@@ -13,7 +13,7 @@ const benefits = [
     icon: Target,
     title: "Clear priorities",
     description:
-      "Projects and tasks stay connected to the right context — no more guessing what matters now.",
+      "Projects, boards, and tasks stay connected to the right context — no more guessing what matters now.",
   },
   {
     icon: Clock3,
@@ -25,7 +25,7 @@ const benefits = [
 
 export function ProductivitySection() {
   return (
-    <section className="border-y border-border bg-primary-light/40 py-20 dark:bg-primary-light/10 sm:py-24">
+    <section className="border-y border-border bg-primary-light/40 py-14 dark:bg-primary-light/10 sm:py-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <Badge
@@ -43,7 +43,7 @@ export function ProductivitySection() {
           </p>
         </div>
 
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
+        <div className="mt-10 grid gap-5 md:grid-cols-3 sm:mt-12">
           {benefits.map((item) => (
             <Card
               key={item.title}

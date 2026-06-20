@@ -15,17 +15,23 @@ const steps = [
   },
   {
     step: "03",
+    title: "Set up boards",
+    description:
+      "Create kanban boards for each project with columns that match how your team plans, builds, and ships.",
+  },
+  {
+    step: "04",
     title: "Manage tasks with clarity",
     description:
-      "Assign, track, and complete tasks with a workflow that keeps momentum high and mental load low.",
+      "Assign, track, and complete tasks on boards with a workflow that keeps momentum high and mental load low.",
   },
 ];
 
 export function WorkflowSection() {
   return (
-    <section id="workflow" className="scroll-mt-24 py-20 sm:py-24">
+    <section id="workflow" className="scroll-mt-20 py-14 sm:py-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-12">
           <div>
             <Badge variant="outline" className="rounded-full">
               How it works

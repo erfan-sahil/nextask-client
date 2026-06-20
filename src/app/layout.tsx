@@ -24,10 +24,11 @@ export const metadata: Metadata = {
     template: "%s | NexTask",
   },
   description:
-    "NexTask helps companies organize work through workspaces, projects, and tasks. Plan clearly, collaborate calmly, and ship with less mental clutter.",
+    "NexTask helps companies organize work through workspaces, projects, boards, and tasks. Plan clearly, collaborate calmly, and ship with less mental clutter.",
   keywords: [
     "project management",
     "task management",
+    "kanban boards",
     "workspace software",
     "team productivity",
     "NexTask",
@@ -40,13 +41,13 @@ export const metadata: Metadata = {
     siteName: "NexTask",
     title: "NexTask — Project Management for Focused Teams",
     description:
-      "Create workspaces, run multiple projects, and manage tasks in one calm, focused platform built for modern teams.",
+      "Create workspaces, run multiple projects, organize work on kanban boards, and manage tasks in one calm, focused platform built for modern teams.",
   },
   twitter: {
     card: "summary_large_image",
     title: "NexTask — Project Management for Focused Teams",
     description:
-      "Workspaces, projects, and tasks — organized the way your team actually thinks.",
+      "Workspaces, projects, boards, and tasks — organized the way your team actually thinks.",
   },
   robots: {
     index: true,

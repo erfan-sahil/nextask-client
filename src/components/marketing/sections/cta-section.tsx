@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils";
 
 export function CtaSection() {
   return (
-    <section className="py-20 sm:py-24">
+    <section className="py-14 sm:py-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-[linear-gradient(135deg,var(--primary-light),var(--background))] px-6 py-14 text-center sm:px-10">
+        <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-[linear-gradient(135deg,var(--primary-light),var(--background))] px-6 py-12 text-center sm:px-10 sm:py-14">
           <div
             aria-hidden
             className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-primary/10 blur-3xl"
@@ -23,8 +23,9 @@ export function CtaSection() {
               Ready to bring clarity to your company&apos;s work?
             </h2>
             <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg">
-              Create your first workspace, spin up projects, and give your team
-              a focused place to manage tasks — all in NexTask.
+              Create your first workspace, spin up projects, set up kanban
+              boards, and give your team a focused place to manage tasks — all
+              in NexTask.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link

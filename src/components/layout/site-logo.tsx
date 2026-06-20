@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import logoDarkImage from "@/assets/logo/logo-dark.png";
 import logoImage from "@/assets/logo/logo.png";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
@@ -16,12 +17,16 @@ const sizeClasses = {
   lg: "h-11 w-auto sm:h-12",
 } as const;
 
+const headerImageClassName =
+  "absolute top-1/2 left-0 h-28 w-auto max-w-none origin-left -translate-y-1/2 scale-[0.85] sm:scale-[0.52] lg:scale-100";
+
 export function SiteLogo({
   className,
   priority = false,
   size = "lg",
 }: SiteLogoProps) {
   const isHeader = size === "header";
+  const imageClassName = isHeader ? headerImageClassName : sizeClasses[size];
 
   return (
     <Link
@@ -38,11 +43,13 @@ export function SiteLogo({
         src={logoImage}
         alt={siteConfig.name}
         priority={priority}
-        className={cn(
-          isHeader
-            ? "absolute top-1/2 left-0 h-28 w-auto max-w-none origin-left -translate-y-1/2 scale-[0.85] sm:scale-[0.52] lg:scale-100"
-            : sizeClasses[size],
-        )}
+        className={cn(imageClassName, "dark:hidden")}
+      />
+      <Image
+        src={logoDarkImage}
+        alt={siteConfig.name}
+        priority={priority}
+        className={cn(imageClassName, "hidden dark:block")}
       />
     </Link>
   );

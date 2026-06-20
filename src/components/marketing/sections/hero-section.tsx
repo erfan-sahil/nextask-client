@@ -17,7 +17,7 @@ export function HeroSection() {
         className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(120,120,120,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(120,120,120,0.08)_1px,transparent_1px)] [background-size:48px_48px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]"
       />
 
-      <div className="relative mx-auto grid max-w-6xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-28">
+      <div className="relative mx-auto grid max-w-6xl gap-10 px-4 pt-6 pb-14 sm:px-6 sm:pt-8 sm:pb-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-12 lg:pt-10 lg:pb-20">
         <div>
           <Badge
             variant="secondary"
@@ -29,14 +29,15 @@ export function HeroSection() {
 
           <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl">
             Organize every team with{" "}
-            <span className="text-primary">workspaces</span>, projects, and
-            tasks
+            <span className="text-primary">workspaces</span>, projects, boards,
+            and tasks
           </h1>
 
           <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground">
             NexTask helps companies create dedicated workspaces, run multiple
-            projects inside each one, and manage tasks with clarity — so your
-            team stays focused and productive.
+            projects inside each one, organize work on kanban boards, and
+            manage tasks with clarity — so your team stays focused and
+            productive.
           </p>
 
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -61,10 +62,11 @@ export function HeroSection() {
             </a>
           </div>
 
-          <dl className="mt-12 grid grid-cols-3 gap-4 border-t border-border pt-8">
+          <dl className="mt-12 grid grid-cols-2 gap-4 border-t border-border pt-8 sm:grid-cols-4">
             {[
               { label: "Workspaces", value: "Per team" },
               { label: "Projects", value: "Unlimited" },
+              { label: "Boards", value: "Kanban" },
               { label: "Tasks", value: "Structured" },
             ].map((item) => (
               <div key={item.label}>
@@ -98,6 +100,7 @@ export function HeroSection() {
               {[
                 {
                   project: "Website Redesign",
+                  board: "Sprint Board",
                   tasks: [
                     { title: "Finalize wireframes", done: true },
                     { title: "Review component library", done: false },
@@ -106,6 +109,7 @@ export function HeroSection() {
                 },
                 {
                   project: "Mobile App Launch",
+                  board: "Release Board",
                   tasks: [
                     { title: "QA sprint checklist", done: true },
                     { title: "App store assets", done: false },
@@ -117,7 +121,12 @@ export function HeroSection() {
                   className="rounded-xl border border-border bg-background p-4"
                 >
                   <div className="mb-3 flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold">{item.project}</p>
+                    <div>
+                      <p className="text-sm font-semibold">{item.project}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.board}
+                      </p>
+                    </div>
                     <span className="text-xs text-muted-foreground">
                       {item.tasks.filter((t) => t.done).length}/
                       {item.tasks.length} done

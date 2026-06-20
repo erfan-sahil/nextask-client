@@ -6,7 +6,7 @@ import { siteConfig } from "@/config/site";
 export const metadata: Metadata = {
   title: siteConfig.tagline,
   description:
-    "Create company workspaces, run multiple projects, and manage tasks in NexTask — a modern project management platform built for clarity and productivity.",
+    "Create company workspaces, run multiple projects, organize work on kanban boards, and manage tasks in NexTask — a modern project management platform built for clarity and productivity.",
   alternates: {
     canonical: "/",
   },

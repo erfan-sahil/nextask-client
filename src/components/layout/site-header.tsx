@@ -23,7 +23,7 @@ export function SiteHeader() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 overflow-visible px-4 pt-3 sm:px-6">
+    <header className="sticky top-0 z-50 overflow-visible px-4 pt-2 sm:px-6">
       <MobileNavOverlay open={mobileOpen} onOpenChange={setMobileOpen} />
 
       <div className="relative z-50 mx-auto max-w-6xl">

@@ -1,9 +1,9 @@
 import {
   Building2,
   CheckSquare,
+  Columns3,
   FolderKanban,
   LayoutDashboard,
-  Shield,
   Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,12 @@ const features = [
       "Run multiple initiatives in parallel — from product launches to internal ops — without mixing priorities.",
   },
   {
+    icon: Columns3,
+    title: "Kanban boards",
+    description:
+      "Organize each project with visual boards and columns — backlog, in progress, and done — so work flows naturally.",
+  },
+  {
     icon: CheckSquare,
     title: "Structured task management",
     description:
@@ -46,17 +52,11 @@ const features = [
     description:
       "Keep everyone on the same page with shared projects, visible progress, and accountable ownership.",
   },
-  {
-    icon: Shield,
-    title: "Secure by design",
-    description:
-      "Workspace-level separation keeps company data organized and access controlled from day one.",
-  },
 ];
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="scroll-mt-24 border-t border-border bg-muted/30 py-20 sm:py-24">
+    <section id="features" className="scroll-mt-20 border-t border-border bg-muted/30 py-14 sm:py-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <Badge variant="outline" className="rounded-full">
@@ -67,11 +67,11 @@ export function FeaturesSection() {
           </h2>
           <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg">
             NexTask mirrors how teams actually work — company first, then
-            workspace, then project, then task — so structure feels natural.
+            workspace, project, board, and task — so structure feels natural.
           </p>
         </div>
 
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-5 sm:mt-12 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature) => (
             <Card
               key={feature.title}
