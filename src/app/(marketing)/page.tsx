@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { LandingPage } from "@/components/marketing/landing-page";
 import { LandingJsonLd } from "@/components/marketing/seo/landing-json-ld";
-import { siteConfig } from "@/config/site";
+import { siteTitle } from "@/config/site";
 
 export const metadata: Metadata = {
-  title: siteConfig.tagline,
+  title: {
+    absolute: siteTitle.default,
+  },
   description:
     "Create company workspaces, run multiple projects, organize work on kanban boards, and manage tasks in NexTask — a modern project management platform built for clarity and productivity.",
   alternates: {

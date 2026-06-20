@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import Script from "next/script";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { siteConfig, siteTitle } from "@/config/site";
+import newIcon from "./new-icon.png";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -19,9 +22,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   ),
+  applicationName: siteConfig.name,
   title: {
-    default: "NexTask — Project Management for Focused Teams",
-    template: "%s | NexTask",
+    default: siteTitle.default,
+    template: siteTitle.template,
   },
   description:
     "NexTask helps companies organize work through workspaces, projects, boards, and tasks. Plan clearly, collaborate calmly, and ship with less mental clutter.",
@@ -33,25 +37,29 @@ export const metadata: Metadata = {
     "team productivity",
     "NexTask",
   ],
-  authors: [{ name: "NexTask" }],
-  creator: "NexTask",
+  authors: [{ name: siteConfig.name }],
+  creator: siteConfig.name,
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "NexTask",
-    title: "NexTask — Project Management for Focused Teams",
+    siteName: siteConfig.name,
+    title: siteTitle.default,
     description:
       "Create workspaces, run multiple projects, organize work on kanban boards, and manage tasks in one calm, focused platform built for modern teams.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "NexTask — Project Management for Focused Teams",
+    title: siteTitle.default,
     description:
       "Workspaces, projects, boards, and tasks — organized the way your team actually thinks.",
   },
   robots: {
     index: true,
     follow: true,
+  },
+  icons: {
+    icon: newIcon.src,
+    apple: newIcon.src,
   },
 };
 
@@ -66,14 +74,14 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${plusJakarta.variable} ${geistMono.variable} h-full`}
     >
-      <head>
-        <script
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        <Script
+          id="nextask-theme-init"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem("nextask-theme");if(t==="dark")document.documentElement.classList.add("dark");}catch(e){}})();`,
           }}
         />
-      </head>
-      <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider>
           <QueryProvider>{children}</QueryProvider>
         </ThemeProvider>
