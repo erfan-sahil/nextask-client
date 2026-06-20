@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export default function Home() {
   return (
@@ -7,6 +8,13 @@ export default function Home() {
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
           <span className="text-xl font-bold text-primary">NexTask</span>
           <nav className="flex items-center gap-4">
+            <Link
+              href="/theme-preview"
+              className="hidden text-sm font-medium text-muted transition-colors hover:text-primary sm:inline"
+            >
+              Theme preview
+            </Link>
+            <ThemeToggle />
             <Link
               href="/register"
               className="text-sm font-medium text-muted transition-colors hover:text-primary"

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 type AuthShellProps = {
   title: string;
@@ -25,6 +26,7 @@ export function AuthShell({
           >
             NexTask
           </Link>
+          <ThemeToggle />
         </div>
       </header>
 
