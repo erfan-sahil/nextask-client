@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col">
@@ -5,18 +7,18 @@ export default function Home() {
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
           <span className="text-xl font-bold text-primary">NexTask</span>
           <nav className="flex items-center gap-4">
-            <a
-              href="#"
+            <Link
+              href="/register"
               className="text-sm font-medium text-muted transition-colors hover:text-primary"
             >
-              Sign in
-            </a>
-            <a
-              href="#"
+              Sign up
+            </Link>
+            <Link
+              href="/register"
               className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
             >
               Get started
-            </a>
+            </Link>
           </nav>
         </div>
       </header>
@@ -35,17 +37,17 @@ export default function Home() {
             get things done.
           </p>
           <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-            <a
-              href="#"
+            <Link
+              href="/register"
               className="rounded-full bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
             >
               Start for free
-            </a>
+            </Link>
             <a
               href="#"
               className="rounded-full border border-border bg-card px-8 py-3 text-sm font-semibold text-card-foreground transition-colors hover:border-primary-muted hover:text-primary"
             >
-              Learn more
+              Learn more NexTask
             </a>
           </div>
         </div>
