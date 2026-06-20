@@ -3,12 +3,6 @@ export type NavLink = {
   label: string;
 };
 
-export const mainNavLinks: NavLink[] = [
-  { href: "#features", label: "Features" },
-  { href: "#workflow", label: "How it works" },
-  { href: "#product", label: "Product" },
-];
-
 export const footerLinkGroups = {
   Product: [
     { label: "Features", href: "#features" },
