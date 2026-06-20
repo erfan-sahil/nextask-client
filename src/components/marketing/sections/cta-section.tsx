@@ -8,17 +8,8 @@ export function CtaSection() {
   return (
     <section className="py-14 sm:py-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-[linear-gradient(135deg,var(--primary-light),var(--background))] px-6 py-12 text-center sm:px-10 sm:py-14">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-primary/10 blur-3xl"
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -bottom-12 -left-8 size-44 rounded-full bg-primary-muted/15 blur-3xl"
-          />
-
-          <div className="relative mx-auto max-w-2xl">
+        <div className="rounded-3xl border border-border bg-primary-light/50 px-6 py-12 text-center sm:px-10 sm:py-14 dark:border-primary/20 dark:bg-primary-light/20">
+          <div className="mx-auto max-w-2xl">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
               Ready to bring clarity to your company&apos;s work?
             </h2>

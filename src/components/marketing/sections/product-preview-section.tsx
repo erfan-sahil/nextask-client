@@ -4,7 +4,11 @@ const columns = [
   {
     title: "Backlog",
     count: 4,
-    items: ["User research summary", "API integration plan", "Design tokens audit"],
+    items: [
+      "User research summary",
+      "API integration plan",
+      "Design tokens audit",
+    ],
     tone: "bg-muted",
   },
   {
@@ -38,7 +42,7 @@ export function ProductPreviewSection() {
           </p>
         </div>
 
-        <div className="mt-10 overflow-hidden rounded-2xl border border-border bg-card shadow-xl shadow-primary/5 sm:mt-12">
+        <div className="mt-10 overflow-hidden rounded-2xl border border-border bg-card shadow-lg shadow-black/5 sm:mt-12 dark:shadow-xl dark:shadow-primary/5">
           <div className="flex items-center justify-between border-b border-border px-5 py-4">
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">

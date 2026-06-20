@@ -7,16 +7,7 @@ import { cn } from "@/lib/utils";
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(15,125,91,0.12),transparent_42%),linear-gradient(to_bottom,transparent,rgba(15,125,91,0.04))]"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(120,120,120,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(120,120,120,0.08)_1px,transparent_1px)] [background-size:48px_48px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]"
-      />
-
+    <section className="relative overflow-hidden border-b border-border/60">
       <div className="relative mx-auto grid max-w-6xl gap-10 px-4 pt-6 pb-14 sm:px-6 sm:pt-8 sm:pb-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-12 lg:pt-10 lg:pb-20">
         <div>
           <Badge
@@ -35,9 +26,8 @@ export function HeroSection() {
 
           <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground">
             NexTask helps companies create dedicated workspaces, run multiple
-            projects inside each one, organize work on kanban boards, and
-            manage tasks with clarity — so your team stays focused and
-            productive.
+            projects inside each one, organize work on kanban boards, and manage
+            tasks with clarity — so your team stays focused and productive.
           </p>
 
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -82,10 +72,7 @@ export function HeroSection() {
         </div>
 
         <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
-          <div className="absolute -left-6 top-8 hidden h-24 w-24 rounded-full bg-primary/10 blur-2xl lg:block" />
-          <div className="absolute -right-4 bottom-0 hidden h-28 w-28 rounded-full bg-primary-muted/20 blur-2xl lg:block" />
-
-          <div className="rounded-2xl border border-border bg-card/90 p-5 shadow-xl shadow-primary/5 backdrop-blur-sm">
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-lg shadow-black/5 dark:shadow-xl dark:shadow-primary/5">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -118,7 +105,7 @@ export function HeroSection() {
               ].map((item) => (
                 <div
                   key={item.project}
-                  className="rounded-xl border border-border bg-background p-4"
+                  className="rounded-xl border border-border bg-muted/40 p-4"
                 >
                   <div className="mb-3 flex items-center justify-between gap-2">
                     <div>

@@ -6,11 +6,11 @@ import { siteConfig } from "@/config/site";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border bg-card/40">
+    <footer className="border-t border-border bg-card dark:bg-card/40">
       <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
         <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,minmax(0,1fr))]">
           <div className="space-y-4">
-            <SiteLogo />
+            <SiteLogo size="xl" />
             <p className="max-w-sm text-sm leading-6 text-muted-foreground">
               {siteConfig.description}
             </p>

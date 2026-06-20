@@ -56,7 +56,10 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="scroll-mt-20 border-t border-border bg-muted/30 py-14 sm:py-16">
+    <section
+      id="features"
+      className="scroll-mt-20 border-t border-border bg-muted/40 py-14 sm:py-16 dark:bg-muted/30"
+    >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <Badge variant="outline" className="rounded-full">
@@ -75,7 +78,7 @@ export function FeaturesSection() {
           {features.map((feature) => (
             <Card
               key={feature.title}
-              className="border-border/80 bg-card/80 transition-all hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md hover:shadow-primary/5"
+              className="border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md dark:border-border/80 dark:bg-card/80 dark:hover:shadow-primary/5"
             >
               <CardHeader>
                 <div className="mb-2 flex size-10 items-center justify-center rounded-xl bg-primary-light text-primary">

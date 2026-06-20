@@ -25,7 +25,7 @@ const benefits = [
 
 export function ProductivitySection() {
   return (
-    <section className="border-y border-border bg-primary-light/40 py-14 dark:bg-primary-light/10 sm:py-16">
+    <section className="border-y border-border bg-primary-light/35 py-14 sm:py-16 dark:bg-primary-light/10">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <Badge
@@ -47,7 +47,7 @@ export function ProductivitySection() {
           {benefits.map((item) => (
             <Card
               key={item.title}
-              className="border-primary/10 bg-background/80 backdrop-blur-sm"
+              className="border-border bg-card shadow-sm dark:border-primary/10 dark:bg-background/80"
             >
               <CardContent className="pt-6">
                 <div className="mb-4 flex size-10 items-center justify-center rounded-xl bg-primary-light text-primary">

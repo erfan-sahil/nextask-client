@@ -8,13 +8,14 @@ import { cn } from "@/lib/utils";
 type SiteLogoProps = {
   className?: string;
   priority?: boolean;
-  size?: "sm" | "md" | "lg" | "header";
+  size?: "sm" | "md" | "lg" | "xl" | "header";
 };
 
 const sizeClasses = {
   sm: "h-8 w-auto",
   md: "h-10 w-auto",
   lg: "h-11 w-auto sm:h-12",
+  xl: "h-28 w-auto sm:h-32",
 } as const;
 
 const headerImageClassName =

@@ -36,7 +36,7 @@ export function SiteHeader() {
                   "rounded-2xl",
                   scrolled
                     ? "border-border/70 bg-background/85 shadow-lg shadow-black/5 backdrop-blur-xl"
-                    : "border-border/40 bg-background/60 shadow-sm backdrop-blur-md",
+                    : "border-border/60 bg-card/95 shadow-sm backdrop-blur-md dark:border-border/40 dark:bg-background/60",
                 ),
           )}
         >
