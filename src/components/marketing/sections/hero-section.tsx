@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { authRoutes } from "@/config/navigation";
 import { cn } from "@/lib/utils";
 
 export function HeroSection() {
@@ -40,7 +41,7 @@ export function HeroSection() {
 
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link
-              href="/login"
+              href={authRoutes.login}
               className={cn(
                 buttonVariants({ size: "lg" }),
                 "h-11 rounded-full px-7 hover:bg-primary-hover",

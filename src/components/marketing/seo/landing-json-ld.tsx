@@ -1,8 +1,10 @@
+import { siteConfig } from "@/config/site";
+
 export function LandingJsonLd() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "NexTask",
+    name: siteConfig.name,
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",
     description:

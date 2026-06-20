@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { authRoutes } from "@/config/navigation";
 import { cn } from "@/lib/utils";
 
 export function CtaSection() {
@@ -27,7 +28,7 @@ export function CtaSection() {
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
-                href="/login"
+                href={authRoutes.login}
                 className={cn(
                   buttonVariants({ size: "lg" }),
                   "h-11 rounded-full px-7 hover:bg-primary-hover",
@@ -37,7 +38,7 @@ export function CtaSection() {
                 <ArrowRight data-icon="inline-end" />
               </Link>
               <Link
-                href="/login"
+                href={authRoutes.login}
                 className={cn(
                   buttonVariants({ variant: "outline", size: "lg" }),
                   "h-11 rounded-full bg-background/70 px-7 backdrop-blur-sm",

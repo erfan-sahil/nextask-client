@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import { useState } from "react";
-import { SiteLogo } from "@/components/landing/site-logo";
+import { SiteLogo } from "@/components/layout/site-logo";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -13,15 +13,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { authRoutes, mainNavLinks } from "@/config/navigation";
 import { cn } from "@/lib/utils";
 
-const navLinks = [
-  { href: "#features", label: "Features" },
-  { href: "#workflow", label: "How it works" },
-  { href: "#product", label: "Product" },
-];
-
-export function SiteNavbar() {
+export function SiteHeader() {
   const [open, setOpen] = useState(false);
 
   return (
@@ -33,7 +28,7 @@ export function SiteNavbar() {
           className="hidden items-center gap-8 md:flex"
           aria-label="Main navigation"
         >
-          {navLinks.map((link) => (
+          {mainNavLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
@@ -46,10 +41,16 @@ export function SiteNavbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <ThemeToggle />
-          <Link href="/login" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+          <Link
+            href={authRoutes.login}
+            className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+          >
             Log in
           </Link>
-          <Link href="/login" className={cn(buttonVariants({ size: "sm" }), "rounded-full px-5")}>
+          <Link
+            href={authRoutes.login}
+            className={cn(buttonVariants({ size: "sm" }), "rounded-full px-5")}
+          >
             Get started
           </Link>
         </div>
@@ -70,8 +71,11 @@ export function SiteNavbar() {
                   <SiteLogo />
                 </SheetTitle>
               </SheetHeader>
-              <nav className="mt-8 flex flex-col gap-2" aria-label="Mobile navigation">
-                {navLinks.map((link) => (
+              <nav
+                className="mt-8 flex flex-col gap-2"
+                aria-label="Mobile navigation"
+              >
+                {mainNavLinks.map((link) => (
                   <a
                     key={link.href}
                     href={link.href}
@@ -82,14 +86,17 @@ export function SiteNavbar() {
                   </a>
                 ))}
                 <Link
-                  href="/login"
+                  href={authRoutes.login}
                   onClick={() => setOpen(false)}
-                  className={cn(buttonVariants({ variant: "outline" }), "mt-4 w-full")}
+                  className={cn(
+                    buttonVariants({ variant: "outline" }),
+                    "mt-4 w-full",
+                  )}
                 >
                   Log in
                 </Link>
                 <Link
-                  href="/login"
+                  href={authRoutes.login}
                   onClick={() => setOpen(false)}
                   className={cn(buttonVariants(), "w-full rounded-full")}
                 >
