@@ -27,7 +27,7 @@ export function SiteNavbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-border/80 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <SiteLogo />
+        <SiteLogo priority />
 
         <nav
           className="hidden items-center gap-8 md:flex"
@@ -67,7 +67,7 @@ export function SiteNavbar() {
             <SheetContent side="right" className="w-full max-w-xs">
               <SheetHeader>
                 <SheetTitle>
-                  <SiteLogo showWordmark />
+                  <SiteLogo />
                 </SheetTitle>
               </SheetHeader>
               <nav className="mt-8 flex flex-col gap-2" aria-label="Mobile navigation">

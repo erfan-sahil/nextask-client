@@ -1,27 +1,29 @@
+import Image from "next/image";
 import Link from "next/link";
-import { Layers3 } from "lucide-react";
+import logoImage from "@/assets/logo/logo.png";
 import { cn } from "@/lib/utils";
 
 type SiteLogoProps = {
   className?: string;
-  showWordmark?: boolean;
+  priority?: boolean;
 };
 
-export function SiteLogo({ className, showWordmark = true }: SiteLogoProps) {
+export function SiteLogo({ className, priority = false }: SiteLogoProps) {
   return (
     <Link
       href="/"
-      className={cn("inline-flex items-center gap-2.5 transition-opacity hover:opacity-80", className)}
+      className={cn(
+        "inline-flex items-center transition-opacity hover:opacity-80",
+        className,
+      )}
       aria-label="NexTask home"
     >
-      <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-        <Layers3 className="size-5" aria-hidden />
-      </span>
-      {showWordmark ? (
-        <span className="text-lg font-bold tracking-tight text-foreground">
-          Nex<span className="text-primary">Task</span>
-        </span>
-      ) : null}
+      <Image
+        src={logoImage}
+        alt="NexTask"
+        priority={priority}
+        className="h-12 w-auto sm:h-28"
+      />
     </Link>
   );
 }
