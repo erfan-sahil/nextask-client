@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -15,8 +16,42 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NexTask",
-  description: "Manage your tasks efficiently with NexTask",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+  ),
+  title: {
+    default: "NexTask — Project Management for Focused Teams",
+    template: "%s | NexTask",
+  },
+  description:
+    "NexTask helps companies organize work through workspaces, projects, and tasks. Plan clearly, collaborate calmly, and ship with less mental clutter.",
+  keywords: [
+    "project management",
+    "task management",
+    "workspace software",
+    "team productivity",
+    "NexTask",
+  ],
+  authors: [{ name: "NexTask" }],
+  creator: "NexTask",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: "NexTask",
+    title: "NexTask — Project Management for Focused Teams",
+    description:
+      "Create workspaces, run multiple projects, and manage tasks in one calm, focused platform built for modern teams.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "NexTask — Project Management for Focused Teams",
+    description:
+      "Workspaces, projects, and tasks — organized the way your team actually thinks.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
@@ -28,7 +63,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${plusJakarta.variable} ${geistMono.variable} h-full`}
     >
       <head>
         <script

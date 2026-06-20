@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useTheme } from "./theme-provider";
 
 type ThemeToggleProps = {
@@ -11,34 +13,33 @@ export function ThemeToggle({ className = "" }: ThemeToggleProps) {
 
   return (
     <div
-      className={`inline-flex rounded-full border border-border bg-card p-1 ${className}`}
+      className={cn(
+        "inline-flex rounded-full border border-border bg-card p-1",
+        className,
+      )}
       role="group"
       aria-label="Theme"
     >
-      <button
+      <Button
         type="button"
+        size="xs"
+        variant={theme === "light" ? "default" : "ghost"}
         onClick={() => setTheme("light")}
         aria-pressed={theme === "light"}
-        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-          theme === "light"
-            ? "bg-primary text-primary-foreground"
-            : "text-muted hover:text-foreground"
-        }`}
+        className="rounded-full px-3"
       >
         Light
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
+        size="xs"
+        variant={theme === "dark" ? "default" : "ghost"}
         onClick={() => setTheme("dark")}
         aria-pressed={theme === "dark"}
-        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-          theme === "dark"
-            ? "bg-primary text-primary-foreground"
-            : "text-muted hover:text-foreground"
-        }`}
+        className="rounded-full px-3"
       >
         Dark
-      </button>
+      </Button>
     </div>
   );
 }
