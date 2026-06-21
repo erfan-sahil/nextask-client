@@ -1,6 +1,5 @@
-import type { LucideIcon } from "lucide-react";
+import { AuthBadge } from "@/components/auth/auth-badge";
 import { SiteLogo } from "@/components/layout/site-logo";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 type AuthShellProps = {
@@ -9,7 +8,6 @@ type AuthShellProps = {
   children: React.ReactNode;
   badge?: string;
   wide?: boolean;
-  icon?: LucideIcon;
 };
 
 export function AuthShell({
@@ -18,7 +16,6 @@ export function AuthShell({
   children,
   badge,
   wide = false,
-  icon: Icon,
 }: AuthShellProps) {
   return (
     <div className={cn("relative w-full", wide ? "max-w-xl" : "max-w-md")}>
@@ -26,15 +23,7 @@ export function AuthShell({
         <div className="mb-8 flex flex-col items-center text-center">
           <SiteLogo size="lg" priority className="mb-6" />
 
-          {badge ? (
-            <Badge
-              variant="secondary"
-              className="mb-5 rounded-full border border-primary/15 bg-primary-light px-3 py-1 text-primary"
-            >
-              {Icon ? <Icon data-icon="inline-start" aria-hidden /> : null}
-              {badge}
-            </Badge>
-          ) : null}
+          {badge ? <AuthBadge>{badge}</AuthBadge> : null}
 
           <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             {title}

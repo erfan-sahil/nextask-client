@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { ArrowRight, LogIn } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -11,10 +11,7 @@ import { Button } from "@/components/ui/button";
 import { authRoutes } from "@/config/navigation";
 import { login } from "@/lib/api/auth";
 import { getErrorMessage } from "@/lib/api/get-error-message";
-import {
-  getFieldErrors,
-  loginFormSchema,
-} from "@/lib/validation/auth-schemas";
+import { getFieldErrors, loginFormSchema } from "@/lib/validation/auth-schemas";
 
 export function LoginForm() {
   const router = useRouter();
@@ -32,7 +29,9 @@ export function LoginForm() {
       }
 
       const callbackUrl = searchParams.get("callbackUrl");
-      router.push(callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/");
+      router.push(
+        callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/",
+      );
     },
   });
 
@@ -70,7 +69,6 @@ export function LoginForm() {
       badge="Welcome back"
       title="Sign in to NexTask"
       description="Access your workspaces, projects, and boards — pick up right where you left off."
-      icon={LogIn}
     >
       <form onSubmit={handleSubmit} className="space-y-5" noValidate>
         <AuthField

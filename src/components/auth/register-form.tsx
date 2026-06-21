@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -78,7 +78,6 @@ export function RegisterForm() {
       badge="Get started"
       title="Create your account"
       description="Fill in your details below. We'll send a verification code to your email."
-      icon={Sparkles}
     >
       <form onSubmit={handleSubmit} className="space-y-5" noValidate>
         <div className="grid gap-5 sm:grid-cols-2">
@@ -182,7 +181,10 @@ export function RegisterForm() {
 
         {registerMutation.isError ? (
           <AuthAlert>
-            {getErrorMessage(registerMutation.error, "Unable to create account")}
+            {getErrorMessage(
+              registerMutation.error,
+              "Unable to create account",
+            )}
           </AuthAlert>
         ) : null}
 
@@ -191,7 +193,9 @@ export function RegisterForm() {
           disabled={registerMutation.isPending}
           className="h-11 w-full rounded-full text-sm font-semibold hover:bg-primary-hover"
         >
-          {registerMutation.isPending ? "Creating account..." : "Create account"}
+          {registerMutation.isPending
+            ? "Creating account..."
+            : "Create account"}
           {!registerMutation.isPending ? (
             <ArrowRight data-icon="inline-end" aria-hidden />
           ) : null}
