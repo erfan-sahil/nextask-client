@@ -10,6 +10,7 @@ import { StatsOverview } from "@/components/app/dashboard/stats-overview";
 import { WelcomeHeader } from "@/components/app/dashboard/welcome-header";
 import { WorkspaceGrid } from "@/components/app/dashboard/workspace-grid";
 import { getMe } from "@/lib/api/auth";
+import { authQueryKeys } from "@/lib/api/query-keys";
 import {
   mockActivity,
   mockBoard,
@@ -21,7 +22,7 @@ import {
 
 export function DashboardPage() {
   const meQuery = useQuery({
-    queryKey: ["me"],
+    queryKey: authQueryKeys.me,
     queryFn: getMe,
   });
 

@@ -7,6 +7,7 @@ import { QueryProvider } from "@/components/providers/query-provider";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { authRoutes, appRoutes } from "@/config/navigation";
 import { getMe } from "@/lib/api/auth";
+import { authQueryKeys } from "@/lib/api/query-keys";
 
 function AuthLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -16,7 +17,7 @@ function AuthLayoutContent({ children }: { children: React.ReactNode }) {
     pathname === authRoutes.login || pathname === authRoutes.register;
 
   const meQuery = useQuery({
-    queryKey: ["me"],
+    queryKey: authQueryKeys.me,
     queryFn: getMe,
     retry: false,
     enabled: isGuestOnlyRoute,

@@ -8,7 +8,7 @@ import { UserAvatar } from "@/components/app/user-avatar";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { authRoutes } from "@/config/navigation";
+import { useAuth } from "@/hooks/use-auth";
 import type { User as AuthUser } from "@/types/auth";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,7 @@ type UserMenuProps = {
 export function UserMenu({ user, className }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { logout, isLoggingOut } = useAuth({ fetchUser: false });
   const displayName = `${user.firstName} ${user.lastName}`.trim();
 
   useEffect(() => {
@@ -80,15 +81,19 @@ export function UserMenu({ user, className }: UserMenuProps) {
               <AppNavIcon icon="settings" className="size-4 text-muted-foreground" />
               Settings
             </Link>
-            <Link
-              href={authRoutes.login}
+            <button
+              type="button"
               role="menuitem"
-              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
-              onClick={() => setIsOpen(false)}
+              disabled={isLoggingOut}
+              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => {
+                setIsOpen(false);
+                logout();
+              }}
             >
               <LogOut className="size-4" />
-              Sign out
-            </Link>
+              {isLoggingOut ? "Signing out..." : "Sign out"}
+            </button>
           </div>
         </div>
       ) : null}

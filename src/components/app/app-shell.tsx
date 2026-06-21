@@ -1,6 +1,5 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppHeader } from "@/components/app/app-header";
@@ -12,30 +11,24 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { authRoutes } from "@/config/navigation";
-import { getMe } from "@/lib/api/auth";
+import { useAuth } from "@/hooks/use-auth";
 
 function AppShellContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-
-  const meQuery = useQuery({
-    queryKey: ["me"],
-    queryFn: getMe,
-    retry: false,
-  });
-
+  const { user, isLoading, isError } = useAuth();
   useEffect(() => {
-    if (meQuery.isError) {
+    if (isError) {
       router.replace(authRoutes.login);
       return;
     }
 
-    if (meQuery.data && !meQuery.data.isEmailVerified) {
+    if (user && !user.isEmailVerified) {
       router.replace(authRoutes.verifyEmail);
     }
-  }, [meQuery.data, meQuery.isError, router]);
+  }, [user, isError, router]);
 
-  if (meQuery.isLoading) {
+  if (isLoading) {
     return (
       <div className="flex min-h-svh items-center justify-center bg-background">
         <div
@@ -46,7 +39,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (meQuery.isError || !meQuery.data) {
+  if (isError || !user) {
     return null;
   }
 
@@ -66,7 +59,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader
-          user={meQuery.data}
+          user={user}
           onMenuClick={() => setMobileNavOpen(true)}
         />
         <main className="flex-1 overflow-y-auto">{children}</main>

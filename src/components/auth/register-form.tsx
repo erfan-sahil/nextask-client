@@ -1,6 +1,5 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -10,8 +9,11 @@ import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { authRoutes } from "@/config/navigation";
-import { register } from "@/lib/api/auth";
-import { getErrorMessage } from "@/lib/api/get-error-message";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  getAuthFormErrors,
+  getErrorMessage,
+} from "@/lib/api/get-error-message";
 import {
   getFieldErrors,
   registerFormSchema,
@@ -27,11 +29,8 @@ export function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const registerMutation = useMutation({
-    mutationFn: register,
-    onSuccess: () => {
-      router.push(authRoutes.verifyEmail);
-    },
+  const { register, isRegistering, registerError, resetRegister } = useAuth({
+    fetchUser: false,
   });
 
   const clearFieldError = (field: string) => {
@@ -49,6 +48,7 @@ export function RegisterForm() {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFieldErrors({});
+    resetRegister();
 
     const result = registerFormSchema.safeParse({
       firstName,
@@ -64,14 +64,32 @@ export function RegisterForm() {
       return;
     }
 
-    registerMutation.mutate({
-      firstName: result.data.firstName,
-      lastName: result.data.lastName,
-      username: result.data.username.toLowerCase(),
-      email: result.data.email.toLowerCase(),
-      password: result.data.password,
-    });
+    register(
+      {
+        firstName: result.data.firstName,
+        lastName: result.data.lastName,
+        username: result.data.username.toLowerCase(),
+        email: result.data.email.toLowerCase(),
+        password: result.data.password,
+      },
+      {
+        onSuccess: () => {
+          router.push(authRoutes.verifyEmail);
+        },
+        onError: (error) => {
+          const apiFieldErrors = getAuthFormErrors(error);
+          if (Object.keys(apiFieldErrors).length > 0) {
+            setFieldErrors(apiFieldErrors);
+          }
+        },
+      },
+    );
   };
+
+  const formError =
+    registerError && Object.keys(fieldErrors).length === 0
+      ? getErrorMessage(registerError, "Unable to create account")
+      : null;
 
   return (
     <AuthShell
@@ -180,17 +198,10 @@ export function RegisterForm() {
           error={fieldErrors.confirmPassword}
         />
 
-        {registerMutation.isError ? (
-          <AuthAlert>
-            {getErrorMessage(
-              registerMutation.error,
-              "Unable to create account",
-            )}
-          </AuthAlert>
-        ) : null}
+        {formError ? <AuthAlert>{formError}</AuthAlert> : null}
 
         <AuthSubmitButton
-          isPending={registerMutation.isPending}
+          isPending={isRegistering}
           label="Create account"
           pendingLabel="Creating account..."
         />

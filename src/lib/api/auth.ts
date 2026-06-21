@@ -1,11 +1,16 @@
 import type { ApiSuccessResponse } from "@/types/api";
 import type { AuthPayload, RegisterPayload, User } from "@/types/auth";
-import { apiClient } from "./client";
+import { API_BASE_URL, apiClient } from "./client";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001/api/v1";
+export type LoginInput = {
+  email: string;
+  password: string;
+};
 
-type LoginInput = {
+export type RegisterInput = {
+  firstName: string;
+  lastName: string;
+  username: string;
   email: string;
   password: string;
 };
@@ -17,33 +22,37 @@ type VerifyEmailInput = {
 export const login = async (input: LoginInput) => {
   const { data } = await apiClient.post<ApiSuccessResponse<AuthPayload>>(
     "/auth/login",
-    input
+    input,
   );
 
   return data.data;
-};
-
-export type RegisterInput = {
-  firstName: string;
-  lastName: string;
-  username: string;
-  email: string;
-  password: string;
 };
 
 export const register = async (input: RegisterInput) => {
   const { data } = await apiClient.post<ApiSuccessResponse<RegisterPayload>>(
     "/auth/register",
-    input
+    input,
   );
 
   return data.data;
 };
 
+export const refreshSession = async () => {
+  const { data } = await apiClient.post<ApiSuccessResponse<AuthPayload>>(
+    "/auth/refresh",
+  );
+
+  return data.data;
+};
+
+export const logout = async () => {
+  await apiClient.post<ApiSuccessResponse<null>>("/auth/logout");
+};
+
 export const verifyEmail = async (input: VerifyEmailInput) => {
   const { data } = await apiClient.post<ApiSuccessResponse<{ user: User }>>(
     "/auth/verify-email",
-    input
+    input,
   );
 
   return data.data;
@@ -51,7 +60,7 @@ export const verifyEmail = async (input: VerifyEmailInput) => {
 
 export const resendVerification = async () => {
   const { data } = await apiClient.post<ApiSuccessResponse<{ user: User }>>(
-    "/auth/resend-verification"
+    "/auth/resend-verification",
   );
 
   return data.data;
@@ -59,7 +68,7 @@ export const resendVerification = async () => {
 
 export const getMe = async () => {
   const { data } = await apiClient.get<ApiSuccessResponse<{ user: User }>>(
-    "/auth/me"
+    "/auth/me",
   );
 
   return data.data.user;

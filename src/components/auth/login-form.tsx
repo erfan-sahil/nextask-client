@@ -1,6 +1,5 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -10,7 +9,7 @@ import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { authRoutes, appRoutes } from "@/config/navigation";
-import { login } from "@/lib/api/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { getErrorMessage } from "@/lib/api/get-error-message";
 import { getFieldErrors, loginFormSchema } from "@/lib/validation/auth-schemas";
 
@@ -21,19 +20,8 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const loginMutation = useMutation({
-    mutationFn: login,
-    onSuccess: (data) => {
-      if (!data.user.isEmailVerified) {
-        router.push(authRoutes.verifyEmail);
-        return;
-      }
-
-      const callbackUrl = searchParams.get("callbackUrl");
-      router.push(
-        callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : appRoutes.dashboard,
-      );
-    },
+  const { login, isLoggingIn, loginError, resetLogin } = useAuth({
+    fetchUser: false,
   });
 
   const clearFieldError = (field: string) => {
@@ -51,6 +39,7 @@ export function LoginForm() {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFieldErrors({});
+    resetLogin();
 
     const result = loginFormSchema.safeParse({ email, password });
 
@@ -59,10 +48,27 @@ export function LoginForm() {
       return;
     }
 
-    loginMutation.mutate({
-      email: result.data.email.toLowerCase(),
-      password: result.data.password,
-    });
+    login(
+      {
+        email: result.data.email.toLowerCase(),
+        password: result.data.password,
+      },
+      {
+        onSuccess: (data) => {
+          if (!data.user.isEmailVerified) {
+            router.push(authRoutes.verifyEmail);
+            return;
+          }
+
+          const callbackUrl = searchParams.get("callbackUrl");
+          router.push(
+            callbackUrl && callbackUrl.startsWith("/")
+              ? callbackUrl
+              : appRoutes.dashboard,
+          );
+        },
+      },
+    );
   };
 
   return (
@@ -100,14 +106,14 @@ export function LoginForm() {
           error={fieldErrors.password}
         />
 
-        {loginMutation.isError ? (
+        {loginError ? (
           <AuthAlert>
-            {getErrorMessage(loginMutation.error, "Unable to sign in")}
+            {getErrorMessage(loginError, "Unable to sign in")}
           </AuthAlert>
         ) : null}
 
         <AuthSubmitButton
-          isPending={loginMutation.isPending}
+          isPending={isLoggingIn}
           label="Sign in"
           pendingLabel="Signing in..."
         />

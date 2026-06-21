@@ -8,6 +8,7 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { appRoutes, authRoutes } from "@/config/navigation";
 import { getMe, resendVerification, verifyEmail } from "@/lib/api/auth";
 import { getErrorMessage } from "@/lib/api/get-error-message";
+import { authQueryKeys } from "@/lib/api/query-keys";
 
 const OTP_LENGTH = 6;
 
@@ -18,7 +19,7 @@ export function VerifyEmailForm() {
   const [resendCooldown, setResendCooldown] = useState(0);
 
   const meQuery = useQuery({
-    queryKey: ["me"],
+    queryKey: authQueryKeys.me,
     queryFn: getMe,
     retry: false,
   });
