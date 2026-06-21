@@ -11,13 +11,17 @@ import { Button } from "@/components/ui/button";
 import { authRoutes } from "@/config/navigation";
 import { login } from "@/lib/api/auth";
 import { getErrorMessage } from "@/lib/api/get-error-message";
+import {
+  getFieldErrors,
+  loginFormSchema,
+} from "@/lib/validation/auth-schemas";
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [clientError, setClientError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const loginMutation = useMutation({
     mutationFn: login,
@@ -32,24 +36,32 @@ export function LoginForm() {
     },
   });
 
+  const clearFieldError = (field: string) => {
+    setFieldErrors((current) => {
+      if (!current[field]) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+  };
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setClientError(null);
+    setFieldErrors({});
 
-    const trimmedEmail = email.trim().toLowerCase();
-    if (!trimmedEmail) {
-      setClientError("Email is required");
-      return;
-    }
+    const result = loginFormSchema.safeParse({ email, password });
 
-    if (!password) {
-      setClientError("Password is required");
+    if (!result.success) {
+      setFieldErrors(getFieldErrors(result.error));
       return;
     }
 
     loginMutation.mutate({
-      email: trimmedEmail,
-      password,
+      email: result.data.email.toLowerCase(),
+      password: result.data.password,
     });
   };
 
@@ -60,16 +72,19 @@ export function LoginForm() {
       description="Access your workspaces, projects, and boards — pick up right where you left off."
       icon={LogIn}
     >
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-5" noValidate>
         <AuthField
           id="email"
           label="Email"
           type="email"
           autoComplete="email"
-          required
           value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            clearFieldError("email");
+          }}
           placeholder="you@example.com"
+          error={fieldErrors.email}
         />
 
         <AuthField
@@ -77,13 +92,14 @@ export function LoginForm() {
           label="Password"
           type="password"
           autoComplete="current-password"
-          required
           value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          onChange={(event) => {
+            setPassword(event.target.value);
+            clearFieldError("password");
+          }}
           placeholder="Enter your password"
+          error={fieldErrors.password}
         />
-
-        {clientError ? <AuthAlert>{clientError}</AuthAlert> : null}
 
         {loginMutation.isError ? (
           <AuthAlert>

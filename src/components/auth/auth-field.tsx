@@ -9,12 +9,14 @@ type AuthFieldProps = {
   id: string;
   label: string;
   hint?: string;
+  error?: string;
 } & React.ComponentProps<"input">;
 
 export function AuthField({
   id,
   label,
   hint,
+  error,
   className,
   ...inputProps
 }: AuthFieldProps) {
@@ -25,10 +27,18 @@ export function AuthField({
       </Label>
       <Input
         id={id}
-        className={cn(authInputClassName, className)}
+        aria-invalid={error ? true : undefined}
+        className={cn(
+          authInputClassName,
+          error &&
+            "border-destructive/50 focus-visible:border-destructive focus-visible:ring-destructive/20",
+          className,
+        )}
         {...inputProps}
       />
-      {hint ? (
+      {error ? (
+        <p className="px-1 text-xs text-destructive">{error}</p>
+      ) : hint ? (
         <p className="px-1 text-xs text-muted-foreground">{hint}</p>
       ) : null}
     </div>

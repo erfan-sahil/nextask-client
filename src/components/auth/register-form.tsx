@@ -11,38 +11,10 @@ import { Button } from "@/components/ui/button";
 import { authRoutes } from "@/config/navigation";
 import { register } from "@/lib/api/auth";
 import { getErrorMessage } from "@/lib/api/get-error-message";
-
-const validatePassword = (password: string) => {
-  if (password.length < 8) {
-    return "Password must be at least 8 characters";
-  }
-
-  if (!/[A-Z]/.test(password)) {
-    return "Password must contain at least one uppercase letter";
-  }
-
-  if (!/[0-9]/.test(password)) {
-    return "Password must contain at least one number";
-  }
-
-  return null;
-};
-
-const validateUsername = (username: string) => {
-  if (username.length < 3) {
-    return "Username must be at least 3 characters";
-  }
-
-  if (username.length > 30) {
-    return "Username must be at most 30 characters";
-  }
-
-  if (!/^[a-z0-9_]+$/.test(username)) {
-    return "Username may only contain lowercase letters, numbers, and underscores";
-  }
-
-  return null;
-};
+import {
+  getFieldErrors,
+  registerFormSchema,
+} from "@/lib/validation/auth-schemas";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -52,7 +24,7 @@ export function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [clientError, setClientError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const registerMutation = useMutation({
     mutationFn: register,
@@ -61,33 +33,42 @@ export function RegisterForm() {
     },
   });
 
+  const clearFieldError = (field: string) => {
+    setFieldErrors((current) => {
+      if (!current[field]) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+  };
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setClientError(null);
+    setFieldErrors({});
 
-    const usernameError = validateUsername(username.trim().toLowerCase());
-    if (usernameError) {
-      setClientError(usernameError);
-      return;
-    }
+    const result = registerFormSchema.safeParse({
+      firstName,
+      lastName,
+      username,
+      email,
+      password,
+      confirmPassword,
+    });
 
-    const passwordError = validatePassword(password);
-    if (passwordError) {
-      setClientError(passwordError);
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setClientError("Passwords do not match");
+    if (!result.success) {
+      setFieldErrors(getFieldErrors(result.error));
       return;
     }
 
     registerMutation.mutate({
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      username: username.trim().toLowerCase(),
-      email: email.trim().toLowerCase(),
-      password,
+      firstName: result.data.firstName,
+      lastName: result.data.lastName,
+      username: result.data.username.toLowerCase(),
+      email: result.data.email.toLowerCase(),
+      password: result.data.password,
     });
   };
 
@@ -99,18 +80,21 @@ export function RegisterForm() {
       description="Fill in your details below. We'll send a verification code to your email."
       icon={Sparkles}
     >
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-5" noValidate>
         <div className="grid gap-5 sm:grid-cols-2">
           <AuthField
             id="firstName"
             label="First name"
             type="text"
             autoComplete="given-name"
-            required
             maxLength={50}
             value={firstName}
-            onChange={(event) => setFirstName(event.target.value)}
+            onChange={(event) => {
+              setFirstName(event.target.value);
+              clearFieldError("firstName");
+            }}
             placeholder="John"
+            error={fieldErrors.firstName}
           />
 
           <AuthField
@@ -118,11 +102,14 @@ export function RegisterForm() {
             label="Last name"
             type="text"
             autoComplete="family-name"
-            required
             maxLength={50}
             value={lastName}
-            onChange={(event) => setLastName(event.target.value)}
+            onChange={(event) => {
+              setLastName(event.target.value);
+              clearFieldError("lastName");
+            }}
             placeholder="Doe"
+            error={fieldErrors.lastName}
           />
         </div>
 
@@ -131,14 +118,19 @@ export function RegisterForm() {
           label="Username"
           type="text"
           autoComplete="username"
-          required
           maxLength={30}
           value={username}
-          onChange={(event) =>
-            setUsername(event.target.value.toLowerCase().replace(/\s/g, ""))
-          }
+          onChange={(event) => {
+            setUsername(event.target.value.toLowerCase().replace(/\s/g, ""));
+            clearFieldError("username");
+          }}
           placeholder="johndoe"
-          hint="Lowercase letters, numbers, and underscores only."
+          hint={
+            fieldErrors.username
+              ? undefined
+              : "Lowercase letters, numbers, and underscores only."
+          }
+          error={fieldErrors.username}
         />
 
         <AuthField
@@ -146,10 +138,13 @@ export function RegisterForm() {
           label="Email"
           type="email"
           autoComplete="email"
-          required
           value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            clearFieldError("email");
+          }}
           placeholder="you@example.com"
+          error={fieldErrors.email}
         />
 
         <AuthField
@@ -157,11 +152,18 @@ export function RegisterForm() {
           label="Password"
           type="password"
           autoComplete="new-password"
-          required
           value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          onChange={(event) => {
+            setPassword(event.target.value);
+            clearFieldError("password");
+          }}
           placeholder="Create a strong password"
-          hint="At least 8 characters, one uppercase letter, and one number."
+          hint={
+            fieldErrors.password
+              ? undefined
+              : "At least 8 characters, one uppercase letter, and one number."
+          }
+          error={fieldErrors.password}
         />
 
         <AuthField
@@ -169,13 +171,14 @@ export function RegisterForm() {
           label="Confirm password"
           type="password"
           autoComplete="new-password"
-          required
           value={confirmPassword}
-          onChange={(event) => setConfirmPassword(event.target.value)}
+          onChange={(event) => {
+            setConfirmPassword(event.target.value);
+            clearFieldError("confirmPassword");
+          }}
           placeholder="Re-enter your password"
+          error={fieldErrors.confirmPassword}
         />
-
-        {clientError ? <AuthAlert>{clientError}</AuthAlert> : null}
 
         {registerMutation.isError ? (
           <AuthAlert>
