@@ -1,15 +1,16 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
+import { ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { AuthAlert, AuthField } from "@/components/auth/auth-field";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { Button } from "@/components/ui/button";
+import { authRoutes } from "@/config/navigation";
 import { register } from "@/lib/api/auth";
 import { getErrorMessage } from "@/lib/api/get-error-message";
-
-const inputClassName =
-  "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary";
 
 const validatePassword = (password: string) => {
   if (password.length < 8) {
@@ -56,7 +57,7 @@ export function RegisterForm() {
   const registerMutation = useMutation({
     mutationFn: register,
     onSuccess: () => {
-      router.push("/verify-email");
+      router.push(authRoutes.verifyEmail);
     },
   });
 
@@ -94,162 +95,113 @@ export function RegisterForm() {
     <AuthShell
       wide
       badge="Get started"
-      title="Create your NexTask account"
+      title="Create your account"
       description="Fill in your details below. We'll send a verification code to your email."
+      icon={Sparkles}
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid gap-5 sm:grid-cols-2">
-          <div className="space-y-2">
-            <label
-              htmlFor="firstName"
-              className="text-sm font-medium text-foreground"
-            >
-              First name
-            </label>
-            <input
-              id="firstName"
-              type="text"
-              autoComplete="given-name"
-              required
-              maxLength={50}
-              value={firstName}
-              onChange={(event) => setFirstName(event.target.value)}
-              className={inputClassName}
-              placeholder="John"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="lastName"
-              className="text-sm font-medium text-foreground"
-            >
-              Last name
-            </label>
-            <input
-              id="lastName"
-              type="text"
-              autoComplete="family-name"
-              required
-              maxLength={50}
-              value={lastName}
-              onChange={(event) => setLastName(event.target.value)}
-              className={inputClassName}
-              placeholder="Doe"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label
-            htmlFor="username"
-            className="text-sm font-medium text-foreground"
-          >
-            Username
-          </label>
-          <input
-            id="username"
+          <AuthField
+            id="firstName"
+            label="First name"
             type="text"
-            autoComplete="username"
+            autoComplete="given-name"
             required
-            maxLength={30}
-            value={username}
-            onChange={(event) =>
-              setUsername(event.target.value.toLowerCase().replace(/\s/g, ""))
-            }
-            className={inputClassName}
-            placeholder="johndoe"
+            maxLength={50}
+            value={firstName}
+            onChange={(event) => setFirstName(event.target.value)}
+            placeholder="John"
           />
-          <p className="text-xs text-muted-foreground">
-            Lowercase letters, numbers, and underscores only.
-          </p>
-        </div>
 
-        <div className="space-y-2">
-          <label htmlFor="email" className="text-sm font-medium text-foreground">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            autoComplete="email"
+          <AuthField
+            id="lastName"
+            label="Last name"
+            type="text"
+            autoComplete="family-name"
             required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className={inputClassName}
-            placeholder="you@example.com"
+            maxLength={50}
+            value={lastName}
+            onChange={(event) => setLastName(event.target.value)}
+            placeholder="Doe"
           />
         </div>
 
-        <div className="space-y-2">
-          <label
-            htmlFor="password"
-            className="text-sm font-medium text-foreground"
-          >
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="new-password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className={inputClassName}
-            placeholder="Create a strong password"
-          />
-          <p className="text-xs text-muted-foreground">
-            At least 8 characters, one uppercase letter, and one number.
-          </p>
-        </div>
+        <AuthField
+          id="username"
+          label="Username"
+          type="text"
+          autoComplete="username"
+          required
+          maxLength={30}
+          value={username}
+          onChange={(event) =>
+            setUsername(event.target.value.toLowerCase().replace(/\s/g, ""))
+          }
+          placeholder="johndoe"
+          hint="Lowercase letters, numbers, and underscores only."
+        />
 
-        <div className="space-y-2">
-          <label
-            htmlFor="confirmPassword"
-            className="text-sm font-medium text-foreground"
-          >
-            Confirm password
-          </label>
-          <input
-            id="confirmPassword"
-            type="password"
-            autoComplete="new-password"
-            required
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            className={inputClassName}
-            placeholder="Re-enter your password"
-          />
-        </div>
+        <AuthField
+          id="email"
+          label="Email"
+          type="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          placeholder="you@example.com"
+        />
 
-        {clientError ? (
-          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {clientError}
-          </p>
-        ) : null}
+        <AuthField
+          id="password"
+          label="Password"
+          type="password"
+          autoComplete="new-password"
+          required
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          placeholder="Create a strong password"
+          hint="At least 8 characters, one uppercase letter, and one number."
+        />
+
+        <AuthField
+          id="confirmPassword"
+          label="Confirm password"
+          type="password"
+          autoComplete="new-password"
+          required
+          value={confirmPassword}
+          onChange={(event) => setConfirmPassword(event.target.value)}
+          placeholder="Re-enter your password"
+        />
+
+        {clientError ? <AuthAlert>{clientError}</AuthAlert> : null}
 
         {registerMutation.isError ? (
-          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <AuthAlert>
             {getErrorMessage(registerMutation.error, "Unable to create account")}
-          </p>
+          </AuthAlert>
         ) : null}
 
-        <button
+        <Button
           type="submit"
           disabled={registerMutation.isPending}
-          className="w-full rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-70"
+          className="h-11 w-full rounded-full text-sm font-semibold hover:bg-primary-hover"
         >
           {registerMutation.isPending ? "Creating account..." : "Create account"}
-        </button>
+          {!registerMutation.isPending ? (
+            <ArrowRight data-icon="inline-end" aria-hidden />
+          ) : null}
+        </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-muted">
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link
-          href="/verify-email"
-          className="font-medium text-primary transition-colors hover:text-primary-hover"
+          href={authRoutes.login}
+          className="font-semibold text-primary transition-colors hover:text-primary-hover"
         >
-          Verify your email
+          Sign in
         </Link>
       </p>
     </AuthShell>

@@ -41,7 +41,7 @@ export function SiteHeader() {
           )}
         >
           <div className="flex h-16 items-center justify-between gap-4 overflow-visible px-4 sm:h-auto sm:min-h-14 sm:px-5 sm:py-2">
-            <SiteLogo priority size="header" />
+            <SiteLogo priority size="md" />
 
             <div className="hidden items-center gap-3 md:flex">
               <ThemeToggle />

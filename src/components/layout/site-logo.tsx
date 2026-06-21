@@ -1,14 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
-import logoDarkImage from "@/assets/logo/logo-dark.png";
-import logoImage from "@/assets/logo/logo.png";
+import logoDarkImage from "@/assets/logo/new-dark-logo.png";
+import logoImage from "@/assets/logo/new-logo.png";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
 type SiteLogoProps = {
   className?: string;
   priority?: boolean;
-  size?: "sm" | "md" | "lg" | "xl" | "header";
+  size?: "sm" | "md" | "lg" | "xl" | "auth" | "header";
 };
 
 const sizeClasses = {
@@ -16,6 +16,7 @@ const sizeClasses = {
   md: "h-10 w-auto",
   lg: "h-11 w-auto sm:h-12",
   xl: "h-28 w-auto sm:h-32",
+  auth: "h-36 w-auto sm:h-44",
 } as const;
 
 const headerImageClassName =

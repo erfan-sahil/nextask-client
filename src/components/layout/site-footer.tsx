@@ -10,7 +10,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
         <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,minmax(0,1fr))]">
           <div className="space-y-4">
-            <SiteLogo size="xl" />
+            <SiteLogo size="md" />
             <p className="max-w-sm text-sm leading-6 text-muted-foreground">
               {siteConfig.description}
             </p>
