@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { appRoutes, authRoutes } from "@/config/navigation";
 import { getMe, resendVerification, verifyEmail } from "@/lib/api/auth";
 import { getErrorMessage } from "@/lib/api/get-error-message";
 
@@ -25,7 +26,7 @@ export function VerifyEmailForm() {
   const verifyMutation = useMutation({
     mutationFn: verifyEmail,
     onSuccess: () => {
-      router.push("/");
+      router.push(appRoutes.dashboard);
     },
   });
 
@@ -52,7 +53,7 @@ export function VerifyEmailForm() {
 
   useEffect(() => {
     if (meQuery.data?.isEmailVerified) {
-      router.replace("/");
+      router.replace(appRoutes.dashboard);
     }
   }, [meQuery.data, router]);
 

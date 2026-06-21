@@ -1,0 +1,9 @@
+export { BoardPreview } from "./board-preview";
+export { DashboardPage } from "./dashboard-page";
+export { ProjectGrid } from "./project-grid";
+export { QuickActions } from "./quick-actions";
+export { RecentActivity } from "./recent-activity";
+export { RecentComments } from "./recent-comments";
+export { StatsOverview } from "./stats-overview";
+export { WelcomeHeader } from "./welcome-header";
+export { WorkspaceGrid } from "./workspace-grid";

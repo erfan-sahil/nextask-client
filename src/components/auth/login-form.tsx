@@ -9,7 +9,7 @@ import { AuthDivider } from "@/components/auth/auth-divider";
 import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
-import { authRoutes } from "@/config/navigation";
+import { authRoutes, appRoutes } from "@/config/navigation";
 import { login } from "@/lib/api/auth";
 import { getErrorMessage } from "@/lib/api/get-error-message";
 import { getFieldErrors, loginFormSchema } from "@/lib/validation/auth-schemas";
@@ -31,7 +31,7 @@ export function LoginForm() {
 
       const callbackUrl = searchParams.get("callbackUrl");
       router.push(
-        callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/",
+        callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : appRoutes.dashboard,
       );
     },
   });
@@ -116,7 +116,7 @@ export function LoginForm() {
       <AuthDivider className="my-5" />
 
       <GoogleSignInButton
-        callbackUrl={searchParams.get("callbackUrl") ?? undefined}
+        callbackUrl={searchParams.get("callbackUrl") ?? appRoutes.dashboard}
       />
 
       <p className="mt-6 text-center text-sm text-muted-foreground">

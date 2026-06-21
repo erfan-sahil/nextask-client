@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
-import { authRoutes } from "@/config/navigation";
+import { authRoutes, appRoutes } from "@/config/navigation";
 import { getMe } from "@/lib/api/auth";
 
 function AuthLayoutContent({ children }: { children: React.ReactNode }) {
@@ -28,7 +28,7 @@ function AuthLayoutContent({ children }: { children: React.ReactNode }) {
     }
 
     if (meQuery.data.isEmailVerified) {
-      router.replace("/");
+      router.replace(appRoutes.dashboard);
       return;
     }
 
