@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
-import { QueryProvider } from "@/components/providers/query-provider";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { siteConfig, siteTitle } from "@/config/site";
 import newIcon from "./new-icon.png";
@@ -82,9 +81,7 @@ export default function RootLayout({
             __html: `(function(){try{var t=localStorage.getItem("nextask-theme");if(t==="dark")document.documentElement.classList.add("dark");}catch(e){}})();`,
           }}
         />
-        <ThemeProvider>
-          <QueryProvider>{children}</QueryProvider>
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

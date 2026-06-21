@@ -1,0 +1,75 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { QueryProvider } from "@/components/providers/query-provider";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { authRoutes } from "@/config/navigation";
+import { getMe } from "@/lib/api/auth";
+
+function AuthLayoutContent({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const isGuestOnlyRoute =
+    pathname === authRoutes.login || pathname === authRoutes.register;
+
+  const meQuery = useQuery({
+    queryKey: ["me"],
+    queryFn: getMe,
+    retry: false,
+    enabled: isGuestOnlyRoute,
+  });
+
+  useEffect(() => {
+    if (!isGuestOnlyRoute || !meQuery.data) {
+      return;
+    }
+
+    if (meQuery.data.isEmailVerified) {
+      router.replace("/");
+      return;
+    }
+
+    router.replace(authRoutes.verifyEmail);
+  }, [isGuestOnlyRoute, meQuery.data, router]);
+
+  const isRedirecting = isGuestOnlyRoute && meQuery.isSuccess;
+
+  return (
+    <div className="relative flex min-h-svh flex-col overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        <div className="absolute -top-32 -right-24 size-[28rem] rounded-full bg-primary-light/50 blur-3xl dark:bg-primary/10" />
+        <div className="absolute -bottom-40 -left-32 size-96 rounded-full bg-primary/5 blur-3xl dark:bg-primary-light/20" />
+        <div className="absolute top-1/3 left-1/2 size-64 -translate-x-1/2 rounded-full bg-primary-light/30 blur-3xl dark:bg-primary/5" />
+      </div>
+
+      <div className="absolute top-4 right-4 z-20 sm:top-6 sm:right-6">
+        <ThemeToggle />
+      </div>
+
+      <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-12 sm:px-6 sm:py-16">
+        {isRedirecting ? (
+          <div
+            className="size-8 animate-spin rounded-full border-2 border-primary/30 border-t-primary"
+            aria-label="Redirecting"
+          />
+        ) : (
+          children
+        )}
+      </main>
+    </div>
+  );
+}
+
+export function AuthLayoutShell({ children }: { children: React.ReactNode }) {
+  return (
+    <QueryProvider>
+      <AuthLayoutContent>{children}</AuthLayoutContent>
+    </QueryProvider>
+  );
+}
