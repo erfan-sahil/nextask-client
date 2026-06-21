@@ -2,6 +2,9 @@ import type { ApiSuccessResponse } from "@/types/api";
 import type { AuthPayload, RegisterPayload, User } from "@/types/auth";
 import { apiClient } from "./client";
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001/api/v1";
+
 type LoginInput = {
   email: string;
   password: string;
@@ -60,4 +63,14 @@ export const getMe = async () => {
   );
 
   return data.data.user;
+};
+
+export const getGoogleAuthUrl = (callbackUrl?: string) => {
+  const url = new URL(`${API_BASE_URL}/auth/google`);
+
+  if (callbackUrl?.startsWith("/")) {
+    url.searchParams.set("callbackUrl", callbackUrl);
+  }
+
+  return url.toString();
 };

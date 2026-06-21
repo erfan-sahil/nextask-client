@@ -1,13 +1,14 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AuthAlert, AuthField } from "@/components/auth/auth-field";
+import { AuthDivider } from "@/components/auth/auth-divider";
+import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 import { AuthShell } from "@/components/auth/auth-shell";
-import { Button } from "@/components/ui/button";
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { authRoutes } from "@/config/navigation";
 import { login } from "@/lib/api/auth";
 import { getErrorMessage } from "@/lib/api/get-error-message";
@@ -105,17 +106,18 @@ export function LoginForm() {
           </AuthAlert>
         ) : null}
 
-        <Button
-          type="submit"
-          disabled={loginMutation.isPending}
-          className="h-11 w-full rounded-full text-sm font-semibold hover:bg-primary-hover"
-        >
-          {loginMutation.isPending ? "Signing in..." : "Sign in"}
-          {!loginMutation.isPending ? (
-            <ArrowRight data-icon="inline-end" aria-hidden />
-          ) : null}
-        </Button>
+        <AuthSubmitButton
+          isPending={loginMutation.isPending}
+          label="Sign in"
+          pendingLabel="Signing in..."
+        />
       </form>
+
+      <AuthDivider className="my-5" />
+
+      <GoogleSignInButton
+        callbackUrl={searchParams.get("callbackUrl") ?? undefined}
+      />
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}

@@ -1,13 +1,14 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AuthAlert, AuthField } from "@/components/auth/auth-field";
+import { AuthDivider } from "@/components/auth/auth-divider";
+import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 import { AuthShell } from "@/components/auth/auth-shell";
-import { Button } from "@/components/ui/button";
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { authRoutes } from "@/config/navigation";
 import { register } from "@/lib/api/auth";
 import { getErrorMessage } from "@/lib/api/get-error-message";
@@ -188,19 +189,16 @@ export function RegisterForm() {
           </AuthAlert>
         ) : null}
 
-        <Button
-          type="submit"
-          disabled={registerMutation.isPending}
-          className="h-11 w-full rounded-full text-sm font-semibold hover:bg-primary-hover"
-        >
-          {registerMutation.isPending
-            ? "Creating account..."
-            : "Create account"}
-          {!registerMutation.isPending ? (
-            <ArrowRight data-icon="inline-end" aria-hidden />
-          ) : null}
-        </Button>
+        <AuthSubmitButton
+          isPending={registerMutation.isPending}
+          label="Create account"
+          pendingLabel="Creating account..."
+        />
       </form>
+
+      <AuthDivider className="my-5" />
+
+      <GoogleSignInButton />
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
