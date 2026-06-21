@@ -62,7 +62,7 @@ export function useAuth(options: UseAuthOptions = {}) {
 
   return {
     user: userQuery.data,
-    isLoading: fetchUser ? userQuery.isLoading : false,
+    isLoading: fetchUser ? userQuery.isPending && !userQuery.data : false,
     isAuthenticated: Boolean(userQuery.data),
     isError: userQuery.isError,
     refetchUser: userQuery.refetch,

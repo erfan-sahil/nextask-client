@@ -1,22 +1,14 @@
-import { PUBLIC_ROUTES } from "@/lib/auth/public-routes";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  const isPublic = PUBLIC_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`),
-  );
-
-  if (isPublic) {
-    return NextResponse.next();
-  }
-
-  const loginUrl = new URL("/login", request.url);
-  loginUrl.searchParams.set("callbackUrl", pathname);
-
-  return NextResponse.redirect(loginUrl);
+/**
+ * Auth tokens live on the API origin (httpOnly cookies on the backend port).
+ * Next.js middleware cannot read those cookies, so server-side redirects here
+ * would always send users back to /login even after a successful sign-in.
+ * Protected routes are guarded client-side in AppShell via GET /auth/me.
+ */
+export function middleware(_request: NextRequest) {
+  return NextResponse.next();
 }
 
 export const config = {

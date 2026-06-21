@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppHeader } from "@/components/app/app-header";
 import { AppSidebar } from "@/components/app/app-sidebar";
-import { QueryProvider } from "@/components/providers/query-provider";
 import {
   Sheet,
   SheetContent,
@@ -69,9 +68,5 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  return (
-    <QueryProvider>
-      <AppShellContent>{children}</AppShellContent>
-    </QueryProvider>
-  );
+  return <AppShellContent>{children}</AppShellContent>;
 }
