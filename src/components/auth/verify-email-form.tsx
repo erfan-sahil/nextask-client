@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -14,6 +14,7 @@ const OTP_LENGTH = 6;
 
 export function VerifyEmailForm() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -26,8 +27,9 @@ export function VerifyEmailForm() {
 
   const verifyMutation = useMutation({
     mutationFn: verifyEmail,
-    onSuccess: () => {
-      router.push(appRoutes.dashboard);
+    onSuccess: (data) => {
+      queryClient.setQueryData(authQueryKeys.me, data.user);
+      router.replace(appRoutes.dashboard);
     },
   });
 
