@@ -1,11 +1,11 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { appRoutes, authRoutes } from "@/config/navigation";
+import { useAuth } from "@/hooks/use-auth";
 import { getMe, resendVerification, verifyEmail } from "@/lib/api/auth";
 import { getErrorMessage } from "@/lib/api/get-error-message";
 import { authQueryKeys } from "@/lib/api/query-keys";
@@ -15,6 +15,7 @@ const OTP_LENGTH = 6;
 export function VerifyEmailForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { logout, isLoggingOut } = useAuth({ fetchUser: false });
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -50,7 +51,7 @@ export function VerifyEmailForm() {
 
   useEffect(() => {
     if (meQuery.isError) {
-      router.replace("/register");
+      router.replace(authRoutes.register);
     }
   }, [meQuery.isError, router]);
 
@@ -209,12 +210,14 @@ export function VerifyEmailForm() {
               : "Resend verification code"}
         </button>
 
-        <Link
-          href="/register"
-          className="transition-colors hover:text-primary"
+        <button
+          type="button"
+          onClick={() => logout(authRoutes.register)}
+          disabled={isLoggingOut}
+          className="transition-colors hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Back to registration
-        </Link>
+          {isLoggingOut ? "Going back..." : "Back to registration"}
+        </button>
       </div>
     </AuthShell>
   );

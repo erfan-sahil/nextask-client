@@ -16,18 +16,20 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const { user, isLoading, isError } = useAuth();
+  const needsEmailVerification = Boolean(user && !user.isEmailVerified);
+
   useEffect(() => {
     if (isError) {
       router.replace(authRoutes.login);
       return;
     }
 
-    if (user && !user.isEmailVerified) {
+    if (needsEmailVerification) {
       router.replace(authRoutes.verifyEmail);
     }
-  }, [user, isError, router]);
+  }, [needsEmailVerification, isError, router]);
 
-  if (isLoading) {
+  if (isLoading || isError || !user || needsEmailVerification) {
     return (
       <div className="flex min-h-svh items-center justify-center bg-background">
         <div
@@ -36,10 +38,6 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
         />
       </div>
     );
-  }
-
-  if (isError || !user) {
-    return null;
   }
 
   return (

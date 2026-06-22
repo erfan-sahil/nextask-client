@@ -6,7 +6,7 @@ import { authRoutes } from "@/config/navigation";
 import {
   getMe,
   login,
-  logout,
+  logout as logoutRequest,
   register,
   type LoginInput,
   type RegisterInput,
@@ -53,12 +53,17 @@ export function useAuth(options: UseAuthOptions = {}) {
   });
 
   const logoutMutation = useMutation({
-    mutationFn: logout,
-    onSettled: () => {
-      clearUser();
-      router.replace(authRoutes.login);
-    },
+    mutationFn: logoutRequest,
   });
+
+  const logout = (redirectTo: string = authRoutes.login) => {
+    logoutMutation.mutate(undefined, {
+      onSettled: () => {
+        clearUser();
+        router.replace(redirectTo);
+      },
+    });
+  };
 
   return {
     user: userQuery.data,
@@ -78,7 +83,7 @@ export function useAuth(options: UseAuthOptions = {}) {
     isRegistering: registerMutation.isPending,
     registerError: registerMutation.error,
     resetRegister: registerMutation.reset,
-    logout: logoutMutation.mutate,
+    logout,
     isLoggingOut: logoutMutation.isPending,
   };
 }
