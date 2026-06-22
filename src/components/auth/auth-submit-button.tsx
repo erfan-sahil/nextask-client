@@ -6,6 +6,7 @@ type AuthSubmitButtonProps = {
   label: string;
   pendingLabel: string;
   className?: string;
+  disabled?: boolean;
 };
 
 export function AuthSubmitButton({
@@ -13,11 +14,12 @@ export function AuthSubmitButton({
   label,
   pendingLabel,
   className,
+  disabled,
 }: AuthSubmitButtonProps) {
   return (
     <Button
       type="submit"
-      disabled={isPending}
+      disabled={isPending || disabled}
       className={cn(
         "h-11 w-full rounded-full px-6 text-sm font-semibold hover:bg-primary-hover",
         className,

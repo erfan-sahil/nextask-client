@@ -17,6 +17,7 @@ export type AuthPayload = {
   accessToken: string;
 };
 
-export type RegisterPayload = AuthPayload & {
+export type RegisterPayload = {
+  email: string;
   verificationEmailSent: boolean;
 };

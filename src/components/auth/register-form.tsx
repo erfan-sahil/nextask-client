@@ -10,6 +10,7 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { authRoutes } from "@/config/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { setPendingVerificationEmail } from "@/lib/auth/pending-verification";
 import {
   getAuthFormErrors,
   getErrorMessage,
@@ -73,7 +74,8 @@ export function RegisterForm() {
         password: result.data.password,
       },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
+          setPendingVerificationEmail(data.email);
           router.push(authRoutes.verifyEmail);
         },
         onError: (error) => {

@@ -47,9 +47,6 @@ export function useAuth(options: UseAuthOptions = {}) {
 
   const registerMutation = useMutation({
     mutationFn: register,
-    onSuccess: (data) => {
-      setUser(data.user);
-    },
   });
 
   const logoutMutation = useMutation({

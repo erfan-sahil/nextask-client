@@ -1,12 +1,16 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 import { appRoutes, authRoutes } from "@/config/navigation";
-import { useAuth } from "@/hooks/use-auth";
-import { getMe, resendVerification, verifyEmail } from "@/lib/api/auth";
+import {
+  clearPendingVerificationEmail,
+  getPendingVerificationEmail,
+} from "@/lib/auth/pending-verification";
+import { resendVerification, verifyEmail } from "@/lib/api/auth";
 import { getErrorMessage } from "@/lib/api/get-error-message";
 import { authQueryKeys } from "@/lib/api/query-keys";
 
@@ -15,20 +19,26 @@ const OTP_LENGTH = 6;
 export function VerifyEmailForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { logout, isLoggingOut } = useAuth({ fetchUser: false });
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [email, setEmail] = useState<string | null>(null);
 
-  const meQuery = useQuery({
-    queryKey: authQueryKeys.me,
-    queryFn: getMe,
-    retry: false,
-  });
+  useEffect(() => {
+    const pendingEmail = getPendingVerificationEmail();
+
+    if (!pendingEmail) {
+      router.replace(authRoutes.register);
+      return;
+    }
+
+    setEmail(pendingEmail);
+  }, [router]);
 
   const verifyMutation = useMutation({
     mutationFn: verifyEmail,
     onSuccess: (data) => {
+      clearPendingVerificationEmail();
       queryClient.setQueryData(authQueryKeys.me, data.user);
       router.replace(appRoutes.dashboard);
     },
@@ -48,18 +58,6 @@ export function VerifyEmailForm() {
       }
     },
   });
-
-  useEffect(() => {
-    if (meQuery.isError) {
-      router.replace(authRoutes.register);
-    }
-  }, [meQuery.isError, router]);
-
-  useEffect(() => {
-    if (meQuery.data?.isEmailVerified) {
-      router.replace(appRoutes.dashboard);
-    }
-  }, [meQuery.data, router]);
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -89,7 +87,7 @@ export function VerifyEmailForm() {
 
   const handleKeyDown = (
     index: number,
-    event: React.KeyboardEvent<HTMLInputElement>
+    event: React.KeyboardEvent<HTMLInputElement>,
   ) => {
     if (event.key === "Backspace" && !digits[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
@@ -118,17 +116,22 @@ export function VerifyEmailForm() {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (otp.length !== OTP_LENGTH) return;
+    if (!email || otp.length !== OTP_LENGTH) return;
 
-    verifyMutation.mutate({ otp });
+    verifyMutation.mutate({ email, otp });
   };
 
-  if (meQuery.isLoading) {
+  const handleBackToRegistration = () => {
+    clearPendingVerificationEmail();
+    router.replace(authRoutes.register);
+  };
+
+  if (!email) {
     return (
       <AuthShell
         badge="Email verification"
-        title="Checking your session"
-        description="Please wait while we load your account."
+        title="Loading verification"
+        description="Please wait while we prepare your verification session."
       >
         <div className="flex justify-center py-8">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -137,15 +140,11 @@ export function VerifyEmailForm() {
     );
   }
 
-  if (meQuery.isError || !meQuery.data) {
-    return null;
-  }
-
   return (
     <AuthShell
       badge="Email verification"
       title="Verify your email"
-      description={`Enter the 6-digit code we sent to ${meQuery.data.email}.`}
+      description={`Enter the 6-digit code we sent to ${email}. Your account will be created after verification.`}
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="flex justify-center gap-2 sm:gap-3">
@@ -187,19 +186,18 @@ export function VerifyEmailForm() {
           </p>
         ) : null}
 
-        <button
-          type="submit"
-          disabled={verifyMutation.isPending || otp.length !== OTP_LENGTH}
-          className="w-full rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          {verifyMutation.isPending ? "Verifying..." : "Verify email"}
-        </button>
+        <AuthSubmitButton
+          isPending={verifyMutation.isPending}
+          disabled={otp.length !== OTP_LENGTH}
+          label="Verify email"
+          pendingLabel="Verifying..."
+        />
       </form>
 
-      <div className="mt-6 flex flex-col items-center gap-3 text-sm text-muted">
+      <div className="mt-6 flex flex-col items-center gap-3 text-sm text-muted-foreground">
         <button
           type="button"
-          onClick={() => resendMutation.mutate()}
+          onClick={() => resendMutation.mutate({ email })}
           disabled={resendMutation.isPending || resendCooldown > 0}
           className="font-medium text-primary transition-colors hover:text-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
         >
@@ -212,11 +210,10 @@ export function VerifyEmailForm() {
 
         <button
           type="button"
-          onClick={() => logout(authRoutes.register)}
-          disabled={isLoggingOut}
-          className="transition-colors hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+          onClick={handleBackToRegistration}
+          className="font-medium text-muted-foreground transition-colors hover:text-primary"
         >
-          {isLoggingOut ? "Going back..." : "Back to registration"}
+          Back to registration
         </button>
       </div>
     </AuthShell>

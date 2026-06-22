@@ -10,6 +10,7 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { authRoutes, appRoutes } from "@/config/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { setPendingVerificationEmail } from "@/lib/auth/pending-verification";
 import { getErrorMessage } from "@/lib/api/get-error-message";
 import { getFieldErrors, loginFormSchema } from "@/lib/validation/auth-schemas";
 
@@ -55,17 +56,20 @@ export function LoginForm() {
       },
       {
         onSuccess: (data) => {
-          if (!data.user.isEmailVerified) {
-            router.push(authRoutes.verifyEmail);
-            return;
-          }
-
           const callbackUrl = searchParams.get("callbackUrl");
           router.push(
             callbackUrl && callbackUrl.startsWith("/")
               ? callbackUrl
               : appRoutes.dashboard,
           );
+        },
+        onError: (error) => {
+          const message = getErrorMessage(error);
+
+          if (message.toLowerCase().includes("verify your email")) {
+            setPendingVerificationEmail(email.toLowerCase());
+            router.push(authRoutes.verifyEmail);
+          }
         },
       },
     );

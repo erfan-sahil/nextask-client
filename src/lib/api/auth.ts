@@ -16,7 +16,12 @@ export type RegisterInput = {
 };
 
 type VerifyEmailInput = {
+  email: string;
   otp: string;
+};
+
+type ResendVerificationInput = {
+  email: string;
 };
 
 export const login = async (input: LoginInput) => {
@@ -50,7 +55,7 @@ export const logout = async () => {
 };
 
 export const verifyEmail = async (input: VerifyEmailInput) => {
-  const { data } = await apiClient.post<ApiSuccessResponse<{ user: User }>>(
+  const { data } = await apiClient.post<ApiSuccessResponse<AuthPayload>>(
     "/auth/verify-email",
     input,
   );
@@ -58,10 +63,10 @@ export const verifyEmail = async (input: VerifyEmailInput) => {
   return data.data;
 };
 
-export const resendVerification = async () => {
-  const { data } = await apiClient.post<ApiSuccessResponse<{ user: User }>>(
-    "/auth/resend-verification",
-  );
+export const resendVerification = async (input: ResendVerificationInput) => {
+  const { data } = await apiClient.post<
+    ApiSuccessResponse<{ email: string }>
+  >("/auth/resend-verification", input);
 
   return data.data;
 };
