@@ -5,7 +5,6 @@ import {
   FolderKanban,
   Inbox,
   LayoutDashboard,
-  Layers,
   Plus,
   Settings,
 } from "lucide-react";
@@ -23,20 +22,27 @@ type AppSidebarProps = {
   onNavigate?: () => void;
 };
 
+/** Small colored letter badge for project items */
+const PROJECT_ACCENTS = [
+  "bg-primary/15 text-primary",
+  "bg-chart-2/20 text-chart-2",
+  "bg-chart-3/20 text-chart-3",
+  "bg-chart-4/20 text-chart-4",
+  "bg-chart-5/20 text-chart-5",
+];
+
 function NavLink({
   href,
   icon: Icon,
   label,
   active,
   onClick,
-  indent = false,
 }: {
   href: string;
   icon: React.ElementType;
   label: string;
   active?: boolean;
   onClick?: () => void;
-  indent?: boolean;
 }) {
   return (
     <Link
@@ -44,7 +50,6 @@ function NavLink({
       onClick={onClick}
       className={cn(
         "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
-        indent && "pl-9",
         active
           ? "bg-sidebar-accent text-sidebar-accent-foreground"
           : "text-sidebar-foreground hover:bg-sidebar-accent/60",
@@ -59,17 +64,25 @@ function NavLink({
 export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
   const pathname = usePathname();
 
+  // Derive active workspace from URL, falling back to the first workspace
   const pathSegments = pathname.split("/").filter(Boolean);
   const firstSegment = pathSegments[0] ?? "";
-  const workspaceSlug = !reservedAppSegments.has(firstSegment) ? firstSegment : null;
-  const activeWorkspace = workspaceSlug
-    ? mockWorkspaces.find((w) => w.slug === workspaceSlug)
-    : null;
+  const slugFromUrl = !reservedAppSegments.has(firstSegment) ? firstSegment : null;
+  const activeWorkspace =
+    (slugFromUrl ? mockWorkspaces.find((w) => w.slug === slugFromUrl) : null) ??
+    mockWorkspaces[0];
+
   const workspaceProjects = activeWorkspace
     ? mockProjects.filter((p) => p.workspaceId === activeWorkspace.id)
     : [];
 
-  const activeProjectId = pathSegments[2]; // /{slug}/projects/{projectId}
+  const allProjectsHref = activeWorkspace
+    ? appRoutes.workspace(activeWorkspace.slug)
+    : appRoutes.workspaces;
+
+  const isAllProjectsActive =
+    pathname === allProjectsHref ||
+    (!!activeWorkspace && pathname === `/${activeWorkspace.slug}`);
 
   return (
     <aside
@@ -79,16 +92,15 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
       )}
     >
       {/* Logo */}
-      <div className="flex h-14 items-center border-b border-sidebar-border px-4">
+      <div className="flex h-14 shrink-0 items-center border-b border-sidebar-border px-4">
         <SiteLogo size="sm" />
       </div>
 
-      <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
+      {/* Scrollable body */}
+      <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-3">
         {/* Workspace Switcher */}
         <div className="mb-2">
-          <WorkspaceSwitcher
-            activeWorkspaceId={activeWorkspace?.id ?? mockWorkspaces[0]?.id}
-          />
+          <WorkspaceSwitcher activeWorkspaceId={activeWorkspace?.id} />
         </div>
 
         {/* Main Nav */}
@@ -101,16 +113,16 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
             onClick={onNavigate}
           />
           <NavLink
-            href={appRoutes.workspaces}
-            icon={Layers}
-            label="All Workspaces"
-            active={pathname === appRoutes.workspaces}
+            href={allProjectsHref}
+            icon={FolderKanban}
+            label="All Projects"
+            active={isAllProjectsActive}
             onClick={onNavigate}
           />
         </nav>
 
-        {/* Workspace-scoped Projects */}
-        {activeWorkspace && workspaceProjects.length > 0 && (
+        {/* Projects list for current workspace */}
+        {workspaceProjects.length > 0 && (
           <div className="mt-3">
             <Separator className="mb-3" />
             <div className="mb-1.5 flex items-center justify-between px-3">
@@ -125,11 +137,14 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
                 <Plus className="size-3.5" />
               </button>
             </div>
+
             <nav className="space-y-0.5" aria-label="Project navigation">
-              {workspaceProjects.map((project) => {
-                const href = appRoutes.project(activeWorkspace.slug, project.id);
+              {workspaceProjects.map((project, idx) => {
+                const href = appRoutes.project(activeWorkspace!.slug, project.id);
                 const isActive =
                   pathname === href || pathname.startsWith(href + "/");
+                const accentClass = PROJECT_ACCENTS[idx % PROJECT_ACCENTS.length];
+
                 return (
                   <Link
                     key={project.id}
@@ -145,10 +160,7 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
                     <span
                       className={cn(
                         "flex size-5 shrink-0 items-center justify-center rounded text-[0.6rem] font-bold",
-                        project.color
-                          .replace("border-", "")
-                          .split(" ")
-                          .find((c) => c.startsWith("bg-")) ?? "bg-primary/10 text-primary",
+                        accentClass,
                       )}
                     >
                       {project.name.slice(0, 1).toUpperCase()}
@@ -165,9 +177,9 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
         )}
       </div>
 
-      {/* Footer */}
-      <div className="border-t border-sidebar-border p-3">
-        <nav className="space-y-0.5 mb-3" aria-label="Footer navigation">
+      {/* Footer — pinned to bottom */}
+      <div className="shrink-0 border-t border-sidebar-border p-3">
+        <nav className="mb-3 space-y-0.5" aria-label="Footer navigation">
           <NavLink
             href={appRoutes.inbox}
             icon={Inbox}

@@ -41,7 +41,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-svh bg-background">
+    <div className="flex h-svh overflow-hidden bg-background">
       <AppSidebar className="hidden lg:flex" />
 
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
