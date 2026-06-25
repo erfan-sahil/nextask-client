@@ -82,7 +82,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
                   Due {formatDueDate(project.dueDate)}
                 </p>
                 <Link
-                  href={appRoutes.boards}
+                  href={appRoutes.workspaces}
                   className="inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary-hover"
                 >
                   View boards

@@ -32,9 +32,15 @@ export type BoardColumn = {
 export type Board = {
   id: string;
   name: string;
+  projectId: string;
   projectName: string;
   workspaceName: string;
+  description?: string;
   columns: BoardColumn[];
+};
+
+export type BoardMeta = Omit<Board, "columns"> & {
+  taskCount: number;
 };
 
 export type Project = {

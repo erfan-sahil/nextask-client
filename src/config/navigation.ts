@@ -25,12 +25,26 @@ export const authRoutes = {
 
 export const appRoutes = {
   dashboard: "/dashboard",
-  workspaces: "/dashboard#workspaces",
-  projects: "/dashboard#projects",
-  boards: "/dashboard#boards",
-  tasks: "/dashboard#tasks",
-  comments: "/dashboard#comments",
+  workspaces: "/workspaces",
+  workspace: (slug: string) => `/${slug}`,
+  project: (slug: string, projectId: string) => `/${slug}/projects/${projectId}`,
+  board: (slug: string, projectId: string, boardId: string) =>
+    `/${slug}/projects/${projectId}/boards/${boardId}`,
+  settings: "/settings",
+  inbox: "/inbox",
 } as const;
+
+/** Segments that are app-level routes, not workspace slugs */
+export const reservedAppSegments = new Set([
+  "dashboard",
+  "workspaces",
+  "settings",
+  "inbox",
+  "login",
+  "register",
+  "verify-email",
+  "theme-preview",
+]);
 
 export type AppNavItem = {
   href: string;
@@ -42,9 +56,6 @@ export type AppNavItem = {
 export const appNavItems: AppNavItem[] = [
   { href: appRoutes.dashboard, label: "Dashboard", icon: "dashboard", section: "main" },
   { href: appRoutes.workspaces, label: "Workspaces", icon: "workspaces", section: "main" },
-  { href: appRoutes.projects, label: "Projects", icon: "projects", section: "workspace" },
-  { href: appRoutes.boards, label: "Boards", icon: "boards", section: "workspace" },
-  { href: appRoutes.tasks, label: "Tasks", icon: "tasks", section: "workspace" },
-  { href: "/dashboard#inbox", label: "Inbox", icon: "inbox", section: "workspace" },
-  { href: "/dashboard#settings", label: "Settings", icon: "settings", section: "footer" },
+  { href: appRoutes.inbox, label: "Inbox", icon: "inbox", section: "footer" },
+  { href: appRoutes.settings, label: "Settings", icon: "settings", section: "footer" },
 ];

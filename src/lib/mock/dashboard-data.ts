@@ -1,6 +1,7 @@
 import type {
   ActivityItem,
   Board,
+  BoardMeta,
   Comment,
   DashboardStats,
   Project,
@@ -87,9 +88,67 @@ export const mockProjects: Project[] = [
   },
 ];
 
+export const mockBoards: BoardMeta[] = [
+  {
+    id: "board-1",
+    name: "Sprint Board",
+    projectId: "proj-1",
+    projectName: "Platform Q2 Roadmap",
+    workspaceName: "Engineering",
+    description: "Active sprint tracking for Q2 milestones.",
+    taskCount: 7,
+  },
+  {
+    id: "board-2",
+    name: "Backlog",
+    projectId: "proj-1",
+    projectName: "Platform Q2 Roadmap",
+    workspaceName: "Engineering",
+    description: "Unscheduled tasks and feature requests.",
+    taskCount: 17,
+  },
+  {
+    id: "board-3",
+    name: "Bug Tracker",
+    projectId: "proj-2",
+    projectName: "Workspace Onboarding",
+    workspaceName: "Engineering",
+    description: "Reported bugs and hotfixes.",
+    taskCount: 5,
+  },
+  {
+    id: "board-4",
+    name: "Onboarding Tasks",
+    projectId: "proj-2",
+    projectName: "Workspace Onboarding",
+    workspaceName: "Engineering",
+    description: "First-run experience tasks.",
+    taskCount: 9,
+  },
+  {
+    id: "board-5",
+    name: "Component Tracker",
+    projectId: "proj-3",
+    projectName: "Design System v2",
+    workspaceName: "Design Studio",
+    description: "Status of all v2 components.",
+    taskCount: 18,
+  },
+  {
+    id: "board-6",
+    name: "Content Calendar",
+    projectId: "proj-4",
+    projectName: "Launch Campaign",
+    workspaceName: "Marketing",
+    description: "Scheduled content and assets.",
+    taskCount: 12,
+  },
+];
+
 export const mockBoard: Board = {
   id: "board-1",
   name: "Sprint Board",
+  projectId: "proj-1",
   projectName: "Platform Q2 Roadmap",
   workspaceName: "Engineering",
   columns: [

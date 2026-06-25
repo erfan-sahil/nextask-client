@@ -56,7 +56,7 @@ export function WorkspaceGrid({ workspaces }: WorkspaceGridProps) {
                 {workspace.projectCount} active projects
               </p>
               <Link
-                href={appRoutes.projects}
+                href={appRoutes.workspace(workspace.slug)}
                 className="inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary-hover"
               >
                 Open
