@@ -26,7 +26,10 @@ function Breadcrumb({
 }) {
   return (
     <nav className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground">
-      <Link href={appRoutes.workspaces} className="hover:text-foreground transition-colors">
+      <Link
+        href={appRoutes.workspaces}
+        className="hover:text-foreground transition-colors"
+      >
         Workspaces
       </Link>
       <ChevronRight className="size-3.5" />
@@ -96,7 +99,7 @@ export function ProjectPage({ workspace, project }: ProjectPageProps) {
       : Math.round((project.completedTaskCount / project.taskCount) * 100);
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-8">
+    <div className="px-4 py-6 sm:px-6">
       <Breadcrumb workspace={workspace} project={project} />
 
       {/* Project Header */}
@@ -114,7 +117,9 @@ export function ProjectPage({ workspace, project }: ProjectPageProps) {
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
               {project.name}
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">{project.description}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {project.description}
+            </p>
           </div>
         </div>
 
@@ -122,7 +127,9 @@ export function ProjectPage({ workspace, project }: ProjectPageProps) {
         <div className="mt-5 flex flex-wrap items-center gap-5">
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <Columns3 className="size-4" />
-            <span>{boards.length} board{boards.length !== 1 ? "s" : ""}</span>
+            <span>
+              {boards.length} board{boards.length !== 1 ? "s" : ""}
+            </span>
           </div>
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <CheckCircle2 className="size-4" />
@@ -193,7 +200,9 @@ export function ProjectPage({ workspace, project }: ProjectPageProps) {
       {boards.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border py-16 text-center">
           <Columns3 className="mb-3 size-10 text-muted-foreground/50" />
-          <p className="text-sm font-medium text-muted-foreground">No boards yet</p>
+          <p className="text-sm font-medium text-muted-foreground">
+            No boards yet
+          </p>
           <p className="mt-1 text-xs text-muted-foreground">
             Create a board to start organizing tasks.
           </p>

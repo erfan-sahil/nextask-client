@@ -55,17 +55,26 @@ const statusColors: Record<TaskStatus, string> = {
 function PriorityIcon({ priority }: { priority: TaskPriority }) {
   const config = priorityConfig[priority];
   const Icon = config.icon;
-  return <Icon className={cn("size-3.5", config.className)} aria-label={config.label} />;
+  return (
+    <Icon
+      className={cn("size-3.5", config.className)}
+      aria-label={config.label}
+    />
+  );
 }
 
 function TaskCard({ task }: { task: Task }) {
   const isOverdue =
-    task.dueDate && task.status !== "done" && new Date(task.dueDate) < new Date();
+    task.dueDate &&
+    task.status !== "done" &&
+    new Date(task.dueDate) < new Date();
 
   return (
     <div className="group rounded-xl border border-border bg-background p-3 shadow-sm transition-all hover:border-primary/30 hover:shadow-md cursor-pointer">
       {/* Title */}
-      <p className="text-sm font-medium text-foreground leading-snug">{task.title}</p>
+      <p className="text-sm font-medium text-foreground leading-snug">
+        {task.title}
+      </p>
 
       {/* Meta row */}
       <div className="mt-2.5 flex items-center gap-2">
@@ -107,8 +116,12 @@ function KanbanColumn({ column }: { column: BoardColumn }) {
     <div className="flex w-72 shrink-0 flex-col gap-3">
       {/* Column header */}
       <div className="flex items-center gap-2 px-1">
-        <span className={cn("size-2 rounded-full", statusColors[column.status])} />
-        <span className="text-sm font-semibold text-foreground">{column.title}</span>
+        <span
+          className={cn("size-2 rounded-full", statusColors[column.status])}
+        />
+        <span className="text-sm font-semibold text-foreground">
+          {column.title}
+        </span>
         <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
           {column.tasks.length}
         </span>
@@ -165,7 +178,10 @@ function Breadcrumb({
 }) {
   return (
     <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
-      <Link href={appRoutes.workspaces} className="hover:text-foreground transition-colors">
+      <Link
+        href={appRoutes.workspaces}
+        className="hover:text-foreground transition-colors"
+      >
         Workspaces
       </Link>
       <ChevronRight className="size-3.5" />
@@ -195,17 +211,22 @@ type BoardPageProps = {
 };
 
 export function BoardPage({ workspace, project, board }: BoardPageProps) {
-  const totalTasks = board.columns.reduce((acc, col) => acc + col.tasks.length, 0);
+  const totalTasks = board.columns.reduce(
+    (acc, col) => acc + col.tasks.length,
+    0,
+  );
 
   return (
     <div className="flex flex-col">
       {/* Top bar */}
-      <div className="sticky top-0 z-10 border-b border-border bg-background px-6 py-4">
+      <div className="sticky top-0 z-10 border-b border-border bg-background px-4 py-4 sm:px-6">
         <Breadcrumb workspace={workspace} project={project} board={board} />
         <div className="mt-3 flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-foreground">{board.name}</h1>
-            <p className="mt-0.5 text-xs text-muted-foreground">{totalTasks} tasks</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {totalTasks} tasks
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -227,7 +248,7 @@ export function BoardPage({ workspace, project, board }: BoardPageProps) {
 
       {/* Kanban scroll area */}
       <div className="overflow-x-auto">
-        <div className="flex gap-4 p-6" style={{ minWidth: "max-content" }}>
+        <div className="flex gap-4 px-4 py-4 sm:px-6" style={{ minWidth: "max-content" }}>
           {board.columns.map((column) => (
             <KanbanColumn key={column.id} column={column} />
           ))}

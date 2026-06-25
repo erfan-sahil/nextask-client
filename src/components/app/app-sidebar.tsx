@@ -92,7 +92,7 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
       )}
     >
       {/* Logo */}
-      <div className="flex h-14 shrink-0 items-center border-b border-sidebar-border px-4">
+      <div className="flex h-16 shrink-0 items-center border-b border-border px-4">
         <SiteLogo size="sm" />
       </div>
 

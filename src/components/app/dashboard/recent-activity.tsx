@@ -28,11 +28,8 @@ const activityTones = {
 export function RecentActivity({ activity }: RecentActivityProps) {
   return (
     <section aria-label="Recent activity">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold tracking-tight">Recent activity</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Latest updates across your workspace.
-        </p>
+      <div className="mb-3">
+        <h3 className="text-sm font-semibold text-foreground">Recent activity</h3>
       </div>
 
       <div className="rounded-2xl border border-border bg-card shadow-sm">

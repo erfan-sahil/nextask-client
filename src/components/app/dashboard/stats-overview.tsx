@@ -50,21 +50,21 @@ export function StatsOverview({ stats }: StatsOverviewProps) {
               key={item.key}
               className="rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm text-muted-foreground">{item.label}</p>
-                  <p className="mt-2 text-3xl font-bold tracking-tight">
-                    {stats[item.key]}
-                  </p>
-                </div>
+              <div className="flex items-center justify-between gap-3">
                 <span
                   className={cn(
-                    "flex size-10 items-center justify-center rounded-xl",
+                    "flex size-9 items-center justify-center rounded-xl",
                     item.tone,
                   )}
                 >
-                  <Icon className="size-5" aria-hidden />
+                  <Icon className="size-4" aria-hidden />
                 </span>
+                <div className="text-right">
+                  <p className="text-2xl font-bold tracking-tight">
+                    {stats[item.key]}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{item.label}</p>
+                </div>
               </div>
             </article>
           );

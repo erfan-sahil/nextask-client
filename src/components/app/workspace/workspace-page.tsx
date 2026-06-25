@@ -38,8 +38,7 @@ function ProjectCard({
       ? 0
       : Math.round((project.completedTaskCount / project.taskCount) * 100);
 
-  const isOverdue =
-    project.dueDate && new Date(project.dueDate) < new Date();
+  const isOverdue = project.dueDate && new Date(project.dueDate) < new Date();
 
   return (
     <Link
@@ -68,10 +67,15 @@ function ProjectCard({
 
       <div>
         <div className="mb-1.5 flex items-center justify-between text-xs text-muted-foreground">
-          <span>{project.completedTaskCount}/{project.taskCount} tasks</span>
+          <span>
+            {project.completedTaskCount}/{project.taskCount} tasks
+          </span>
           <span className="font-medium text-foreground">{pct}%</span>
         </div>
-        <ProgressBar value={project.completedTaskCount} max={project.taskCount} />
+        <ProgressBar
+          value={project.completedTaskCount}
+          max={project.taskCount}
+        />
       </div>
 
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -110,7 +114,7 @@ export function WorkspacePage({ workspace }: WorkspacePageProps) {
   const projects = mockProjects.filter((p) => p.workspaceId === workspace.id);
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-8">
+    <div className="px-4 py-6 sm:px-6">
       {/* Workspace Header */}
       <div className="mb-8">
         <div className="flex items-center gap-4">
@@ -126,7 +130,9 @@ export function WorkspacePage({ workspace }: WorkspacePageProps) {
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
               {workspace.name}
             </h1>
-            <p className="text-sm text-muted-foreground">{workspace.description}</p>
+            <p className="text-sm text-muted-foreground">
+              {workspace.description}
+            </p>
           </div>
         </div>
 
@@ -177,7 +183,9 @@ export function WorkspacePage({ workspace }: WorkspacePageProps) {
       {projects.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border py-16 text-center">
           <FolderKanban className="mb-3 size-10 text-muted-foreground/50" />
-          <p className="text-sm font-medium text-muted-foreground">No projects yet</p>
+          <p className="text-sm font-medium text-muted-foreground">
+            No projects yet
+          </p>
           <p className="mt-1 text-xs text-muted-foreground">
             Create your first project to start tracking work.
           </p>

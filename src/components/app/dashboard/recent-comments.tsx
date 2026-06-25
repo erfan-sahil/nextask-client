@@ -9,11 +9,8 @@ type RecentCommentsProps = {
 export function RecentComments({ comments }: RecentCommentsProps) {
   return (
     <section id="comments" className="scroll-mt-24" aria-label="Recent comments">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold tracking-tight">Recent comments</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Conversations happening on tasks right now.
-        </p>
+      <div className="mb-3">
+        <h3 className="text-sm font-semibold text-foreground">Recent comments</h3>
       </div>
 
       <div className="rounded-2xl border border-border bg-card shadow-sm">

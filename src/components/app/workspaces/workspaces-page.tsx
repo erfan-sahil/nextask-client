@@ -49,7 +49,7 @@ function WorkspaceCard({ workspace }: { workspace: Workspace }) {
 
 export function WorkspacesPage() {
   return (
-    <div className="mx-auto max-w-5xl px-6 py-8">
+    <div className="px-4 py-6 sm:px-6">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
@@ -57,7 +57,8 @@ export function WorkspacesPage() {
             Workspaces
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {mockWorkspaces.length} workspace{mockWorkspaces.length !== 1 ? "s" : ""} you&apos;re part of
+            {mockWorkspaces.length} workspace
+            {mockWorkspaces.length !== 1 ? "s" : ""} you&apos;re part of
           </p>
         </div>
         <button
