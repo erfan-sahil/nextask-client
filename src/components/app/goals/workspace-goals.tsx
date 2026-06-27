@@ -303,14 +303,11 @@ function GoalCard({
 
           {/* More actions */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground"
-                aria-label="More options"
-              >
-                <MoreHorizontal className="size-4" />
-              </button>
+            <DropdownMenuTrigger
+              className="rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground"
+              aria-label="More options"
+            >
+              <MoreHorizontal className="size-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuItem
