@@ -27,6 +27,9 @@ export const appRoutes = {
   dashboard: "/dashboard",
   workspaces: "/workspaces",
   workspace: (slug: string) => `/${slug}`,
+  workspaceCalendar: (slug: string) => `/${slug}/calendar`,
+  workspaceMembers: (slug: string) => `/${slug}/members`,
+  workspaceReports: (slug: string) => `/${slug}/reports`,
   project: (slug: string, projectId: string) => `/${slug}/projects/${projectId}`,
   board: (slug: string, projectId: string, boardId: string) =>
     `/${slug}/projects/${projectId}/boards/${boardId}`,

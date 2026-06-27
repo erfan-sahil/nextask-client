@@ -1,12 +1,15 @@
 "use client";
 
 import {
+  BarChart3,
+  CalendarDays,
   ChevronRight,
   FolderKanban,
   Inbox,
   LayoutDashboard,
   Plus,
   Settings,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -120,6 +123,41 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
             onClick={onNavigate}
           />
         </nav>
+
+        {/* Workspace Nav */}
+        {activeWorkspace && (
+          <div className="mt-3">
+            <Separator className="mb-3" />
+            <div className="mb-1.5 px-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Workspace
+              </p>
+            </div>
+            <nav className="space-y-0.5" aria-label="Workspace navigation">
+              <NavLink
+                href={appRoutes.workspaceCalendar(activeWorkspace.slug)}
+                icon={CalendarDays}
+                label="Calendar"
+                active={pathname === appRoutes.workspaceCalendar(activeWorkspace.slug)}
+                onClick={onNavigate}
+              />
+              <NavLink
+                href={appRoutes.workspaceMembers(activeWorkspace.slug)}
+                icon={Users}
+                label="Members"
+                active={pathname === appRoutes.workspaceMembers(activeWorkspace.slug)}
+                onClick={onNavigate}
+              />
+              <NavLink
+                href={appRoutes.workspaceReports(activeWorkspace.slug)}
+                icon={BarChart3}
+                label="Reports"
+                active={pathname === appRoutes.workspaceReports(activeWorkspace.slug)}
+                onClick={onNavigate}
+              />
+            </nav>
+          </div>
+        )}
 
         {/* Projects list for current workspace */}
         {workspaceProjects.length > 0 && (

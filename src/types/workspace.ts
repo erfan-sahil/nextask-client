@@ -83,3 +83,17 @@ export type DashboardStats = {
   dueThisWeek: number;
   teamMembers: number;
 };
+
+export type MemberRole = "owner" | "admin" | "member" | "viewer";
+
+export type Member = {
+  id: string;
+  workspaceId: string;
+  name: string;
+  email: string;
+  initials: string;
+  role: MemberRole;
+  avatarColor: string;
+  joinedAt: string;
+  projectIds: string[];
+};
