@@ -1,20 +1,31 @@
 "use client";
 
 import {
-  ArrowRight,
   Calendar,
   CheckCircle2,
+  ExternalLink,
   FolderKanban,
   LayoutGrid,
+  MoreHorizontal,
+  Pencil,
   Plus,
+  Trash2,
   TrendingUp,
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { appRoutes } from "@/config/navigation";
 import { mockProjects } from "@/lib/mock/dashboard-data";
 import { cn } from "@/lib/utils";
 import type { Project, Workspace } from "@/types/workspace";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // ─── Stat chip ──────────────────────────────────────────────────────────────
 
@@ -70,6 +81,9 @@ function ProjectCard({
   project: Project;
   workspaceSlug: string;
 }) {
+  const router = useRouter();
+  const href = appRoutes.project(workspaceSlug, project.id);
+
   const pct =
     project.taskCount === 0
       ? 0
@@ -79,10 +93,7 @@ function ProjectCard({
   const isComplete = pct === 100;
 
   return (
-    <Link
-      href={appRoutes.project(workspaceSlug, project.id)}
-      className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 transition-all duration-200 hover:border-primary/30 hover:shadow-lg hover:-translate-y-0.5"
-    >
+    <div className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 transition-all duration-200 hover:border-primary/30 hover:shadow-lg hover:-translate-y-0.5">
       {/* Header */}
       <div className="flex items-start gap-3">
         <div
@@ -93,15 +104,40 @@ function ProjectCard({
         >
           {project.name.slice(0, 1)}
         </div>
-        <div className="min-w-0 flex-1">
+        <Link href={href} className="min-w-0 flex-1">
           <h3 className="truncate text-sm font-semibold text-foreground transition-colors group-hover:text-primary">
             {project.name}
           </h3>
           <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
             {project.description}
           </p>
-        </div>
-        <ArrowRight className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+        </Link>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            onClick={(e) => e.stopPropagation()}
+            className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100"
+          >
+            <MoreHorizontal className="size-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem
+              className="gap-2 text-xs"
+              onClick={() => router.push(href)}
+            >
+              <ExternalLink className="size-3.5" />
+              Open project
+            </DropdownMenuItem>
+            <DropdownMenuItem className="gap-2 text-xs">
+              <Pencil className="size-3.5" />
+              Edit project
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="gap-2 text-xs text-destructive focus:text-destructive">
+              <Trash2 className="size-3.5" />
+              Delete project
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Divider */}
@@ -167,7 +203,7 @@ function ProjectCard({
           {isComplete ? "Done" : `${pct}% done`}
         </span>
       </div>
-    </Link>
+    </div>
   );
 }
 

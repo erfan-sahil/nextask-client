@@ -13,13 +13,13 @@ import type {
 export const mockWorkspaces: Workspace[] = [
   {
     id: "ws-1",
-    name: "Engineering",
-    slug: "engineering",
-    description: "Platform, infrastructure, and product engineering.",
+    name: "Project Space",
+    slug: "project-space",
+    description: "A shared space for all teams to manage and track projects together.",
     memberCount: 12,
     projectCount: 5,
     color: "bg-primary/10 text-primary",
-    initials: "EN",
+    initials: "PS",
   },
   {
     id: "ws-2",
