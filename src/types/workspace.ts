@@ -97,3 +97,27 @@ export type Member = {
   joinedAt: string;
   projectIds: string[];
 };
+
+export type GoalStatus = "on_track" | "at_risk" | "off_track" | "completed";
+
+export type KeyResult = {
+  id: string;
+  title: string;
+  current: number;
+  target: number;
+  unit: string;
+};
+
+export type Goal = {
+  id: string;
+  workspaceId: string;
+  title: string;
+  description: string;
+  status: GoalStatus;
+  ownerInitials: string;
+  ownerName: string;
+  ownerColor: string;
+  dueDate: string;
+  projectIds: string[];
+  keyResults: KeyResult[];
+};

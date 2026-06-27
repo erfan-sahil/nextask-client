@@ -11,12 +11,29 @@ import {
 } from "@/components/ui/sheet";
 import { authRoutes } from "@/config/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils";
+
+const SIDEBAR_STORAGE_KEY = "nextask-sidebar-open";
 
 function AppShellContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const { user, isLoading, isError } = useAuth();
   const needsEmailVerification = Boolean(user && !user.isEmailVerified);
+
+  // Restore persisted sidebar preference after mount
+  useEffect(() => {
+    const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY);
+    if (stored !== null) setSidebarOpen(stored === "true");
+  }, []);
+
+  function toggleSidebar() {
+    setSidebarOpen((prev) => {
+      localStorage.setItem(SIDEBAR_STORAGE_KEY, String(!prev));
+      return !prev;
+    });
+  }
 
   useEffect(() => {
     if (isError) {
@@ -42,8 +59,17 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-svh overflow-hidden bg-background">
-      <AppSidebar className="hidden lg:flex" />
+      {/* Desktop sidebar — collapses with a width transition */}
+      <div
+        className={cn(
+          "hidden shrink-0 overflow-hidden transition-[width] duration-200 ease-in-out lg:block",
+          sidebarOpen ? "w-64" : "w-0",
+        )}
+      >
+        <AppSidebar className="h-full w-64" />
+      </div>
 
+      {/* Mobile sidebar — Sheet slide-over */}
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetContent side="left" className="w-72 p-0" showCloseButton>
           <SheetTitle className="sr-only">Navigation</SheetTitle>
@@ -57,7 +83,9 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader
           user={user}
+          sidebarOpen={sidebarOpen}
           onMenuClick={() => setMobileNavOpen(true)}
+          onSidebarToggle={toggleSidebar}
         />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>

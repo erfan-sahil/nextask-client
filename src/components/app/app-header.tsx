@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Menu, Search, User } from "lucide-react";
+import { LogOut, Menu, PanelLeft, PanelLeftClose, Search, User } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { AppNavIcon, NotificationIcon } from "@/components/app/app-nav-icon";
@@ -105,11 +105,20 @@ type AppHeaderProps = {
   user: AuthUser;
   title?: string;
   onMenuClick?: () => void;
+  onSidebarToggle?: () => void;
+  sidebarOpen?: boolean;
 };
 
-export function AppHeader({ user, title = "Dashboard", onMenuClick }: AppHeaderProps) {
+export function AppHeader({
+  user,
+  title = "Dashboard",
+  onMenuClick,
+  onSidebarToggle,
+  sidebarOpen = true,
+}: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-4 border-b border-border bg-background/90 px-4 backdrop-blur-md sm:px-6">
+      {/* Mobile: opens Sheet */}
       <Button
         type="button"
         variant="ghost"
@@ -119,6 +128,22 @@ export function AppHeader({ user, title = "Dashboard", onMenuClick }: AppHeaderP
         aria-label="Open navigation menu"
       >
         <Menu className="size-5" />
+      </Button>
+
+      {/* Desktop: collapses/expands sidebar */}
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="hidden lg:flex"
+        onClick={onSidebarToggle}
+        aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+      >
+        {sidebarOpen ? (
+          <PanelLeftClose className="size-5" />
+        ) : (
+          <PanelLeft className="size-5" />
+        )}
       </Button>
 
       <div className="min-w-0 flex-1">

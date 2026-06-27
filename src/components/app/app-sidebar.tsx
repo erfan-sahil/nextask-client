@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Plus,
   Settings,
+  Target,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -135,6 +136,13 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
             </div>
             <nav className="space-y-0.5" aria-label="Workspace navigation">
               <NavLink
+                href={appRoutes.workspaceGoals(activeWorkspace.slug)}
+                icon={Target}
+                label="Goals"
+                active={pathname === appRoutes.workspaceGoals(activeWorkspace.slug)}
+                onClick={onNavigate}
+              />
+              <NavLink
                 href={appRoutes.workspaceCalendar(activeWorkspace.slug)}
                 icon={CalendarDays}
                 label="Calendar"
@@ -234,12 +242,6 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
           />
         </nav>
 
-        <div className="rounded-xl border border-primary/15 bg-primary-light/50 p-3 dark:bg-primary-light/10">
-          <p className="text-sm font-semibold text-primary">Upgrade your team</p>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            Unlock advanced boards, automations, and workspace analytics.
-          </p>
-        </div>
       </div>
     </aside>
   );
