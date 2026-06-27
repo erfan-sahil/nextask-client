@@ -98,7 +98,14 @@ export type Member = {
   projectIds: string[];
 };
 
-export type GoalStatus = "exceeding" | "on_track" | "at_risk" | "off_track" | "achieved";
+export type GoalStatus =
+  | "not_started"
+  | "in_progress"
+  | "on_track"
+  | "off_track"
+  | "on_hold"
+  | "completed"
+  | "cancelled";
 
 export type KeyResult = {
   id: string;

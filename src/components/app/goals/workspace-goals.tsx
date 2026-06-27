@@ -1,20 +1,21 @@
 "use client";
 
 import {
-  AlertTriangle,
+  Ban,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
   Circle,
+  CircleDashed,
+  CirclePause,
+  Loader2,
   Pencil,
   Plus,
-  Rocket,
   Target,
   Trash2,
   TrendingDown,
   TrendingUp,
   MoreHorizontal,
-  Trophy,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -42,29 +43,29 @@ type StatusConfig = {
 };
 
 const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
-  exceeding: {
-    label: "Exceeding",
-    icon: Rocket,
-    badgeClass: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-    ringClass: "stroke-emerald-500",
-    borderAccent: "border-l-emerald-500",
-    bgAccent: "bg-emerald-500",
+  not_started: {
+    label: "Not Started",
+    icon: CircleDashed,
+    badgeClass: "border-muted-foreground/25 bg-muted/60 text-muted-foreground",
+    ringClass: "stroke-muted-foreground/40",
+    borderAccent: "border-l-muted-foreground/30",
+    bgAccent: "bg-muted-foreground/30",
+  },
+  in_progress: {
+    label: "In Progress",
+    icon: Loader2,
+    badgeClass: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    ringClass: "stroke-blue-500",
+    borderAccent: "border-l-blue-500",
+    bgAccent: "bg-blue-500",
   },
   on_track: {
     label: "On Track",
     icon: TrendingUp,
-    badgeClass: "border-primary/25 bg-primary/10 text-primary",
-    ringClass: "stroke-primary",
-    borderAccent: "border-l-primary",
-    bgAccent: "bg-primary",
-  },
-  at_risk: {
-    label: "At Risk",
-    icon: AlertTriangle,
-    badgeClass: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
-    ringClass: "stroke-amber-500",
-    borderAccent: "border-l-amber-500",
-    bgAccent: "bg-amber-500",
+    badgeClass: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    ringClass: "stroke-emerald-500",
+    borderAccent: "border-l-emerald-500",
+    bgAccent: "bg-emerald-500",
   },
   off_track: {
     label: "Off Track",
@@ -74,13 +75,29 @@ const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
     borderAccent: "border-l-destructive",
     bgAccent: "bg-destructive",
   },
-  achieved: {
-    label: "Achieved",
-    icon: Trophy,
+  on_hold: {
+    label: "On Hold",
+    icon: CirclePause,
+    badgeClass: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    ringClass: "stroke-amber-500",
+    borderAccent: "border-l-amber-500",
+    bgAccent: "bg-amber-500",
+  },
+  completed: {
+    label: "Completed",
+    icon: CheckCircle2,
     badgeClass: "border-violet-500/30 bg-violet-500/10 text-violet-600 dark:text-violet-400",
     ringClass: "stroke-violet-500",
     borderAccent: "border-l-violet-500",
     bgAccent: "bg-violet-500",
+  },
+  cancelled: {
+    label: "Cancelled",
+    icon: Ban,
+    badgeClass: "border-muted-foreground/20 bg-muted/40 text-muted-foreground/70",
+    ringClass: "stroke-muted-foreground/30",
+    borderAccent: "border-l-muted-foreground/20",
+    bgAccent: "bg-muted-foreground/20",
   },
 };
 
@@ -191,7 +208,10 @@ function GoalCard({
   const pct = goalProgress(goal);
   const cfg = STATUS_CONFIG[goal.status];
   const StatusIcon = cfg.icon;
-  const isOverdue = new Date(goal.dueDate) < new Date() && goal.status !== "achieved";
+  const isOverdue =
+    new Date(goal.dueDate) < new Date() &&
+    goal.status !== "completed" &&
+    goal.status !== "cancelled";
   const completedKRs = goal.keyResults.filter(
     (kr) => (kr.target === 0 ? 100 : (kr.current / kr.target) * 100) >= 100,
   ).length;
@@ -353,23 +373,23 @@ type StatusFilter = GoalStatus | "all";
 
 const FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "All Goals" },
-  { value: "exceeding", label: "Exceeding" },
+  { value: "not_started", label: "Not Started" },
+  { value: "in_progress", label: "In Progress" },
   { value: "on_track", label: "On Track" },
-  { value: "at_risk", label: "At Risk" },
   { value: "off_track", label: "Off Track" },
-  { value: "achieved", label: "Achieved" },
+  { value: "on_hold", label: "On Hold" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
 ];
 
-const STAT_CONFIG: {
-  status: GoalStatus;
-  colorClass: string;
-  bgClass: string;
-}[] = [
-  { status: "exceeding", colorClass: "text-emerald-600 dark:text-emerald-400", bgClass: "bg-emerald-500/10" },
-  { status: "on_track", colorClass: "text-primary", bgClass: "bg-primary/10" },
-  { status: "at_risk", colorClass: "text-amber-600 dark:text-amber-400", bgClass: "bg-amber-500/10" },
+const STAT_CONFIG: { status: GoalStatus; colorClass: string; bgClass: string }[] = [
+  { status: "not_started", colorClass: "text-muted-foreground", bgClass: "bg-muted/60" },
+  { status: "in_progress", colorClass: "text-blue-600 dark:text-blue-400", bgClass: "bg-blue-500/10" },
+  { status: "on_track", colorClass: "text-emerald-600 dark:text-emerald-400", bgClass: "bg-emerald-500/10" },
   { status: "off_track", colorClass: "text-destructive", bgClass: "bg-destructive/10" },
-  { status: "achieved", colorClass: "text-violet-600 dark:text-violet-400", bgClass: "bg-violet-500/10" },
+  { status: "on_hold", colorClass: "text-amber-600 dark:text-amber-400", bgClass: "bg-amber-500/10" },
+  { status: "completed", colorClass: "text-violet-600 dark:text-violet-400", bgClass: "bg-violet-500/10" },
+  { status: "cancelled", colorClass: "text-muted-foreground/70", bgClass: "bg-muted/40" },
 ];
 
 export function WorkspaceGoals({ workspace }: { workspace: Workspace }) {
@@ -401,10 +421,10 @@ export function WorkspaceGoals({ workspace }: { workspace: Workspace }) {
   }, [goals]);
 
   const overallStatus = useMemo((): GoalStatus => {
-    if (avgProgress >= 90) return "exceeding";
-    if (avgProgress >= 65) return "on_track";
-    if (avgProgress >= 35) return "at_risk";
-    return "off_track";
+    if (avgProgress >= 80) return "on_track";
+    if (avgProgress >= 50) return "in_progress";
+    if (avgProgress > 0) return "off_track";
+    return "not_started";
   }, [avgProgress]);
 
   const handleEdit = (id: string) => {
