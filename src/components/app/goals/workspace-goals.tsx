@@ -9,13 +9,11 @@ import {
   CircleDashed,
   CirclePause,
   Loader2,
+  MoreHorizontal,
   Pencil,
   Plus,
   Target,
   Trash2,
-  TrendingDown,
-  TrendingUp,
-  MoreHorizontal,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -54,31 +52,17 @@ const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
   in_progress: {
     label: "In Progress",
     icon: Loader2,
-    badgeClass: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    badgeClass:
+      "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400",
     ringClass: "stroke-blue-500",
     borderAccent: "border-l-blue-500",
     bgAccent: "bg-blue-500",
   },
-  on_track: {
-    label: "On Track",
-    icon: TrendingUp,
-    badgeClass: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-    ringClass: "stroke-emerald-500",
-    borderAccent: "border-l-emerald-500",
-    bgAccent: "bg-emerald-500",
-  },
-  off_track: {
-    label: "Off Track",
-    icon: TrendingDown,
-    badgeClass: "border-destructive/25 bg-destructive/10 text-destructive",
-    ringClass: "stroke-destructive",
-    borderAccent: "border-l-destructive",
-    bgAccent: "bg-destructive",
-  },
   on_hold: {
     label: "On Hold",
     icon: CirclePause,
-    badgeClass: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    badgeClass:
+      "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
     ringClass: "stroke-amber-500",
     borderAccent: "border-l-amber-500",
     bgAccent: "bg-amber-500",
@@ -86,7 +70,8 @@ const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
   completed: {
     label: "Completed",
     icon: CheckCircle2,
-    badgeClass: "border-violet-500/30 bg-violet-500/10 text-violet-600 dark:text-violet-400",
+    badgeClass:
+      "border-violet-500/30 bg-violet-500/10 text-violet-600 dark:text-violet-400",
     ringClass: "stroke-violet-500",
     borderAccent: "border-l-violet-500",
     bgAccent: "bg-violet-500",
@@ -94,7 +79,8 @@ const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
   cancelled: {
     label: "Cancelled",
     icon: Ban,
-    badgeClass: "border-muted-foreground/20 bg-muted/40 text-muted-foreground/70",
+    badgeClass:
+      "border-muted-foreground/20 bg-muted/40 text-muted-foreground/70",
     ringClass: "stroke-muted-foreground/30",
     borderAccent: "border-l-muted-foreground/20",
     bgAccent: "bg-muted-foreground/20",
@@ -147,7 +133,10 @@ function ProgressRing({
 // ─── Key result row ─────────────────────────────────────────────────────────
 
 function KeyResultRow({ kr }: { kr: KeyResult }) {
-  const pct = kr.target === 0 ? 100 : Math.min(100, Math.round((kr.current / kr.target) * 100));
+  const pct =
+    kr.target === 0
+      ? 100
+      : Math.min(100, Math.round((kr.current / kr.target) * 100));
   const isComplete = pct >= 100;
 
   return (
@@ -159,12 +148,19 @@ function KeyResultRow({ kr }: { kr: KeyResult }) {
       )}
       <div className="min-w-0 flex-1">
         <div className="mb-1.5 flex items-center justify-between gap-2">
-          <p className={cn("truncate text-xs font-medium", isComplete && "line-through text-muted-foreground/60")}>
+          <p
+            className={cn(
+              "truncate text-xs font-medium",
+              isComplete && "line-through text-muted-foreground/60",
+            )}
+          >
             {kr.title}
           </p>
           <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
             {kr.current.toLocaleString()}
-            <span className="opacity-50">/{kr.target.toLocaleString()} {kr.unit}</span>
+            <span className="opacity-50">
+              /{kr.target.toLocaleString()} {kr.unit}
+            </span>
           </span>
         </div>
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -176,7 +172,9 @@ function KeyResultRow({ kr }: { kr: KeyResult }) {
             style={{ width: `${pct}%` }}
           />
         </div>
-        <p className="mt-1 text-[10px] text-muted-foreground/60">{pct}% complete</p>
+        <p className="mt-1 text-[10px] text-muted-foreground/60">
+          {pct}% complete
+        </p>
       </div>
     </div>
   );
@@ -187,7 +185,8 @@ function KeyResultRow({ kr }: { kr: KeyResult }) {
 function goalProgress(goal: Goal): number {
   if (goal.keyResults.length === 0) return 0;
   const total = goal.keyResults.reduce((sum, kr) => {
-    const pct = kr.target === 0 ? 100 : Math.min(100, (kr.current / kr.target) * 100);
+    const pct =
+      kr.target === 0 ? 100 : Math.min(100, (kr.current / kr.target) * 100);
     return sum + pct;
   }, 0);
   return Math.round(total / goal.keyResults.length);
@@ -227,7 +226,12 @@ function GoalCard({
       <div className="flex items-start gap-4 p-5">
         {/* Progress ring */}
         <div className="relative shrink-0">
-          <ProgressRing value={pct} size={52} strokeWidth={4} status={goal.status} />
+          <ProgressRing
+            value={pct}
+            size={52}
+            strokeWidth={4}
+            status={goal.status}
+          />
           <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold tabular-nums">
             {pct}%
           </span>
@@ -240,7 +244,10 @@ function GoalCard({
             <h3 className="text-sm font-semibold leading-snug">{goal.title}</h3>
             <Badge
               variant="outline"
-              className={cn("flex shrink-0 items-center gap-1 px-2 py-0 text-[11px] font-medium", cfg.badgeClass)}
+              className={cn(
+                "flex shrink-0 items-center gap-1 px-2 py-0 text-[11px] font-medium",
+                cfg.badgeClass,
+              )}
             >
               <StatusIcon className="size-3" />
               {cfg.label}
@@ -271,17 +278,27 @@ function GoalCard({
               >
                 {goal.ownerInitials}
               </div>
-              <span className="text-[11px] text-muted-foreground">{goal.ownerName}</span>
+              <span className="text-[11px] text-muted-foreground">
+                {goal.ownerName}
+              </span>
             </div>
 
             {/* Due date */}
-            <span className={cn("text-[11px] text-muted-foreground", isOverdue && "text-destructive font-medium")}>
+            <span
+              className={cn(
+                "text-[11px] text-muted-foreground",
+                isOverdue && "text-destructive font-medium",
+              )}
+            >
               Due{" "}
-              {new Date(goal.dueDate + "T00:00:00").toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
+              {new Date(goal.dueDate + "T00:00:00").toLocaleDateString(
+                "en-US",
+                {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                },
+              )}
             </span>
 
             {/* Key results count */}
@@ -315,9 +332,15 @@ function GoalCard({
               type="button"
               onClick={() => setExpanded((v) => !v)}
               className="rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground"
-              aria-label={expanded ? "Collapse key results" : "Expand key results"}
+              aria-label={
+                expanded ? "Collapse key results" : "Expand key results"
+              }
             >
-              {expanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+              {expanded ? (
+                <ChevronDown className="size-4" />
+              ) : (
+                <ChevronRight className="size-4" />
+              )}
             </button>
           )}
 
@@ -375,26 +398,48 @@ const FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "All Goals" },
   { value: "not_started", label: "Not Started" },
   { value: "in_progress", label: "In Progress" },
-  { value: "on_track", label: "On Track" },
-  { value: "off_track", label: "Off Track" },
   { value: "on_hold", label: "On Hold" },
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
 ];
 
-const STAT_CONFIG: { status: GoalStatus; colorClass: string; bgClass: string }[] = [
-  { status: "not_started", colorClass: "text-muted-foreground", bgClass: "bg-muted/60" },
-  { status: "in_progress", colorClass: "text-blue-600 dark:text-blue-400", bgClass: "bg-blue-500/10" },
-  { status: "on_track", colorClass: "text-emerald-600 dark:text-emerald-400", bgClass: "bg-emerald-500/10" },
-  { status: "off_track", colorClass: "text-destructive", bgClass: "bg-destructive/10" },
-  { status: "on_hold", colorClass: "text-amber-600 dark:text-amber-400", bgClass: "bg-amber-500/10" },
-  { status: "completed", colorClass: "text-violet-600 dark:text-violet-400", bgClass: "bg-violet-500/10" },
-  { status: "cancelled", colorClass: "text-muted-foreground/70", bgClass: "bg-muted/40" },
+const STAT_CONFIG: {
+  status: GoalStatus;
+  colorClass: string;
+  bgClass: string;
+}[] = [
+  {
+    status: "not_started",
+    colorClass: "text-muted-foreground",
+    bgClass: "bg-muted/60",
+  },
+  {
+    status: "in_progress",
+    colorClass: "text-blue-600 dark:text-blue-400",
+    bgClass: "bg-blue-500/10",
+  },
+  {
+    status: "on_hold",
+    colorClass: "text-amber-600 dark:text-amber-400",
+    bgClass: "bg-amber-500/10",
+  },
+  {
+    status: "completed",
+    colorClass: "text-violet-600 dark:text-violet-400",
+    bgClass: "bg-violet-500/10",
+  },
+  {
+    status: "cancelled",
+    colorClass: "text-muted-foreground/70",
+    bgClass: "bg-muted/40",
+  },
 ];
 
 export function WorkspaceGoals({ workspace }: { workspace: Workspace }) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [goals, setGoals] = useState(() => mockGoals.filter((g) => g.workspaceId === workspace.id));
+  const [goals, setGoals] = useState(() =>
+    mockGoals.filter((g) => g.workspaceId === workspace.id),
+  );
 
   const filtered = useMemo(() => {
     if (statusFilter === "all") return goals;
@@ -417,13 +462,14 @@ export function WorkspaceGoals({ workspace }: { workspace: Workspace }) {
 
   const avgProgress = useMemo(() => {
     if (goals.length === 0) return 0;
-    return Math.round(goals.reduce((s, g) => s + goalProgress(g), 0) / goals.length);
+    return Math.round(
+      goals.reduce((s, g) => s + goalProgress(g), 0) / goals.length,
+    );
   }, [goals]);
 
   const overallStatus = useMemo((): GoalStatus => {
-    if (avgProgress >= 80) return "on_track";
-    if (avgProgress >= 50) return "in_progress";
-    if (avgProgress > 0) return "off_track";
+    if (avgProgress >= 80) return "completed";
+    if (avgProgress > 0) return "in_progress";
     return "not_started";
   }, [avgProgress]);
 
@@ -444,7 +490,9 @@ export function WorkspaceGoals({ workspace }: { workspace: Workspace }) {
           <h1 className="text-2xl font-bold tracking-tight">Goals</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Track objectives and key results for{" "}
-            <span className="font-medium text-foreground">{workspace.name}</span>
+            <span className="font-medium text-foreground">
+              {workspace.name}
+            </span>
           </p>
         </div>
         <Button size="sm" className="gap-1.5">
@@ -459,7 +507,12 @@ export function WorkspaceGoals({ workspace }: { workspace: Workspace }) {
           {/* Progress ring + summary */}
           <div className="flex items-center gap-4">
             <div className="relative shrink-0">
-              <ProgressRing value={avgProgress} size={68} strokeWidth={5} status={overallStatus} />
+              <ProgressRing
+                value={avgProgress}
+                size={68}
+                strokeWidth={5}
+                status={overallStatus}
+              />
               <span className="absolute inset-0 flex items-center justify-center text-xs font-bold tabular-nums">
                 {avgProgress}%
               </span>
@@ -468,7 +521,9 @@ export function WorkspaceGoals({ workspace }: { workspace: Workspace }) {
               <p className="text-base font-bold leading-tight">
                 {goals.length} goal{goals.length !== 1 ? "s" : ""}
               </p>
-              <p className="mt-0.5 text-xs text-muted-foreground">Overall workspace progress</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Overall workspace progress
+              </p>
               <Badge
                 variant="outline"
                 className={cn(
@@ -504,11 +559,19 @@ export function WorkspaceGoals({ workspace }: { workspace: Workspace }) {
                     statusFilter === status && "bg-muted",
                   )}
                 >
-                  <div className={cn("flex size-8 items-center justify-center rounded-lg", bgClass, colorClass)}>
+                  <div
+                    className={cn(
+                      "flex size-8 items-center justify-center rounded-lg",
+                      bgClass,
+                      colorClass,
+                    )}
+                  >
                     <Icon className="size-4" />
                   </div>
                   <p className="text-base font-bold tabular-nums">{count}</p>
-                  <p className="text-[10px] text-muted-foreground">{cfg.label}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {cfg.label}
+                  </p>
                 </button>
               );
             })}

@@ -101,8 +101,6 @@ export type Member = {
 export type GoalStatus =
   | "not_started"
   | "in_progress"
-  | "on_track"
-  | "off_track"
   | "on_hold"
   | "completed"
   | "cancelled";
