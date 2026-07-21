@@ -8,7 +8,6 @@ import {
   ListTodo,
   MessageSquare,
   Search,
-  Trash2,
   Users,
   X,
 } from "lucide-react";
@@ -44,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import {
   useKanban,
@@ -103,8 +103,7 @@ export function TaskModal({
   const [memberSearch, setMemberSearch] = useState("");
   const [comment, setComment] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
-  const [isDeleteConfirmation, setIsDeleteConfirmation] = useState(false);
-  const isDeleting = mode === "delete" || isDeleteConfirmation;
+  const isDeleting = mode === "delete";
   const isDetails = mode === "details";
   const isPending =
     kanban.createTask.isPending ||
@@ -222,6 +221,7 @@ export function TaskModal({
         ? "Edit task"
         : "Create task";
   const selectedDueDate = dueDate ? new Date(`${dueDate}T00:00:00`) : undefined;
+  const hasScrollableTaskContent = Boolean(task) && !isDeleting;
 
   return (
     <Dialog
@@ -230,9 +230,19 @@ export function TaskModal({
         if (!nextOpen) closeModal();
       }}
     >
-      <DialogContent className={isDetails ? "max-w-3xl" : isDeleting ? "max-w-md" : undefined}>
+      <DialogContent
+        className={
+          isDetails
+            ? "h-[min(40rem,calc(100svh-2rem))] max-w-3xl overflow-hidden p-0"
+            : isDeleting
+              ? "max-w-md overflow-hidden p-0"
+              : hasScrollableTaskContent
+                ? "h-[min(40rem,calc(100svh-2rem))] overflow-hidden p-0"
+                : "overflow-hidden p-0"
+        }
+      >
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <DialogHeader className={isDetails || isDeleting ? "relative pr-10" : undefined}>
+          <DialogHeader className="relative shrink-0 border-b border-border px-6 py-4 pr-16">
             <DialogTitle className={!task && !isDeleting ? "text-primary" : undefined}>
               {heading}
             </DialogTitle>
@@ -243,19 +253,19 @@ export function TaskModal({
                   ? "Task details and discussion."
                   : "Add the details needed to complete this work."}
             </DialogDescription>
-            {(isDetails || isDeleting) && (
-              <button
-                type="button"
-                onClick={closeModal}
-                className="absolute top-0 right-0 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label={isDeleting ? "Close delete task dialog" : "Close task details"}
-                disabled={isPending}
-              >
-                <X className="size-4" />
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={closeModal}
+              className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="Close task modal"
+              disabled={isPending}
+            >
+              <X className="size-4" />
+            </button>
           </DialogHeader>
 
+        <ScrollArea className="min-h-0 flex-1">
+          <div className="px-6 pb-6">
         {isDeleting ? (
           <div className="mt-6 flex gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
@@ -570,19 +580,10 @@ export function TaskModal({
         )}
 
         {formError && <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{formError}</p>}
+          </div>
+        </ScrollArea>
         {!isDetails && (
-        <div className="mt-6 flex justify-end gap-3">
-          {task && !isDeleting && !isDetails && (
-            <Button
-              type="button"
-              variant="destructive"
-              className="mr-auto"
-              onClick={() => setIsDeleteConfirmation(true)}
-            >
-              <Trash2 className="size-4" />
-              Delete
-            </Button>
-          )}
+        <div className="flex shrink-0 justify-end gap-3 border-t border-border px-6 py-4">
           <>
             <Button type="button" variant="outline" onClick={closeModal} disabled={isPending}>
               Cancel
