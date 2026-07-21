@@ -194,7 +194,11 @@ export const workflowApi = {
       ),
     ).task;
   },
-  async updateTask({ workspaceId, projectId, boardId, taskId, ...input }: TaskRef & Partial<Pick<TaskDoc, "title" | "columnId" | "description" | "priority" | "assignees" | "reporterId" | "dueDate" | "labels" | "completedAt">>) {
+  async updateTask({ workspaceId, projectId, boardId, taskId, ...input }: TaskRef &
+    Partial<Omit<Pick<TaskDoc, "title" | "columnId" | "position" | "description" | "priority" | "reporterId" | "dueDate" | "labels" | "completedAt">, "reporterId">> & {
+      assignees?: string[];
+      reporterId?: string;
+    }) {
     return unwrap(
       await apiClient.patch<ApiSuccessResponse<{ task: TaskDoc }>>(
         `/workspaces/${workspaceId}/projects/${projectId}/boards/${boardId}/tasks/${taskId}`,

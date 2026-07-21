@@ -15,9 +15,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { BoardModal } from "@/components/app/board/board-modal";
 import { appRoutes } from "@/config/navigation";
 import { mockBoards } from "@/lib/mock/dashboard-data";
 import { cn } from "@/lib/utils";
+import type { BoardDoc } from "@/types/domain";
 import type { BoardMeta, Project, Workspace } from "@/types/workspace";
 import { useBoards, useProject, useWorkspaceBySlug } from "@/hooks/use-workflow";
 import {
@@ -197,6 +200,11 @@ function ConnectedProjectPage({
   workspaceSlug: string;
   projectId: string;
 }) {
+  const [boardModal, setBoardModal] = useState<
+    | { mode: "create" }
+    | { mode: "edit" | "delete"; board: BoardDoc }
+    | null
+  >(null);
   const { workspace, isLoading: isWorkspaceLoading } =
     useWorkspaceBySlug(workspaceSlug);
   const project = useProject(workspace?._id, projectId);
@@ -209,22 +217,130 @@ function ConnectedProjectPage({
     return <div className="p-8 text-sm text-destructive">Project not found or you do not have access.</div>;
   }
 
-  const createBoard = async () => {
-    const name = window.prompt("Board name");
-    if (!name) return;
-    await boards.create.mutateAsync({
-      workspaceId: workspace._id,
-      projectId,
-      name,
-    });
-  };
-
   return (
     <div className="max-w-6xl px-4 py-6 sm:px-8">
-      <nav className="mb-8 flex gap-2 text-sm text-muted-foreground"><Link href={appRoutes.workspace(workspace.slug)}>{workspace.name}</Link><ChevronRight className="size-4" /><span className="text-foreground">{project.data.name}</span></nav>
-      <section className="mb-8 overflow-hidden rounded-2xl border border-border bg-card"><div className="h-1 bg-primary/20" /><div className="p-6"><div className="flex items-start justify-between gap-4"><div><h1 className="text-2xl font-bold">{project.data.name}</h1><p className="mt-1 text-sm text-muted-foreground">{project.data.description}</p></div><button onClick={createBoard} className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"><Plus className="mr-2 inline size-4" />New board</button></div><div className="mt-5 flex gap-3 text-sm text-muted-foreground"><span className="rounded-xl border border-border px-3 py-2">{project.data.taskCount} tasks</span><span className="rounded-xl border border-border px-3 py-2">{project.data.status.replace("_", " ")}</span></div></div></section>
-      <div className="mb-5 flex items-center justify-between"><div><h2 className="font-semibold">Boards</h2><p className="text-xs text-muted-foreground">{boards.data?.pagination.total ?? 0} boards in this project</p></div></div>
-      {boards.isLoading ? <p className="text-sm text-muted-foreground">Loading boards…</p> : !boards.data?.boards.length ? <div className="rounded-2xl border-2 border-dashed border-border py-16 text-center"><Columns3 className="mx-auto size-8 text-muted-foreground" /><p className="mt-3 font-semibold">No boards yet</p><button onClick={createBoard} className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm text-primary-foreground">Create board</button></div> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{boards.data.boards.map((board) => <article key={board._id} className="rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-lg"><Link href={appRoutes.board(workspace.slug, projectId, board._id)}><h3 className="font-semibold hover:text-primary">{board.name}</h3><p className="mt-1 text-sm text-muted-foreground">{board.description}</p></Link><button onClick={() => { if (window.confirm(`Delete ${board.name}?`)) boards.remove.mutate({ workspaceId: workspace._id, projectId, boardId: board._id }); }} className="mt-4 text-xs text-destructive">Delete board</button></article>)}</div>}
+      <nav className="mb-8 flex gap-2 text-sm text-muted-foreground">
+        <Link href={appRoutes.workspace(workspace.slug)}>{workspace.name}</Link>
+        <ChevronRight className="size-4" />
+        <span className="text-foreground">{project.data.name}</span>
+      </nav>
+
+      <section className="mb-8 overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="h-1 bg-primary/20" />
+        <div className="p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold">{project.data.name}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {project.data.description}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setBoardModal({ mode: "create" })}
+              className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+            >
+              <Plus className="mr-2 inline size-4" />
+              New board
+            </button>
+          </div>
+          <div className="mt-5 flex gap-3 text-sm text-muted-foreground">
+            <span className="rounded-xl border border-border px-3 py-2">
+              {project.data.taskCount} tasks
+            </span>
+            <span className="rounded-xl border border-border px-3 py-2">
+              {project.data.status.replace("_", " ")}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <div className="mb-5">
+        <h2 className="font-semibold">Boards</h2>
+        <p className="text-xs text-muted-foreground">
+          {boards.data?.pagination.total ?? 0} boards in this project
+        </p>
+      </div>
+
+      {boards.isLoading ? (
+        <p className="text-sm text-muted-foreground">Loading boards…</p>
+      ) : !boards.data?.boards.length ? (
+        <div className="rounded-2xl border-2 border-dashed border-border py-16 text-center">
+          <Columns3 className="mx-auto size-8 text-muted-foreground" />
+          <p className="mt-3 font-semibold">No boards yet</p>
+          <button
+            type="button"
+            onClick={() => setBoardModal({ mode: "create" })}
+            className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm text-primary-foreground"
+          >
+            Create board
+          </button>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {boards.data.boards.map((board) => {
+            const boardHref = appRoutes.board(workspace.slug, projectId, board._id);
+
+            return (
+              <article
+                key={board._id}
+                className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-lg"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <Link href={boardHref} className="min-w-0 flex-1">
+                    <h3 className="truncate font-semibold transition-colors group-hover:text-primary">
+                      {board.name}
+                    </h3>
+                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                      {board.description}
+                    </p>
+                  </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      aria-label={`Board actions for ${board.name}`}
+                    >
+                      <MoreHorizontal className="size-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-40">
+                      <DropdownMenuItem
+                        onClick={() => setBoardModal({ mode: "edit", board })}
+                        className="gap-2"
+                      >
+                        <Pencil className="size-3.5" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => setBoardModal({ mode: "delete", board })}
+                        className="gap-2 text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="size-3.5" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+
+      {boardModal && (
+        <BoardModal
+          key={boardModal.mode === "create" ? "create" : `${boardModal.mode}-${boardModal.board._id}`}
+          isOpen
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setBoardModal(null);
+          }}
+          workspaceId={workspace._id}
+          projectId={projectId}
+          projectName={project.data.name}
+          mode={boardModal.mode}
+          board={boardModal.mode === "create" ? undefined : boardModal.board}
+        />
+      )}
     </div>
   );
 }

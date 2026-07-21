@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { workflowApi } from "@/lib/api/workflow";
 import { workflowQueryKeys } from "@/lib/api/query-keys";
+import type { ListResult, TaskDoc } from "@/types/domain";
 
 export function useWorkspaces() {
   const queryClient = useQueryClient();
@@ -103,6 +104,9 @@ export function useKanban(workspaceId?: string, projectId?: string, boardId?: st
     queryClient.invalidateQueries({ queryKey: columnsKey });
     queryClient.invalidateQueries({ queryKey: tasksKey });
   };
+  const taskColumnId = (task: TaskDoc) =>
+    typeof task.columnId === "string" ? task.columnId : task.columnId._id;
+
   return {
     columns,
     tasks,
@@ -110,7 +114,79 @@ export function useKanban(workspaceId?: string, projectId?: string, boardId?: st
     updateColumn: useMutation({ mutationFn: workflowApi.updateColumn, onSuccess: invalidate }),
     deleteColumn: useMutation({ mutationFn: workflowApi.deleteColumn, onSuccess: invalidate }),
     createTask: useMutation({ mutationFn: workflowApi.createTask, onSuccess: invalidate }),
-    updateTask: useMutation({ mutationFn: workflowApi.updateTask, onSuccess: invalidate }),
+    updateTask: useMutation({
+      mutationFn: workflowApi.updateTask,
+      onMutate: async (input) => {
+        if (input.position === undefined && input.columnId === undefined) {
+          return;
+        }
+
+        await queryClient.cancelQueries({ queryKey: tasksKey });
+        const previousTasks = queryClient.getQueryData<ListResult<TaskDoc, "tasks">>(tasksKey);
+
+        if (!previousTasks) {
+          return;
+        }
+
+        const task = previousTasks.tasks.find((item) => item._id === input.taskId);
+
+        if (!task) {
+          return { previousTasks };
+        }
+
+        const sourceColumnId = taskColumnId(task);
+        const destinationColumnId = input.columnId ?? sourceColumnId;
+        const sourceTasks = previousTasks.tasks.filter(
+          (item) => taskColumnId(item) === sourceColumnId && item._id !== task._id,
+        );
+        const destinationTasks =
+          destinationColumnId === sourceColumnId
+            ? sourceTasks
+            : previousTasks.tasks.filter(
+                (item) =>
+                  taskColumnId(item) === destinationColumnId &&
+                  item._id !== task._id,
+              );
+        const targetPosition = Math.min(
+          Math.max(input.position ?? destinationTasks.length, 0),
+          destinationTasks.length,
+        );
+
+        destinationTasks.splice(targetPosition, 0, {
+          ...task,
+          columnId: destinationColumnId,
+        });
+
+        const nextPositions = new Map<string, number>();
+        sourceTasks.forEach((item, index) => nextPositions.set(item._id, index));
+        destinationTasks.forEach((item, index) => nextPositions.set(item._id, index));
+
+        queryClient.setQueryData<ListResult<TaskDoc, "tasks">>(tasksKey, {
+          ...previousTasks,
+          tasks: previousTasks.tasks.map((item) => {
+            const position = nextPositions.get(item._id);
+
+            if (position === undefined) {
+              return item;
+            }
+
+            return {
+              ...item,
+              columnId: item._id === task._id ? destinationColumnId : item.columnId,
+              position,
+            };
+          }),
+        });
+
+        return { previousTasks };
+      },
+      onError: (_error, _input, context) => {
+        if (context?.previousTasks) {
+          queryClient.setQueryData(tasksKey, context.previousTasks);
+        }
+      },
+      onSettled: invalidate,
+    }),
     deleteTask: useMutation({ mutationFn: workflowApi.deleteTask, onSuccess: invalidate }),
   };
 }

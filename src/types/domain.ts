@@ -67,7 +67,8 @@ export type TaskDoc = {
   workspaceId: Id;
   projectId: Id;
   boardId: Id;
-  columnId: Id;
+  columnId: Id | Pick<ColumnDoc, "_id" | "name" | "position" | "color" | "isCompletedColumn">;
+  position: number;
   title: string;
   description: string;
   priority: TaskPriority;
