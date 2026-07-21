@@ -3,6 +3,7 @@
 import { ChevronDown, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { CreateWorkspaceModal } from "@/components/app/workspaces/create-workspace-modal";
 import { Button } from "@/components/ui/button";
 import { appRoutes } from "@/config/navigation";
 import { cn } from "@/lib/utils";
@@ -23,21 +24,52 @@ export function WorkspaceSwitcher({
 }: WorkspaceSwitcherProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [isCreateWorkspaceModalOpen, setIsCreateWorkspaceModalOpen] =
+    useState(false);
   const activeWorkspace =
     workspaces.find((workspace) => workspace._id === activeWorkspaceId) ??
     workspaces[0];
 
   if (!activeWorkspace) {
     return (
-      <div className={cn("rounded-xl border border-sidebar-border px-3 py-2.5 text-sm text-muted-foreground", className)}>
-        {isLoading ? "Loading workspaces…" : "No workspaces yet"}
-      </div>
+      <>
+        <div
+          className={cn(
+            "rounded-xl border border-sidebar-border px-3 py-2.5 text-sm text-muted-foreground",
+            className,
+          )}
+        >
+          {isLoading ? "Loading workspaces…" : "No workspaces yet"}
+          {!isLoading && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCreateWorkspaceModalOpen(true)}
+              className="mt-2 w-full justify-start gap-2 rounded-lg text-primary"
+            >
+              <Plus className="size-4" />
+              Create workspace
+            </Button>
+          )}
+        </div>
+        <CreateWorkspaceModal
+          isOpen={isCreateWorkspaceModalOpen}
+          onOpenChange={setIsCreateWorkspaceModalOpen}
+          onCreated={handleWorkspaceCreated}
+        />
+      </>
     );
   }
 
   function handleSelect(workspace: WorkspaceDoc) {
     router.push(appRoutes.workspace(workspace.slug));
     setIsOpen(false);
+  }
+
+  function handleWorkspaceCreated(workspace: WorkspaceDoc) {
+    setIsOpen(false);
+    router.push(appRoutes.workspace(workspace.slug));
   }
 
   return (
@@ -133,8 +165,10 @@ export function WorkspaceSwitcher({
             </ul>
             <div className="border-t border-border p-1.5">
               <Button
+                type="button"
                 variant="ghost"
                 size="sm"
+                onClick={() => setIsCreateWorkspaceModalOpen(true)}
                 className="w-full justify-start gap-2 rounded-lg text-primary"
               >
                 <Plus className="size-4" />
@@ -144,6 +178,11 @@ export function WorkspaceSwitcher({
           </div>
         </>
       )}
+      <CreateWorkspaceModal
+        isOpen={isCreateWorkspaceModalOpen}
+        onOpenChange={setIsCreateWorkspaceModalOpen}
+        onCreated={handleWorkspaceCreated}
+      />
     </div>
   );
 }

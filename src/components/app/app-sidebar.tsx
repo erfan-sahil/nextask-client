@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { CreateProjectModal } from "@/components/app/project/create-project-modal";
 import { WorkspaceSwitcher } from "@/components/app/workspace-switcher";
 import { SiteLogo } from "@/components/layout/site-logo";
 import { Separator } from "@/components/ui/separator";
@@ -67,6 +69,7 @@ function NavLink({
 
 export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
   const pathname = usePathname();
+  const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
   const workspaces = useWorkspaces();
 
   // Derive active workspace from the URL, falling back to the first available workspace.
@@ -172,7 +175,7 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
         )}
 
         {/* Projects list for current workspace */}
-        {(projects.isLoading || workspaceProjects.length > 0) && (
+        {activeWorkspace && (
           <div className="mt-3">
             <Separator className="mb-3" />
             <div className="mb-1.5 flex items-center justify-between px-3">
@@ -181,6 +184,7 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
               </p>
               <button
                 type="button"
+                onClick={() => setIsCreateProjectModalOpen(true)}
                 className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
                 aria-label="New project"
               >
@@ -251,6 +255,14 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
         </nav>
 
       </div>
+      {activeWorkspace && (
+        <CreateProjectModal
+          isOpen={isCreateProjectModalOpen}
+          onOpenChange={setIsCreateProjectModalOpen}
+          workspaceId={activeWorkspace._id}
+          workspaceName={activeWorkspace.name}
+        />
+      )}
     </aside>
   );
 }
