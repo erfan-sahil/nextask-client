@@ -1,6 +1,5 @@
-import { notFound } from "next/navigation";
 import { WorkspaceReports } from "@/components/app/reports/workspace-reports";
-import { mockWorkspaces } from "@/lib/mock/dashboard-data";
+import { getWorkspaceForRoute } from "@/lib/mock/workspace-route";
 
 type Props = {
   params: Promise<{ workspaceSlug: string }>;
@@ -8,15 +7,13 @@ type Props = {
 
 export async function generateMetadata({ params }: Props) {
   const { workspaceSlug } = await params;
-  const workspace = mockWorkspaces.find((w) => w.slug === workspaceSlug);
-  return { title: workspace ? `Reports · ${workspace.name} — NexTask` : "Not Found" };
+  const workspace = getWorkspaceForRoute(workspaceSlug);
+  return { title: `Reports · ${workspace.name} — NexTask` };
 }
 
 export default async function WorkspaceReportsRoute({ params }: Props) {
   const { workspaceSlug } = await params;
-  const workspace = mockWorkspaces.find((w) => w.slug === workspaceSlug);
-
-  if (!workspace) notFound();
+  const workspace = getWorkspaceForRoute(workspaceSlug);
 
   return <WorkspaceReports workspace={workspace} />;
 }
