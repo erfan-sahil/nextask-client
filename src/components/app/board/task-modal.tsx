@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AlertTriangle,
   CalendarDays,
   CircleDot,
   Flag,
@@ -205,9 +206,9 @@ export function TaskModal({
         if (!nextOpen) closeModal();
       }}
     >
-      <DialogContent className={isDetails ? "max-w-3xl" : undefined}>
+      <DialogContent className={isDetails ? "max-w-3xl" : isDeleting ? "max-w-md" : undefined}>
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <DialogHeader className={isDetails ? "relative pr-10" : undefined}>
+          <DialogHeader className={isDetails || isDeleting ? "relative pr-10" : undefined}>
             <DialogTitle>{heading}</DialogTitle>
             <DialogDescription>
               {isDeleting
@@ -216,12 +217,13 @@ export function TaskModal({
                   ? "Task details and discussion."
                   : "Add the details needed to complete this work."}
             </DialogDescription>
-            {isDetails && (
+            {(isDetails || isDeleting) && (
               <button
                 type="button"
                 onClick={closeModal}
                 className="absolute top-0 right-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Close task details"
+                aria-label={isDeleting ? "Close delete task dialog" : "Close task details"}
+                disabled={isPending}
               >
                 <X className="size-4" />
               </button>
@@ -229,7 +231,19 @@ export function TaskModal({
           </DialogHeader>
 
         {isDeleting ? (
-          <p className="mt-6 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">This action cannot be undone.</p>
+          <div className="mt-6 flex gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+              <AlertTriangle className="size-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-foreground">
+                Delete “{task?.title}”?
+              </p>
+              <p className="mt-1 text-sm leading-5 text-muted-foreground">
+                This will permanently remove the task and its comments.
+              </p>
+            </div>
+          </div>
         ) : isDetails && task ? (
           <section className="mt-6 space-y-5">
             <div className="rounded-xl border border-border bg-muted/30 p-4">
@@ -488,7 +502,9 @@ export function TaskModal({
             </Button>
           )}
           <>
-            <Button type="button" variant="outline" onClick={closeModal} disabled={isPending}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={closeModal} disabled={isPending}>
+              Cancel
+            </Button>
             <Button type="submit" variant={isDeleting ? "destructive" : "default"} disabled={isPending || (!isDeleting && (!title.trim() || !columnId))}>
               {isPending ? "Saving…" : isDeleting ? "Delete task" : task ? "Save changes" : "Create task"}
             </Button>
