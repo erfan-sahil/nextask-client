@@ -106,7 +106,7 @@ function TaskCard({
         onClick && "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         isDragging
           ? "opacity-40"
-          : "hover:border-primary/35 hover:bg-primary/[0.035] dark:hover:border-primary/30 dark:hover:bg-muted/40",
+          : "hover:border-primary/35 hover:bg-primary/1 dark:hover:border-primary/30 dark:hover:bg-muted/40",
       )}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
@@ -127,19 +127,19 @@ function TaskCard({
             <DropdownMenuTrigger
               onPointerDown={(event) => event.stopPropagation()}
               onClick={(event) => event.stopPropagation()}
-              className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="cursor-pointer rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               aria-label={`Options for ${task.title}`}
             >
               <MoreHorizontal className="size-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-36">
-              <DropdownMenuItem onClick={onClick} className="gap-2">
+              <DropdownMenuItem onClick={onClick} className="cursor-pointer gap-2">
                 <Eye className="size-3.5" />
                 View details
               </DropdownMenuItem>
               {(onEdit || onDelete) && <DropdownMenuSeparator />}
               {onEdit && (
-                <DropdownMenuItem onClick={onEdit} className="gap-2">
+                <DropdownMenuItem onClick={onEdit} className="cursor-pointer gap-2">
                   <Pencil className="size-3.5" />
                   Edit task
                 </DropdownMenuItem>
@@ -148,7 +148,7 @@ function TaskCard({
               {onDelete && (
                 <DropdownMenuItem
                   onClick={onDelete}
-                  className="gap-2 text-destructive focus:text-destructive"
+                  className="cursor-pointer gap-2 text-destructive focus:text-destructive"
                 >
                   <Trash2 className="size-3.5" />
                   Delete task
@@ -220,7 +220,7 @@ function TaskCard({
             }}
             onPointerDown={(event) => event.stopPropagation()}
             disabled={!canMoveUp}
-            className="flex size-7 items-center justify-center rounded-md border border-transparent bg-background text-muted-foreground transition-colors hover:border-primary/25 hover:bg-primary/10 hover:text-primary disabled:pointer-events-none disabled:opacity-40"
+            className="flex size-7 cursor-pointer items-center justify-center rounded-md border border-transparent bg-background text-muted-foreground transition-colors hover:border-primary/25 hover:bg-primary/10 hover:text-primary disabled:pointer-events-none disabled:opacity-40"
             aria-label={`Move ${task.title} up`}
           >
             <ArrowUp className="size-3.5" />
@@ -233,7 +233,7 @@ function TaskCard({
             }}
             onPointerDown={(event) => event.stopPropagation()}
             disabled={!canMoveDown}
-            className="flex size-7 items-center justify-center rounded-md border border-transparent bg-background text-muted-foreground transition-colors hover:border-primary/25 hover:bg-primary/10 hover:text-primary disabled:pointer-events-none disabled:opacity-40"
+            className="flex size-7 cursor-pointer items-center justify-center rounded-md border border-transparent bg-background text-muted-foreground transition-colors hover:border-primary/25 hover:bg-primary/10 hover:text-primary disabled:pointer-events-none disabled:opacity-40"
             aria-label={`Move ${task.title} down`}
           >
             <ArrowDown className="size-3.5" />
@@ -334,27 +334,27 @@ function KanbanColumn({
           <button
             type="button"
             onClick={onCreateTask}
-            className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+            className="cursor-pointer rounded-lg p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
             aria-label={`Add task to ${column.name}`}
           >
             <Plus className="size-3.5" />
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger
-              className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+              className="cursor-pointer rounded-lg p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
               aria-label={`Options for ${column.name}`}
             >
               <MoreHorizontal className="size-3.5" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={onEditColumn} className="gap-2">
+              <DropdownMenuItem onClick={onEditColumn} className="cursor-pointer gap-2">
                 <Pencil className="size-3.5" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={onDeleteColumn}
-                className="gap-2 text-destructive focus:text-destructive"
+                className="cursor-pointer gap-2 text-destructive focus:text-destructive"
               >
                 <Trash2 className="size-3.5" />
                 Delete
@@ -390,7 +390,7 @@ function KanbanColumn({
       <button
         type="button"
         onClick={onCreateTask}
-        className="flex items-center gap-2 rounded-xl px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+        className="flex cursor-pointer items-center gap-2 rounded-xl px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
       >
         <Plus className="size-3.5" />
         Add task
@@ -488,7 +488,7 @@ export function LiveKanbanBoard({
           <button
             type="button"
             onClick={() => setColumnModal({ mode: "create" })}
-            className="shrink-0 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="shrink-0 cursor-pointer rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             <Plus className="mr-1 inline size-3.5" />
             Add column
@@ -524,7 +524,7 @@ export function LiveKanbanBoard({
             <button
               type="button"
               onClick={() => setColumnModal({ mode: "create" })}
-              className="w-72 shrink-0 rounded-2xl border-2 border-dashed border-border px-4 py-3 text-left text-sm text-muted-foreground hover:border-primary/50 hover:text-primary"
+              className="w-72 shrink-0 cursor-pointer rounded-2xl border-2 border-dashed border-border px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
             >
               <Plus className="mr-2 inline size-4" />
               Add column
