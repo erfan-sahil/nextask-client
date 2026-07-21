@@ -60,10 +60,10 @@ type ColumnModalState =
   | null;
 
 const priorityClass = {
-  LOW: "border-border/80 bg-muted/70 text-muted-foreground",
-  MEDIUM: "border-chart-4/20 bg-chart-4/10 text-chart-4",
+  LOW: "border-lime-500/20 bg-lime-500/10 text-lime-700 dark:text-lime-400",
+  MEDIUM: "border-yellow-500/20 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
   HIGH: "border-orange-500/20 bg-orange-500/10 text-orange-600 dark:text-orange-400",
-  URGENT: "border-destructive/20 bg-destructive/10 text-destructive",
+  URGENT: "border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-400",
 } as const;
 
 function taskColumnId(task: TaskDoc) {
@@ -120,7 +120,9 @@ function TaskCard({
     >
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          <p className="line-clamp-2 text-sm font-medium leading-snug text-foreground">{task.title}</p>
+          <p className="line-clamp-2 text-sm font-medium leading-snug text-foreground transition-colors group-hover:text-primary">
+            {task.title}
+          </p>
         </div>
         {(onEdit || onDelete) && (
           <DropdownMenu>
@@ -133,13 +135,27 @@ function TaskCard({
               <MoreHorizontal className="size-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-36">
-              <DropdownMenuItem onClick={onClick} className="cursor-pointer gap-2">
+              <DropdownMenuItem
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onClick?.();
+                }}
+                onPointerDown={(event) => event.stopPropagation()}
+                className="cursor-pointer gap-2"
+              >
                 <Eye className="size-3.5" />
                 View details
               </DropdownMenuItem>
               {(onEdit || onDelete) && <DropdownMenuSeparator />}
               {onEdit && (
-                <DropdownMenuItem onClick={onEdit} className="cursor-pointer gap-2">
+                <DropdownMenuItem
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onEdit();
+                  }}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  className="cursor-pointer gap-2"
+                >
                   <Pencil className="size-3.5" />
                   Edit task
                 </DropdownMenuItem>
@@ -147,7 +163,11 @@ function TaskCard({
               {onEdit && onDelete && <DropdownMenuSeparator />}
               {onDelete && (
                 <DropdownMenuItem
-                  onClick={onDelete}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onDelete();
+                  }}
+                  onPointerDown={(event) => event.stopPropagation()}
                   className="cursor-pointer gap-2 text-destructive focus:text-destructive"
                 >
                   <Trash2 className="size-3.5" />
@@ -182,7 +202,7 @@ function TaskCard({
               })}
             </span>
           )}
-          <span className="flex items-center gap-1 rounded-md bg-muted px-1.5 py-1 text-[0.7rem] font-medium tabular-nums text-muted-foreground transition-colors group-hover:bg-background dark:group-hover:bg-card">
+          <span className="flex items-center gap-1 rounded-md border border-violet-500/20 bg-violet-500/10 px-1.5 py-1 text-[0.7rem] font-semibold tabular-nums text-violet-700 transition-colors group-hover:bg-violet-500/15 dark:text-violet-300">
             <MessageSquare className="size-3" />
             {task.commentCount ?? 0}
           </span>
@@ -480,8 +500,8 @@ export function LiveKanbanBoard({
             <p className="mb-1 text-xs font-medium text-muted-foreground">Project board</p>
             <div className="flex items-center gap-2">
               <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground">{boardName}</h1>
-              <span className="shrink-0 rounded-md border border-border bg-muted/60 px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
-                {kanban.tasks.data?.pagination.total ?? 0} tasks
+              <span className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-primary">
+                {kanban.tasks.data?.pagination.total ?? 0} total tasks
               </span>
             </div>
           </div>

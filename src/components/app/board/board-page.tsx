@@ -95,13 +95,13 @@ function TaskCard({
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-card p-3 shadow-sm transition-all",
+        "group rounded-xl border border-border bg-card p-3 shadow-sm transition-all",
         isDragging
           ? "opacity-40 shadow-none"
           : "hover:border-primary/30 hover:shadow-md",
       )}
     >
-      <p className="text-sm font-medium text-foreground leading-snug">
+      <p className="text-sm font-medium leading-snug text-foreground transition-colors group-hover:text-primary">
         {task.title}
       </p>
       <div className="mt-2.5 flex items-center gap-2">

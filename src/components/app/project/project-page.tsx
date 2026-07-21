@@ -42,14 +42,14 @@ function Breadcrumb({
     <nav className="mb-8 flex items-center gap-1.5 text-sm text-muted-foreground">
       <Link
         href={appRoutes.workspaces}
-        className="hover:text-foreground transition-colors"
+        className="cursor-pointer transition-colors hover:text-foreground"
       >
         Workspaces
       </Link>
       <ChevronRight className="size-3.5" />
       <Link
         href={appRoutes.workspace(workspace.slug)}
-        className="hover:text-foreground transition-colors"
+        className="cursor-pointer transition-colors hover:text-foreground"
       >
         {workspace.name}
       </Link>
@@ -114,13 +114,21 @@ function BoardCard({
   const dot = dotColors[index % dotColors.length];
 
   return (
-    <div className="group relative flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 transition-all duration-200 hover:border-primary/30 hover:shadow-lg hover:-translate-y-0.5">
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={() => router.push(boardHref)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          router.push(boardHref);
+        }
+      }}
+      className="group relative flex cursor-pointer flex-col gap-4 rounded-2xl border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 dark:hover:bg-muted/40 dark:hover:shadow-lg"
+    >
       {/* Top row */}
       <div className="flex items-start justify-between gap-3">
-        <Link
-          href={boardHref}
-          className="flex items-center gap-3 min-w-0 flex-1"
-        >
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted">
             <Columns3 className="size-4 text-muted-foreground" />
           </div>
@@ -134,13 +142,13 @@ function BoardCard({
               </p>
             )}
           </div>
-        </Link>
+        </div>
 
         {/* Three-dot menu */}
         <DropdownMenu>
           <DropdownMenuTrigger
-            onClick={(e) => e.stopPropagation()}
-            className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100"
+            onClick={(event) => event.stopPropagation()}
+            className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100"
           >
             <MoreHorizontal className="size-4" />
           </DropdownMenuTrigger>
@@ -169,7 +177,7 @@ function BoardCard({
       <div className="h-px bg-border" />
 
       {/* Footer row */}
-      <Link href={boardHref} className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <span className={cn("size-2 rounded-full", dot)} />
           <span className="text-xs text-muted-foreground">
@@ -179,7 +187,7 @@ function BoardCard({
         <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wide">
           Board
         </span>
-      </Link>
+      </div>
     </div>
   );
 }
@@ -205,6 +213,7 @@ function ConnectedProjectPage({
     | { mode: "edit" | "delete"; board: BoardDoc }
     | null
   >(null);
+  const router = useRouter();
   const { workspace, isLoading: isWorkspaceLoading } =
     useWorkspaceBySlug(workspaceSlug);
   const project = useProject(workspace?._id, projectId);
@@ -220,13 +229,15 @@ function ConnectedProjectPage({
   return (
     <div className="max-w-6xl px-4 py-6 sm:px-8">
       <nav className="mb-8 flex gap-2 text-sm text-muted-foreground">
-        <Link href={appRoutes.workspace(workspace.slug)}>{workspace.name}</Link>
+        <Link href={appRoutes.workspace(workspace.slug)} className="cursor-pointer transition-colors hover:text-foreground">
+          {workspace.name}
+        </Link>
         <ChevronRight className="size-4" />
         <span className="text-foreground">{project.data.name}</span>
       </nav>
 
       <section className="mb-8 overflow-hidden rounded-2xl border border-border bg-card">
-        <div className="h-1 bg-primary/20" />
+        <div className="h-1 bg-primary" />
         <div className="p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -238,19 +249,35 @@ function ConnectedProjectPage({
             <button
               type="button"
               onClick={() => setBoardModal({ mode: "create" })}
-              className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+              className="inline-flex cursor-pointer items-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               <Plus className="mr-2 inline size-4" />
               New board
             </button>
           </div>
-          <div className="mt-5 flex gap-3 text-sm text-muted-foreground">
-            <span className="rounded-xl border border-border px-3 py-2">
-              {project.data.taskCount} tasks
-            </span>
-            <span className="rounded-xl border border-border px-3 py-2">
-              {project.data.status.replace("_", " ")}
-            </span>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <CheckCircle2 className="size-4" />
+              </span>
+              <div>
+                <p className="text-[11px] text-muted-foreground">Tasks</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {project.data.taskCount} task{project.data.taskCount === 1 ? "" : "s"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <TrendingUp className="size-4" />
+              </span>
+              <div>
+                <p className="text-[11px] text-muted-foreground">Status</p>
+                <p className="text-sm font-semibold capitalize text-foreground">
+                  {project.data.status.replaceAll("_", " ").toLowerCase()}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -271,7 +298,7 @@ function ConnectedProjectPage({
           <button
             type="button"
             onClick={() => setBoardModal({ mode: "create" })}
-            className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm text-primary-foreground"
+            className="mt-4 inline-flex cursor-pointer items-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             Create board
           </button>
@@ -284,27 +311,49 @@ function ConnectedProjectPage({
             return (
               <article
                 key={board._id}
-                className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-lg"
+                role="link"
+                tabIndex={0}
+                onClick={() => router.push(boardHref)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    router.push(boardHref);
+                  }
+                }}
+                className="group cursor-pointer rounded-2xl border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 dark:hover:bg-muted/40 dark:hover:shadow-lg"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <Link href={boardHref} className="min-w-0 flex-1">
-                    <h3 className="truncate font-semibold transition-colors group-hover:text-primary">
-                      {board.name}
-                    </h3>
-                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                      {board.description}
-                    </p>
-                  </Link>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-3">
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted">
+                        <Columns3 className="size-4 text-muted-foreground" />
+                      </span>
+                      <div className="min-w-0">
+                        <h3 className="truncate font-semibold transition-colors group-hover:text-primary">
+                          {board.name}
+                        </h3>
+                        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                          {board.description || "No description yet"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger
-                      className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      onClick={(event) => event.stopPropagation()}
+                      onPointerDown={(event) => event.stopPropagation()}
+                      className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                       aria-label={`Board actions for ${board.name}`}
                     >
                       <MoreHorizontal className="size-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-40">
                       <DropdownMenuItem
-                        onClick={() => setBoardModal({ mode: "edit", board })}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setBoardModal({ mode: "edit", board });
+                        }}
+                        onPointerDown={(event) => event.stopPropagation()}
                         className="gap-2"
                       >
                         <Pencil className="size-3.5" />
@@ -312,7 +361,11 @@ function ConnectedProjectPage({
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => setBoardModal({ mode: "delete", board })}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setBoardModal({ mode: "delete", board });
+                        }}
+                        onPointerDown={(event) => event.stopPropagation()}
                         className="gap-2 text-destructive focus:text-destructive"
                       >
                         <Trash2 className="size-3.5" />
