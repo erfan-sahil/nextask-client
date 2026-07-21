@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Calendar,
   Crown,
   ListFilter,
   LogOut,
@@ -39,7 +38,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { useWorkspaceBySlug, useWorkspaceMembers } from "@/hooks/use-workflow";
 import { getErrorMessage } from "@/lib/api/get-error-message";
@@ -49,6 +47,12 @@ import type { MemberDoc, MemberRole } from "@/types/domain";
 const ROLE_ORDER: MemberRole[] = ["OWNER", "ADMIN", "MEMBER"];
 const EDITABLE_ROLES: MemberRole[] = ["ADMIN", "MEMBER"];
 const EMPTY_MEMBERS: MemberDoc[] = [];
+const ROLE_FILTER_OPTIONS: { value: MemberRole | "ALL"; label: string }[] = [
+  { value: "ALL", label: "All" },
+  { value: "OWNER", label: "Owners" },
+  { value: "ADMIN", label: "Admins" },
+  { value: "MEMBER", label: "Members" },
+];
 
 const roleConfig: Record<
   MemberRole,
@@ -73,7 +77,7 @@ const roleConfig: Record<
 
 type MemberModalState =
   | { mode: "invite" }
-  | { mode: "role" | "remove"; member: MemberDoc }
+  | { mode: "details" | "role" | "remove"; member: MemberDoc }
   | null;
 
 function getMemberName(member: MemberDoc) {
@@ -108,9 +112,9 @@ function RoleSelect({
       <Label htmlFor="member-role">Role</Label>
       <Select value={value} onValueChange={(nextRole) => onValueChange(nextRole as MemberRole)}>
         <SelectTrigger id="member-role" className="w-full">
-          <SelectValue />
+          <span>{roleConfig[value].label}</span>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent side="bottom" align="start" alignItemWithTrigger={false}>
           {EDITABLE_ROLES.map((role) => (
             <SelectItem key={role} value={role}>
               {roleConfig[role].label}
@@ -145,12 +149,21 @@ function MemberModal({
 
   const member = state.mode === "invite" ? undefined : state.member;
   const isInvite = state.mode === "invite";
+  const isDetails = state.mode === "details";
   const isRemove = state.mode === "remove";
   const isPending =
     members.invite.isPending || members.updateRole.isPending || members.remove.isPending;
-  const title = isInvite ? "Invite member" : isRemove ? "Remove member" : "Update member role";
+  const title = isInvite
+    ? "Invite member"
+    : isDetails
+      ? "Member details"
+      : isRemove
+        ? "Remove member"
+        : "Update member role";
   const description = isInvite
     ? "Send an invitation and set the member's initial access level."
+    : isDetails
+      ? "Workspace member profile and access details."
     : isRemove
       ? `Remove ${getMemberName(member!)} from this workspace. They will lose access to its projects and boards.`
       : `Update the access level for ${getMemberName(member!)}.`;
@@ -193,6 +206,36 @@ function MemberModal({
             <X className="size-4" />
           </button>
           <div className="space-y-5 px-6 py-5">
+            {isDetails && member && (
+              <div className="flex items-center gap-4">
+                <UserAvatar name={getMemberName(member)} avatar={member.userId.avatar} size="lg" />
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">{getMemberName(member)}</p>
+                  <p className="truncate text-sm text-muted-foreground">{member.userId.email}</p>
+                  <div className="mt-2">
+                    <RoleBadge role={member.role} />
+                  </div>
+                </div>
+              </div>
+            )}
+            {isDetails && member && (
+              <div className="grid grid-cols-2 gap-3 border-t border-border pt-5 text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground">Joined</p>
+                  <p className="mt-1 font-medium">
+                    {new Intl.DateTimeFormat("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    }).format(new Date(member.joinedAt))}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Access level</p>
+                  <p className="mt-1 font-medium">{roleConfig[member.role].label}</p>
+                </div>
+              </div>
+            )}
             {isInvite && (
               <>
                 <div className="space-y-2">
@@ -210,7 +253,7 @@ function MemberModal({
                 <RoleSelect value={role} onValueChange={setRole} />
               </>
             )}
-            {!isInvite && !isRemove && <RoleSelect value={role} onValueChange={setRole} />}
+            {!isInvite && !isDetails && !isRemove && <RoleSelect value={role} onValueChange={setRole} />}
             {formError && (
               <p className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                 {formError}
@@ -219,17 +262,19 @@ function MemberModal({
           </div>
           <div className="flex justify-end gap-3 border-t border-border bg-muted/30 px-6 py-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
-              Cancel
+              {isDetails ? "Close" : "Cancel"}
             </Button>
-            <Button type="submit" variant={isRemove ? "destructive" : "default"} disabled={isPending}>
-              {isPending
-                ? "Saving…"
-                : isInvite
-                  ? "Send invitation"
-                  : isRemove
-                    ? "Remove member"
-                    : "Save changes"}
-            </Button>
+            {!isDetails && (
+              <Button type="submit" variant={isRemove ? "destructive" : "default"} disabled={isPending}>
+                {isPending
+                  ? "Saving…"
+                  : isInvite
+                    ? "Send invitation"
+                    : isRemove
+                      ? "Remove member"
+                      : "Save changes"}
+              </Button>
+            )}
           </div>
         </form>
       </DialogContent>
@@ -240,30 +285,47 @@ function MemberModal({
 function MemberCard({
   member,
   canManage,
+  onOpenDetails,
   onEditRole,
   onRemove,
 }: {
   member: MemberDoc;
   canManage: boolean;
+  onOpenDetails: () => void;
   onEditRole: () => void;
   onRemove: () => void;
 }) {
   const name = getMemberName(member);
 
   return (
-    <article className="group rounded-2xl border border-border bg-card transition-all duration-200 hover:border-primary/30 hover:shadow-md">
-      <div className="flex items-center gap-3 p-4 sm:gap-4 sm:p-5">
-        <UserAvatar name={name} avatar={member.userId.avatar} size="lg" />
+    <article
+      role="button"
+      tabIndex={0}
+      onClick={onOpenDetails}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpenDetails();
+        }
+      }}
+      className="group cursor-pointer rounded-2xl border border-border bg-card transition-all duration-200 hover:border-primary/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <div className="flex items-center gap-3 px-3 py-2.5 sm:px-4">
+        <UserAvatar name={name} avatar={member.userId.avatar} size="md" />
         <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <h2 className="truncate text-sm font-semibold text-foreground">{name}</h2>
             <div className="sm:hidden">
               <RoleBadge role={member.role} />
             </div>
           </div>
-          <p className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+          <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
             <Mail className="size-3.5 shrink-0" />
             <span className="truncate">{member.userId.email}</span>
+            <span className="hidden shrink-0 text-border sm:inline">•</span>
+            <span className="hidden shrink-0 sm:inline">
+              Joined {new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric" }).format(new Date(member.joinedAt))}
+            </span>
           </p>
         </div>
         <div className="hidden shrink-0 sm:block">
@@ -273,6 +335,8 @@ function MemberCard({
           <DropdownMenu>
             <DropdownMenuTrigger
               aria-label={`Actions for ${name}`}
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => event.stopPropagation()}
               className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-all hover:bg-muted hover:text-foreground sm:opacity-0 sm:group-hover:opacity-100"
             >
               <MoreHorizontal className="size-4" />
@@ -293,16 +357,6 @@ function MemberCard({
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-      </div>
-      <div className="mx-4 h-px bg-border sm:mx-5" />
-      <div className="flex items-center gap-2 px-4 py-3 text-xs text-muted-foreground sm:px-5">
-        <Calendar className="size-3.5" />
-        Joined{" "}
-        {new Intl.DateTimeFormat("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }).format(new Date(member.joinedAt))}
       </div>
     </article>
   );
@@ -406,26 +460,25 @@ export function WorkspaceMembers({ workspaceSlug }: { workspaceSlug: string }) {
               {members.isLoading ? "Loading members…" : `${workspaceMembers.length} people with workspace access`}
             </p>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <div className="relative min-w-0 sm:w-72">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search name or email…"
-                className="pl-9"
+                className="h-10 rounded-xl pl-9"
               />
             </div>
             <Select value={roleFilter} onValueChange={(value) => setRoleFilter(value as MemberRole | "ALL")}>
-              <SelectTrigger className="w-full gap-2 sm:w-40">
+              <SelectTrigger aria-label="Filter members by role" className="h-10 w-full gap-2 rounded-xl sm:w-36">
                 <ListFilter className="size-3.5 text-muted-foreground" />
-                <SelectValue />
+                <span>{ROLE_FILTER_OPTIONS.find((option) => option.value === roleFilter)?.label}</span>
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All roles</SelectItem>
-                {ROLE_ORDER.map((role) => (
-                  <SelectItem key={role} value={role}>
-                    {roleConfig[role].label}s
+              <SelectContent side="bottom" align="start" alignItemWithTrigger={false}>
+                {ROLE_FILTER_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -469,6 +522,7 @@ export function WorkspaceMembers({ workspaceSlug }: { workspaceSlug: string }) {
                 key={member._id}
                 member={member}
                 canManage={canManageMember(member)}
+                onOpenDetails={() => setModalState({ mode: "details", member })}
                 onEditRole={() => setModalState({ mode: "role", member })}
                 onRemove={() => setModalState({ mode: "remove", member })}
               />
