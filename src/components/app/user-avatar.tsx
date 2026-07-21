@@ -6,6 +6,7 @@ type UserAvatarProps = {
   avatar?: string | null;
   size?: "sm" | "md" | "lg";
   fallback?: "initials" | "first-letter";
+  title?: string;
   className?: string;
 };
 
@@ -44,6 +45,7 @@ export function UserAvatar({
   avatar,
   size = "md",
   fallback = "initials",
+  title,
   className,
 }: UserAvatarProps) {
   if (avatar) {
@@ -53,6 +55,7 @@ export function UserAvatar({
       <Image
         src={avatar}
         alt={name}
+        title={title}
         width={pixelSize}
         height={pixelSize}
         className={cn(
@@ -71,6 +74,7 @@ export function UserAvatar({
         sizeClasses[size],
         className,
       )}
+      title={title}
       aria-hidden
     >
       {fallback === "first-letter" ? getFirstLetter(name) : getInitials(name)}

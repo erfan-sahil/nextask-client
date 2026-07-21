@@ -20,6 +20,8 @@ import {
   Calendar,
   ChevronDown,
   ChevronUp,
+  Eye,
+  MessageSquare,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -28,6 +30,7 @@ import {
 import { useMemo, useState } from "react";
 import { ColumnModal } from "@/components/app/board/column-modal";
 import { TaskModal } from "@/components/app/board/task-modal";
+import { UserAvatar } from "@/components/app/user-avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -124,6 +127,11 @@ function TaskCard({
               <MoreHorizontal className="size-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-36">
+              <DropdownMenuItem onClick={onClick} className="gap-2">
+                <Eye className="size-3.5" />
+                View details
+              </DropdownMenuItem>
+              {(onEdit || onDelete) && <DropdownMenuSeparator />}
               {onEdit && (
                 <DropdownMenuItem onClick={onEdit} className="gap-2">
                   <Pencil className="size-3.5" />
@@ -152,7 +160,7 @@ function TaskCard({
       >
         <div className="flex items-center gap-2">
           <span className={cn("rounded-full bg-muted px-2 py-0.5 text-[0.65rem] font-semibold tracking-wide", priorityClass[task.priority])}>
-            {task.priority.toLowerCase()}
+            {task.priority[0]}{task.priority.slice(1).toLowerCase()}
           </span>
           {task.dueDate && (
             <span
@@ -168,16 +176,21 @@ function TaskCard({
               })}
             </span>
           )}
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <MessageSquare className="size-3" />
+            {task.commentCount ?? 0}
+          </span>
           {task.assignees.length > 0 && (
             <span className="ml-auto flex -space-x-1.5">
               {task.assignees.slice(0, 3).map((assignee) => (
-                <span
+                <UserAvatar
                   key={assignee._id}
+                  name={`${assignee.firstName} ${assignee.lastName}`}
+                  avatar={assignee.avatar}
                   title={`${assignee.firstName} ${assignee.lastName}`}
-                  className="flex size-6 items-center justify-center rounded-full border-2 border-card bg-primary/10 text-[0.6rem] font-bold text-primary"
-                >
-                  {`${assignee.firstName[0] ?? ""}${assignee.lastName[0] ?? ""}`}
-                </span>
+                  size="sm"
+                  className="size-6 border-2 border-card text-[0.6rem]"
+                />
               ))}
               {task.assignees.length > 3 && (
                 <span className="flex size-6 items-center justify-center rounded-full border-2 border-card bg-muted text-[0.6rem] font-semibold text-muted-foreground">
@@ -268,6 +281,7 @@ function KanbanColumn({
   onEditColumn,
   onDeleteColumn,
   onOpenTask,
+  onEditTask,
   onDeleteTask,
   onMoveTask,
 }: {
@@ -277,6 +291,7 @@ function KanbanColumn({
   onEditColumn: () => void;
   onDeleteColumn: () => void;
   onOpenTask: (task: TaskDoc) => void;
+  onEditTask: (task: TaskDoc) => void;
   onDeleteTask: (task: TaskDoc) => void;
   onMoveTask: (task: TaskDoc, position: number) => void;
 }) {
@@ -341,7 +356,7 @@ function KanbanColumn({
               key={task._id}
               task={task}
               onClick={() => onOpenTask(task)}
-              onEdit={() => onOpenTask(task)}
+              onEdit={() => onEditTask(task)}
               onDelete={() => onDeleteTask(task)}
               onMoveUp={() => onMoveTask(task, index - 1)}
               onMoveDown={() => onMoveTask(task, index + 1)}
@@ -481,6 +496,7 @@ export function LiveKanbanBoard({
                 onEditColumn={() => setColumnModal({ mode: "edit", column })}
                 onDeleteColumn={() => setColumnModal({ mode: "delete", column })}
                 onOpenTask={(task) => setTaskModal({ mode: "details", task })}
+                onEditTask={(task) => setTaskModal({ mode: "edit", task })}
                 onDeleteTask={(task) => setTaskModal({ mode: "delete", task })}
                 onMoveTask={moveTask}
               />

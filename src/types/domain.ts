@@ -77,6 +77,7 @@ export type TaskDoc = {
   dueDate: string | null;
   labels: string[];
   completedAt: string | null;
+  commentCount?: number;
   createdBy: ApiUser;
   updatedBy: ApiUser;
 };

@@ -12,9 +12,11 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { format } from "date-fns";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/app/user-avatar";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +26,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -81,6 +88,12 @@ export function TaskModal({
   const [title, setTitle] = useState(task?.title ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
   const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? "MEDIUM");
+  const [dueDate, setDueDate] = useState(
+    task?.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : "",
+  );
+  const [calendarMonth, setCalendarMonth] = useState(
+    task?.dueDate ? new Date(task.dueDate) : new Date(),
+  );
   const [columnId, setColumnId] = useState(
     task ? getColumnId(task.columnId) : initialColumnId ?? columns[0]?._id ?? "",
   );
@@ -117,6 +130,14 @@ export function TaskModal({
       `${member.firstName} ${member.lastName} ${member.email}`.toLowerCase().includes(search),
     );
   }, [memberSearch, members]);
+  const selectedAssignees = useMemo(() => {
+    const membersById = new Map(members.map((member) => [member._id, member]));
+    const taskAssigneesById = new Map(task?.assignees.map((member) => [member._id, member]));
+
+    return assigneeIds
+      .map((memberId) => membersById.get(memberId) ?? taskAssigneesById.get(memberId))
+      .filter((member) => member !== undefined)
+  }, [assigneeIds, members, task?.assignees]);
 
   function toggleAssignee(memberId: string) {
     setAssigneeIds((currentAssigneeIds) =>
@@ -155,6 +176,7 @@ export function TaskModal({
           priority,
           columnId,
           assignees: assigneeIds,
+          dueDate: dueDate || null,
         });
       } else {
         await kanban.createTask.mutateAsync({
@@ -166,6 +188,7 @@ export function TaskModal({
           priority,
           columnId,
           assignees: assigneeIds,
+          dueDate: dueDate || undefined,
         });
       }
       onOpenChange(false);
@@ -198,6 +221,7 @@ export function TaskModal({
       : task
         ? "Edit task"
         : "Create task";
+  const selectedDueDate = dueDate ? new Date(`${dueDate}T00:00:00`) : undefined;
 
   return (
     <Dialog
@@ -209,7 +233,9 @@ export function TaskModal({
       <DialogContent className={isDetails ? "max-w-3xl" : isDeleting ? "max-w-md" : undefined}>
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <DialogHeader className={isDetails || isDeleting ? "relative pr-10" : undefined}>
-            <DialogTitle>{heading}</DialogTitle>
+            <DialogTitle className={!task && !isDeleting ? "text-primary" : undefined}>
+              {heading}
+            </DialogTitle>
             <DialogDescription>
               {isDeleting
                 ? `This will permanently delete ${task?.title}.`
@@ -221,7 +247,7 @@ export function TaskModal({
               <button
                 type="button"
                 onClick={closeModal}
-                className="absolute top-0 right-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="absolute top-0 right-0 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label={isDeleting ? "Close delete task dialog" : "Close task details"}
                 disabled={isPending}
               >
@@ -354,7 +380,7 @@ export function TaskModal({
                   if (value) setColumnId(value);
                 }}
               >
-                <SelectTrigger id="task-column" className="h-10 w-full rounded-xl bg-background px-3">
+                <SelectTrigger id="task-column" className="h-10 w-full cursor-pointer rounded-xl bg-background px-3">
                   <SelectValue placeholder="Select a column">
                     {(value: string | null) =>
                       columns.find((column) => column._id === value)?.name ??
@@ -379,8 +405,12 @@ export function TaskModal({
                   if (value) setPriority(value as TaskPriority);
                 }}
               >
-                <SelectTrigger id="task-priority" className="h-10 w-full rounded-xl bg-background px-3">
-                  <SelectValue />
+                <SelectTrigger id="task-priority" className="h-10 w-full cursor-pointer rounded-xl bg-background px-3">
+                  <SelectValue>
+                    {(value: string | null) =>
+                      value ? `${value[0]}${value.slice(1).toLowerCase()}` : "Select priority"
+                    }
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent align="start">
                   {(["LOW", "MEDIUM", "HIGH", "URGENT"] as const).map((value) => (
@@ -391,17 +421,57 @@ export function TaskModal({
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-1.5">
+              <Label>Deadline</Label>
+              <Popover>
+                <PopoverTrigger
+                  type="button"
+                  className="flex h-10 w-full cursor-pointer items-center gap-2 rounded-xl border border-input bg-background px-3 text-left text-sm font-normal transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                  aria-label="Select task deadline"
+                >
+                  <CalendarDays className="size-4 text-muted-foreground" />
+                  <span className={dueDate ? "text-foreground" : "text-muted-foreground"}>
+                    {selectedDueDate ? format(selectedDueDate, "PPP") : "Pick a date"}
+                  </span>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    month={calendarMonth}
+                    onMonthChange={setCalendarMonth}
+                    selected={selectedDueDate}
+                    onSelect={(date) => {
+                      setDueDate(date ? format(date, "yyyy-MM-dd") : "");
+                      if (date) setCalendarMonth(date);
+                    }}
+                  />
+                  {dueDate && (
+                    <div className="border-t border-border p-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setDueDate("")}
+                      >
+                        Clear deadline
+                      </Button>
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
+            </div>
             <div className="space-y-1.5 sm:col-span-2">
               <Label>Assignees</Label>
               <DropdownMenu>
                 <DropdownMenuTrigger
-                  className="flex h-10 w-full items-center gap-2 rounded-xl border border-input bg-background px-3 text-left text-sm outline-none hover:bg-accent focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                  className="flex h-10 w-full cursor-pointer items-center gap-2 rounded-xl border border-input bg-background px-3 text-left text-sm outline-none hover:bg-accent focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                   aria-label="Select task assignees"
                 >
                   <Users className="size-4 shrink-0 text-muted-foreground" />
-                  <span className="truncate text-muted-foreground">
+                  <span className={assigneeIds.length ? "truncate" : "truncate text-muted-foreground"}>
                     {assigneeIds.length
-                      ? `${assigneeIds.length} member${assigneeIds.length === 1 ? "" : "s"} assigned`
+                      ? `${assigneeIds.length} member${assigneeIds.length === 1 ? "" : "s"} selected`
                       : "Assign members"}
                   </span>
                 </DropdownMenuTrigger>
@@ -428,7 +498,7 @@ export function TaskModal({
                         key={member._id}
                         checked={assigneeIds.includes(member._id)}
                         onCheckedChange={() => toggleAssignee(member._id)}
-                        className="gap-2 px-2 py-2"
+                        className="cursor-pointer gap-2 px-2 py-2"
                       >
                         <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[0.65rem] font-semibold text-primary">
                           {`${member.firstName[0] ?? ""}${member.lastName[0] ?? ""}`}
@@ -451,6 +521,18 @@ export function TaskModal({
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
+              {selectedAssignees.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {selectedAssignees.map((member) => (
+                    <span
+                      key={member._id}
+                      className="rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary"
+                    >
+                      {member.firstName} {member.lastName}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

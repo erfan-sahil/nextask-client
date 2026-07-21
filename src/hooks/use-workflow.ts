@@ -233,12 +233,16 @@ export function useTaskComments(
 ) {
   const queryClient = useQueryClient();
   const key = workflowQueryKeys.comments(workspaceId ?? "", projectId ?? "", boardId ?? "", taskId ?? "");
+  const tasksKey = workflowQueryKeys.tasks(workspaceId ?? "", projectId ?? "", boardId ?? "");
   const query = useQuery({
     queryKey: key,
     queryFn: () => workflowApi.listComments({ workspaceId: workspaceId!, projectId: projectId!, boardId: boardId!, taskId: taskId!, limit: 100 }),
     enabled: Boolean(workspaceId && projectId && boardId && taskId),
   });
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: key });
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: key });
+    queryClient.invalidateQueries({ queryKey: tasksKey });
+  };
   return {
     ...query,
     create: useMutation({ mutationFn: workflowApi.createComment, onSuccess: invalidate }),
