@@ -1,10 +1,16 @@
 "use client";
 
-import { ChevronDown, Plus } from "lucide-react";
+import { ChevronDown, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { CreateWorkspaceModal } from "@/components/app/workspaces/create-workspace-modal";
+import { WorkspaceModal } from "@/components/app/workspaces/workspace-modal";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { appRoutes } from "@/config/navigation";
 import { cn } from "@/lib/utils";
 import type { WorkspaceDoc } from "@/types/domain";
@@ -26,6 +32,10 @@ export function WorkspaceSwitcher({
   const [isOpen, setIsOpen] = useState(false);
   const [isCreateWorkspaceModalOpen, setIsCreateWorkspaceModalOpen] =
     useState(false);
+  const [workspaceAction, setWorkspaceAction] = useState<{
+    mode: "edit" | "delete";
+    workspace: WorkspaceDoc;
+  } | null>(null);
   const activeWorkspace =
     workspaces.find((workspace) => workspace._id === activeWorkspaceId) ??
     workspaces[0];
@@ -53,9 +63,10 @@ export function WorkspaceSwitcher({
             </Button>
           )}
         </div>
-        <CreateWorkspaceModal
+        <WorkspaceModal
           isOpen={isCreateWorkspaceModalOpen}
           onOpenChange={setIsCreateWorkspaceModalOpen}
+          mode="create"
           onCreated={handleWorkspaceCreated}
         />
       </>
@@ -70,6 +81,14 @@ export function WorkspaceSwitcher({
   function handleWorkspaceCreated(workspace: WorkspaceDoc) {
     setIsOpen(false);
     router.push(appRoutes.workspace(workspace.slug));
+  }
+
+  function handleWorkspaceDeleted(workspace: WorkspaceDoc) {
+    setWorkspaceAction(null);
+    setIsOpen(false);
+    if (workspace._id === activeWorkspace._id) {
+      router.push(appRoutes.workspaces);
+    }
   }
 
   return (
@@ -126,18 +145,21 @@ export function WorkspaceSwitcher({
               {workspaces.map((workspace) => {
                 const isActive = workspace._id === activeWorkspace._id;
                 return (
-                  <li key={workspace._id}>
+                  <li
+                    key={workspace._id}
+                    role="option"
+                    aria-selected={isActive}
+                    className={cn(
+                      "group flex items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors",
+                      isActive
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "hover:bg-muted",
+                    )}
+                  >
                     <button
                       type="button"
-                      role="option"
-                      aria-selected={isActive}
                       onClick={() => handleSelect(workspace)}
-                      className={cn(
-                        "flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors",
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "hover:bg-muted",
-                      )}
+                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
                     >
                       <span
                         className={cn(
@@ -159,6 +181,32 @@ export function WorkspaceSwitcher({
                         <span className="size-1.5 shrink-0 rounded-full bg-primary" />
                       )}
                     </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label={`Manage ${workspace.name}`}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <MoreHorizontal className="size-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem
+                          className="whitespace-nowrap"
+                          onClick={() => setWorkspaceAction({ mode: "edit", workspace })}
+                        >
+                          <Pencil />
+                          Edit workspace
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          className="whitespace-nowrap"
+                          onClick={() => setWorkspaceAction({ mode: "delete", workspace })}
+                        >
+                          <Trash2 />
+                          Delete workspace
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </li>
                 );
               })}
@@ -178,10 +226,25 @@ export function WorkspaceSwitcher({
           </div>
         </>
       )}
-      <CreateWorkspaceModal
+      <WorkspaceModal
         isOpen={isCreateWorkspaceModalOpen}
         onOpenChange={setIsCreateWorkspaceModalOpen}
+        mode="create"
         onCreated={handleWorkspaceCreated}
+      />
+      <WorkspaceModal
+        key={
+          workspaceAction
+            ? `${workspaceAction.mode}-${workspaceAction.workspace._id}`
+            : "workspace-action"
+        }
+        isOpen={workspaceAction !== null}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setWorkspaceAction(null);
+        }}
+        mode={workspaceAction?.mode ?? "edit"}
+        workspace={workspaceAction?.workspace}
+        onDeleted={handleWorkspaceDeleted}
       />
     </div>
   );
