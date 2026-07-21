@@ -1,16 +1,54 @@
 "use client";
 
-import { FolderKanban, Plus, Trash2 } from "lucide-react";
+import {
+  CheckCircle2,
+  FolderKanban,
+  LayoutGrid,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { CreateProjectModal } from "@/components/app/project/create-project-modal";
+import { ProjectModal } from "@/components/app/project/project-modal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { appRoutes } from "@/config/navigation";
 import { getErrorMessage } from "@/lib/api/get-error-message";
 import { useProjects, useWorkspaceBySlug } from "@/hooks/use-workflow";
+import type { ProjectDoc } from "@/types/domain";
+
+const PROJECT_ACCENTS = [
+  "bg-primary/10 text-primary",
+  "bg-chart-2/15 text-chart-2",
+  "bg-chart-3/15 text-chart-3",
+  "bg-chart-4/15 text-chart-4",
+  "bg-chart-5/15 text-chart-5",
+];
+
+function formatStatus(status: ProjectDoc["status"]) {
+  return status
+    .toLowerCase()
+    .replaceAll("_", " ")
+    .replace(/^\w/, (letter) => letter.toUpperCase());
+}
 
 export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] =
     useState(false);
+  const [projectModal, setProjectModal] = useState<
+    | { mode: "edit" | "delete"; project: ProjectDoc }
+    | null
+  >(null);
   const { workspace, isLoading, error } = useWorkspaceBySlug(workspaceSlug);
   const projects = useProjects(workspace?._id);
 
@@ -35,7 +73,7 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
   return (
     <div className="max-w-6xl px-4 py-6 sm:px-8">
       <section className="mb-8 overflow-hidden rounded-2xl border border-border bg-card">
-        <div className="h-1 bg-primary/20" />
+        <div className="h-1 bg-primary" />
         <div className="p-6">
           <div className="flex items-start gap-4">
             <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-lg font-bold text-primary">
@@ -49,19 +87,42 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
                 {workspace.description}
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() => setIsCreateProjectModalOpen(true)}
+              className="hidden shrink-0 cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:inline-flex"
+            >
+              <Plus className="size-4" />
+              New project
+            </button>
           </div>
           <div className="mt-5 flex flex-wrap gap-3">
-            <div className="rounded-xl border border-border bg-background px-4 py-3 text-sm">
-              <span className="text-muted-foreground">Projects </span>
-              <strong>{workspace.projectCount}</strong>
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <LayoutGrid className="size-4" />
+              </span>
+              <div>
+                <p className="text-[11px] text-muted-foreground">Projects</p>
+                <p className="text-sm font-semibold text-foreground">{workspace.projectCount}</p>
+              </div>
             </div>
-            <div className="rounded-xl border border-border bg-background px-4 py-3 text-sm">
-              <span className="text-muted-foreground">Members </span>
-              <strong>{workspace.memberCount}</strong>
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                <Users className="size-4" />
+              </span>
+              <div>
+                <p className="text-[11px] text-muted-foreground">Members</p>
+                <p className="text-sm font-semibold text-foreground">{workspace.memberCount}</p>
+              </div>
             </div>
-            <div className="rounded-xl border border-border bg-background px-4 py-3 text-sm">
-              <span className="text-muted-foreground">Tasks </span>
-              <strong>{workspace.taskCount}</strong>
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                <CheckCircle2 className="size-4" />
+              </span>
+              <div>
+                <p className="text-[11px] text-muted-foreground">Tasks</p>
+                <p className="text-sm font-semibold text-foreground">{workspace.taskCount}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -77,7 +138,7 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
         <button
           type="button"
           onClick={() => setIsCreateProjectModalOpen(true)}
-          className="flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:hidden"
         >
           <Plus className="size-4" />
           New project
@@ -90,50 +151,85 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
         </p>
       ) : !projects.data?.projects.length ? (
         <div className="flex flex-col items-center rounded-2xl border-2 border-dashed border-border py-20 text-center">
-          <FolderKanban className="mb-4 size-8 text-muted-foreground" />
+          <span className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-muted">
+            <FolderKanban className="size-6 text-muted-foreground/60" />
+          </span>
           <p className="font-semibold">No projects yet</p>
+          <p className="mt-1 max-w-xs text-xs text-muted-foreground">
+            Create a project to organize boards, tasks, and your team&apos;s work.
+          </p>
           <button
             type="button"
             onClick={() => setIsCreateProjectModalOpen(true)}
-            className="mt-5 rounded-xl bg-primary px-4 py-2 text-sm text-primary-foreground"
+            className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
+            <Plus className="size-4" />
             Create project
           </button>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {projects.data.projects.map((project) => (
+          {projects.data.projects.map((project, index) => (
             <article
               key={project._id}
-              className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-lg"
+              className="group cursor-pointer rounded-2xl border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 dark:hover:bg-muted/40 dark:hover:shadow-lg"
             >
-              <Link href={appRoutes.project(workspace.slug, project._id)}>
-                <h3 className="font-semibold group-hover:text-primary">
-                  {project.name}
-                </h3>
-                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                  {project.description}
-                </p>
-              </Link>
-              <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-                <span>{project.taskCount} tasks</span>
-                <span>{project.status.replace("_", " ")}</span>
+              <div className="flex items-start justify-between gap-3">
+                <Link
+                  href={appRoutes.project(workspace.slug, project._id)}
+                  className="flex min-w-0 flex-1 items-start gap-3"
+                >
+                  <span
+                    className={`flex size-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold ${PROJECT_ACCENTS[index % PROJECT_ACCENTS.length]}`}
+                  >
+                    {project.name.slice(0, 1).toUpperCase()}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-foreground transition-colors group-hover:text-primary">
+                      {project.name}
+                    </span>
+                    <span className="mt-0.5 block line-clamp-2 text-xs text-muted-foreground">
+                      {project.description || "No description yet"}
+                    </span>
+                  </span>
+                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={`Project actions for ${project.name}`}
+                  >
+                    <MoreHorizontal className="size-4" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40">
+                    <DropdownMenuItem
+                      onClick={() => setProjectModal({ mode: "edit", project })}
+                      className="gap-2"
+                    >
+                      <Pencil className="size-3.5" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => setProjectModal({ mode: "delete", project })}
+                      className="gap-2 text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="size-3.5" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  if (window.confirm(`Delete ${project.name}?`)) {
-                    projects.remove.mutate({
-                      workspaceId: workspace._id,
-                      projectId: project._id,
-                    });
-                  }
-                }}
-                className="mt-4 flex items-center gap-1 text-xs text-destructive"
-              >
-                <Trash2 className="size-3" />
-                Delete
-              </button>
+              <div className="my-4 h-px bg-border" />
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="size-2 rounded-full bg-primary" />
+                  {project.taskCount} task{project.taskCount === 1 ? "" : "s"}
+                </span>
+                <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground/70">
+                  <TrendingUp className="size-3" />
+                  {formatStatus(project.status)}
+                </span>
+              </div>
             </article>
           ))}
         </div>
@@ -144,6 +240,19 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
         workspaceId={workspace._id}
         workspaceName={workspace.name}
       />
+      {projectModal && (
+        <ProjectModal
+          key={`${projectModal.mode}-${projectModal.project._id}`}
+          isOpen
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setProjectModal(null);
+          }}
+          workspaceId={workspace._id}
+          workspaceName={workspace.name}
+          project={projectModal.project}
+          mode={projectModal.mode}
+        />
+      )}
     </div>
   );
 }
