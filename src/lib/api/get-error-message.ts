@@ -6,7 +6,7 @@ const stripBodyPrefix = (field: string) => field.replace(/^body\./, "");
 export const getErrorMessage = (
   error: unknown,
   fallback = "Something went wrong",
-) => {
+): string => {
   if (axios.isAxiosError<ApiErrorResponse>(error)) {
     if (!error.response) {
       return "Unable to reach the server. Check your connection and try again.";

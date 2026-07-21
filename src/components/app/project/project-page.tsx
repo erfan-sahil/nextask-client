@@ -19,6 +19,7 @@ import { appRoutes } from "@/config/navigation";
 import { mockBoards } from "@/lib/mock/dashboard-data";
 import { cn } from "@/lib/utils";
 import type { BoardMeta, Project, Workspace } from "@/types/workspace";
+import { useBoards, useProject, useWorkspaceBySlug } from "@/hooks/use-workflow";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -180,12 +181,57 @@ function BoardCard({
   );
 }
 
-type ProjectPageProps = {
+type MockProjectPageProps = {
   workspace: Workspace;
   project: Project;
 };
 
-export function ProjectPage({ workspace, project }: ProjectPageProps) {
+type ProjectPageProps =
+  | MockProjectPageProps
+  | { workspaceSlug: string; projectId: string };
+
+function ConnectedProjectPage({
+  workspaceSlug,
+  projectId,
+}: {
+  workspaceSlug: string;
+  projectId: string;
+}) {
+  const { workspace, isLoading: isWorkspaceLoading } =
+    useWorkspaceBySlug(workspaceSlug);
+  const project = useProject(workspace?._id, projectId);
+  const boards = useBoards(workspace?._id, projectId);
+
+  if (isWorkspaceLoading || project.isLoading) {
+    return <div className="p-8 text-sm text-muted-foreground">Loading project…</div>;
+  }
+  if (!workspace || !project.data) {
+    return <div className="p-8 text-sm text-destructive">Project not found or you do not have access.</div>;
+  }
+
+  const createBoard = async () => {
+    const name = window.prompt("Board name");
+    if (!name) return;
+    await boards.create.mutateAsync({
+      workspaceId: workspace._id,
+      projectId,
+      name,
+    });
+  };
+
+  return (
+    <div className="max-w-6xl px-4 py-6 sm:px-8">
+      <nav className="mb-8 flex gap-2 text-sm text-muted-foreground"><Link href={appRoutes.workspace(workspace.slug)}>{workspace.name}</Link><ChevronRight className="size-4" /><span className="text-foreground">{project.data.name}</span></nav>
+      <section className="mb-8 overflow-hidden rounded-2xl border border-border bg-card"><div className="h-1 bg-primary/20" /><div className="p-6"><div className="flex items-start justify-between gap-4"><div><h1 className="text-2xl font-bold">{project.data.name}</h1><p className="mt-1 text-sm text-muted-foreground">{project.data.description}</p></div><button onClick={createBoard} className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"><Plus className="mr-2 inline size-4" />New board</button></div><div className="mt-5 flex gap-3 text-sm text-muted-foreground"><span className="rounded-xl border border-border px-3 py-2">{project.data.taskCount} tasks</span><span className="rounded-xl border border-border px-3 py-2">{project.data.status.replace("_", " ")}</span></div></div></section>
+      <div className="mb-5 flex items-center justify-between"><div><h2 className="font-semibold">Boards</h2><p className="text-xs text-muted-foreground">{boards.data?.pagination.total ?? 0} boards in this project</p></div></div>
+      {boards.isLoading ? <p className="text-sm text-muted-foreground">Loading boards…</p> : !boards.data?.boards.length ? <div className="rounded-2xl border-2 border-dashed border-border py-16 text-center"><Columns3 className="mx-auto size-8 text-muted-foreground" /><p className="mt-3 font-semibold">No boards yet</p><button onClick={createBoard} className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm text-primary-foreground">Create board</button></div> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{boards.data.boards.map((board) => <article key={board._id} className="rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-lg"><Link href={appRoutes.board(workspace.slug, projectId, board._id)}><h3 className="font-semibold hover:text-primary">{board.name}</h3><p className="mt-1 text-sm text-muted-foreground">{board.description}</p></Link><button onClick={() => { if (window.confirm(`Delete ${board.name}?`)) boards.remove.mutate({ workspaceId: workspace._id, projectId, boardId: board._id }); }} className="mt-4 text-xs text-destructive">Delete board</button></article>)}</div>}
+    </div>
+  );
+}
+
+export function ProjectPage(props: ProjectPageProps) {
+  if ("workspaceSlug" in props) return <ConnectedProjectPage {...props} />;
+  const { workspace, project } = props;
   const boards = mockBoards.filter((b) => b.projectId === project.id);
   const pct =
     project.taskCount === 0

@@ -34,6 +34,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { appRoutes } from "@/config/navigation";
 import { cn } from "@/lib/utils";
+import { useKanban, useWorkspaceBySlug } from "@/hooks/use-workflow";
 import type {
   Board,
   BoardColumn,
@@ -259,13 +260,63 @@ function Breadcrumb({
 
 // ─── BoardPage ────────────────────────────────────────────────────────────────
 
-type BoardPageProps = {
+type MockBoardPageProps = {
   workspace: Workspace;
   project: Project;
   board: Board;
 };
 
-export function BoardPage({ workspace, project, board }: BoardPageProps) {
+type BoardPageProps =
+  | MockBoardPageProps
+  | { workspaceSlug: string; projectId: string; boardId: string };
+
+function ConnectedBoardPage({
+  workspaceSlug,
+  projectId,
+  boardId,
+}: {
+  workspaceSlug: string;
+  projectId: string;
+  boardId: string;
+}) {
+  const { workspace, isLoading: isWorkspaceLoading } =
+    useWorkspaceBySlug(workspaceSlug);
+  const kanban = useKanban(workspace?._id, projectId, boardId);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+
+  if (isWorkspaceLoading || kanban.columns.isLoading || kanban.tasks.isLoading) {
+    return <div className="p-8 text-sm text-muted-foreground">Loading board…</div>;
+  }
+  if (!workspace || !kanban.columns.data || !kanban.tasks.data) {
+    return <div className="p-8 text-sm text-destructive">Board not found or you do not have access.</div>;
+  }
+
+  const columns = [...kanban.columns.data].sort((a, b) => a.position - b.position);
+  const tasksByColumn = new Map(columns.map((column) => [column._id, kanban.tasks.data!.tasks.filter((task) => task.columnId === column._id)]));
+  const createTask = async (columnId: string) => {
+    const title = newTaskTitle.trim() || window.prompt("Task title")?.trim();
+    if (!title) return;
+    await kanban.createTask.mutateAsync({ workspaceId: workspace._id, projectId, boardId, columnId, title });
+    setNewTaskTitle("");
+  };
+  const createColumn = async () => {
+    const name = window.prompt("Column name")?.trim();
+    if (!name) return;
+    await kanban.createColumn.mutateAsync({ workspaceId: workspace._id, projectId, boardId, name, position: columns.length });
+  };
+
+  return (
+    <div className="flex h-full flex-col">
+      <header className="border-b border-border px-4 py-4 sm:px-6"><div className="flex items-center justify-between gap-4"><div><h1 className="text-xl font-bold">Board</h1><p className="text-xs text-muted-foreground">{kanban.tasks.data.pagination.total} tasks</p></div><button onClick={createColumn} className="rounded-xl border border-border px-3 py-2 text-xs font-medium"><Plus className="mr-1 inline size-3.5" />Add column</button></div></header>
+      <div className="scrollbar-hidden flex-1 overflow-x-auto"><div className="flex h-full items-start gap-4 p-4 sm:p-6" style={{ minWidth: "max-content" }}>{columns.map((column) => <section key={column._id} className="flex w-72 shrink-0 flex-col gap-3 rounded-2xl bg-muted/60 p-3"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><span className="size-2 rounded-full" style={{ backgroundColor: column.color ?? "#64748b" }} /><strong className="text-sm">{column.name}</strong><span className="rounded-full bg-background px-2 py-0.5 text-xs">{tasksByColumn.get(column._id)?.length ?? 0}</span></div><button onClick={() => { const nextName = window.prompt("Rename column", column.name); if (nextName) kanban.updateColumn.mutate({ workspaceId: workspace._id, projectId, boardId, columnId: column._id, name: nextName }); }} className="text-xs text-muted-foreground">Edit</button></div><div className="flex flex-col gap-2">{tasksByColumn.get(column._id)?.map((task) => <article key={task._id} className="rounded-xl border border-border bg-card p-3 shadow-sm"><p className="text-sm font-medium">{task.title}</p><p className="mt-1 text-xs text-muted-foreground">{task.priority}</p><select value={task.columnId} onChange={(event) => kanban.updateTask.mutate({ workspaceId: workspace._id, projectId, boardId, taskId: task._id, columnId: event.target.value })} className="mt-3 w-full rounded-lg border border-border bg-background p-1 text-xs">{columns.map((target) => <option key={target._id} value={target._id}>{target.name}</option>)}</select><button onClick={() => { if (window.confirm(`Delete ${task.title}?`)) kanban.deleteTask.mutate({ workspaceId: workspace._id, projectId, boardId, taskId: task._id }); }} className="mt-2 text-xs text-destructive">Delete task</button></article>)}</div><button onClick={() => createTask(column._id)} className="rounded-xl px-2 py-2 text-left text-xs text-muted-foreground hover:bg-background"><Plus className="mr-1 inline size-3.5" />Add task</button></section>)}</div></div>
+      <input value={newTaskTitle} onChange={(event) => setNewTaskTitle(event.target.value)} placeholder="Optional task title, then click Add task" className="sr-only" />
+    </div>
+  );
+}
+
+export function BoardPage(props: BoardPageProps) {
+  if ("workspaceSlug" in props) return <ConnectedBoardPage {...props} />;
+  const { workspace, project, board } = props;
   const [columns, setColumns] = useState<BoardColumn[]>(board.columns);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
 

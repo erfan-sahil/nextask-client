@@ -5,29 +5,37 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { appRoutes } from "@/config/navigation";
-import { mockWorkspaces } from "@/lib/mock/dashboard-data";
 import { cn } from "@/lib/utils";
-import type { Workspace } from "@/types/workspace";
+import type { WorkspaceDoc } from "@/types/domain";
 
 type WorkspaceSwitcherProps = {
-  workspaces?: Workspace[];
+  workspaces: WorkspaceDoc[];
   activeWorkspaceId?: string;
   className?: string;
+  isLoading?: boolean;
 };
 
 export function WorkspaceSwitcher({
-  workspaces = mockWorkspaces,
-  activeWorkspaceId = workspaces[0]?.id,
+  workspaces,
+  activeWorkspaceId = workspaces[0]?._id,
   className,
+  isLoading = false,
 }: WorkspaceSwitcherProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const activeWorkspace =
-    workspaces.find((w) => w.id === activeWorkspaceId) ?? workspaces[0];
+    workspaces.find((workspace) => workspace._id === activeWorkspaceId) ??
+    workspaces[0];
 
-  if (!activeWorkspace) return null;
+  if (!activeWorkspace) {
+    return (
+      <div className={cn("rounded-xl border border-sidebar-border px-3 py-2.5 text-sm text-muted-foreground", className)}>
+        {isLoading ? "Loading workspaces…" : "No workspaces yet"}
+      </div>
+    );
+  }
 
-  function handleSelect(workspace: Workspace) {
+  function handleSelect(workspace: WorkspaceDoc) {
     router.push(appRoutes.workspace(workspace.slug));
     setIsOpen(false);
   }
@@ -44,10 +52,10 @@ export function WorkspaceSwitcher({
         <span
           className={cn(
             "flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
-            activeWorkspace.color,
+            "bg-primary/15 text-primary",
           )}
         >
-          {activeWorkspace.initials}
+          {activeWorkspace.name.slice(0, 2).toUpperCase()}
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-semibold text-sidebar-foreground">
@@ -84,9 +92,9 @@ export function WorkspaceSwitcher({
             </div>
             <ul className="max-h-56 overflow-y-auto p-1.5">
               {workspaces.map((workspace) => {
-                const isActive = workspace.id === activeWorkspace.id;
+                const isActive = workspace._id === activeWorkspace._id;
                 return (
-                  <li key={workspace.id}>
+                  <li key={workspace._id}>
                     <button
                       type="button"
                       role="option"
@@ -102,10 +110,10 @@ export function WorkspaceSwitcher({
                       <span
                         className={cn(
                           "flex size-7 shrink-0 items-center justify-center rounded-md text-[0.65rem] font-bold",
-                          workspace.color,
+                          "bg-primary/15 text-primary",
                         )}
                       >
-                        {workspace.initials}
+                        {workspace.name.slice(0, 2).toUpperCase()}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-medium">

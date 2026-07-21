@@ -18,7 +18,7 @@ import { WorkspaceSwitcher } from "@/components/app/workspace-switcher";
 import { SiteLogo } from "@/components/layout/site-logo";
 import { Separator } from "@/components/ui/separator";
 import { appRoutes, reservedAppSegments } from "@/config/navigation";
-import { mockProjects, mockWorkspaces } from "@/lib/mock/dashboard-data";
+import { useProjects, useWorkspaces } from "@/hooks/use-workflow";
 import { cn } from "@/lib/utils";
 
 type AppSidebarProps = {
@@ -67,18 +67,18 @@ function NavLink({
 
 export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
   const pathname = usePathname();
+  const workspaces = useWorkspaces();
 
-  // Derive active workspace from URL, falling back to the first workspace
+  // Derive active workspace from the URL, falling back to the first available workspace.
   const pathSegments = pathname.split("/").filter(Boolean);
   const firstSegment = pathSegments[0] ?? "";
   const slugFromUrl = !reservedAppSegments.has(firstSegment) ? firstSegment : null;
   const activeWorkspace =
-    (slugFromUrl ? mockWorkspaces.find((w) => w.slug === slugFromUrl) : null) ??
-    mockWorkspaces[0];
-
-  const workspaceProjects = activeWorkspace
-    ? mockProjects.filter((p) => p.workspaceId === activeWorkspace.id)
-    : [];
+    (slugFromUrl
+      ? workspaces.data?.workspaces.find((workspace) => workspace.slug === slugFromUrl)
+      : undefined) ?? workspaces.data?.workspaces[0];
+  const projects = useProjects(activeWorkspace?._id);
+  const workspaceProjects = projects.data?.projects ?? [];
 
   const allProjectsHref = activeWorkspace
     ? appRoutes.workspace(activeWorkspace.slug)
@@ -104,7 +104,11 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
       <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-3">
         {/* Workspace Switcher */}
         <div className="mb-2">
-          <WorkspaceSwitcher activeWorkspaceId={activeWorkspace?.id} />
+          <WorkspaceSwitcher
+            workspaces={workspaces.data?.workspaces ?? []}
+            activeWorkspaceId={activeWorkspace?._id}
+            isLoading={workspaces.isLoading}
+          />
         </div>
 
         {/* Main Nav */}
@@ -168,7 +172,7 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
         )}
 
         {/* Projects list for current workspace */}
-        {workspaceProjects.length > 0 && (
+        {(projects.isLoading || workspaceProjects.length > 0) && (
           <div className="mt-3">
             <Separator className="mb-3" />
             <div className="mb-1.5 flex items-center justify-between px-3">
@@ -185,15 +189,19 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
             </div>
 
             <nav className="space-y-0.5" aria-label="Project navigation">
-              {workspaceProjects.map((project, idx) => {
-                const href = appRoutes.project(activeWorkspace!.slug, project.id);
+              {projects.isLoading ? (
+                <div className="px-3 py-2 text-xs text-muted-foreground">
+                  Loading projects…
+                </div>
+              ) : workspaceProjects.map((project, idx) => {
+                const href = appRoutes.project(activeWorkspace!.slug, project._id);
                 const isActive =
                   pathname === href || pathname.startsWith(href + "/");
                 const accentClass = PROJECT_ACCENTS[idx % PROJECT_ACCENTS.length];
 
                 return (
                   <Link
-                    key={project.id}
+                    key={project._id}
                     href={href}
                     onClick={onNavigate}
                     className={cn(
