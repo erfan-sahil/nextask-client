@@ -1,17 +1,32 @@
 "use client";
 
-import { FolderKanban } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { StatsOverview } from "@/components/app/dashboard/stats-overview";
 import { appRoutes } from "@/config/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useDashboard } from "@/hooks/use-dashboard";
 
+const PROJECT_ACCENTS = [
+  "bg-primary/10 text-primary",
+  "bg-chart-2/15 text-chart-2",
+  "bg-chart-3/15 text-chart-3",
+  "bg-chart-4/15 text-chart-4",
+  "bg-chart-5/15 text-chart-5",
+];
+
 function getGreeting() {
   const hour = new Date().getHours();
   if (hour < 12) return "Good morning";
   if (hour < 17) return "Good afternoon";
   return "Good evening";
+}
+
+function formatStatus(status: string) {
+  return status
+    .toLowerCase()
+    .replaceAll("_", " ")
+    .replace(/^\w/, (letter) => letter.toUpperCase());
 }
 
 export function DashboardPage() {
@@ -56,23 +71,38 @@ export function DashboardPage() {
           </p>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {dashboard.projects.map((project) => (
+            {dashboard.projects.map((project, index) => (
               <Link
                 key={project._id}
                 href={appRoutes.project(project.workspace.slug, project._id)}
-                className="group rounded-2xl border border-border bg-card p-5 transition-shadow hover:shadow-md"
+                className="group rounded-2xl border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 dark:hover:bg-muted/40 dark:hover:shadow-lg"
               >
-                <FolderKanban className="size-5 text-primary" />
-                <h3 className="mt-4 font-semibold group-hover:text-primary">
-                  {project.name}
-                </h3>
-                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                  {project.description || "No description"}
-                </p>
-                <p className="mt-4 text-xs text-muted-foreground">
-                  {project.taskCount} task{project.taskCount === 1 ? "" : "s"} ·{" "}
-                  {project.status.replace("_", " ")}
-                </p>
+                <div className="flex items-start gap-3">
+                  <span
+                    className={`flex size-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold ${PROJECT_ACCENTS[index % PROJECT_ACCENTS.length]}`}
+                  >
+                    {project.name.slice(0, 1).toUpperCase()}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold text-foreground transition-colors group-hover:text-primary">
+                      {project.name}
+                    </span>
+                    <span className="mt-0.5 block line-clamp-2 text-xs text-muted-foreground">
+                      {project.description || "No description yet"}
+                    </span>
+                  </span>
+                </div>
+                <div className="my-4 h-px bg-border" />
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="size-2 rounded-full bg-primary" />
+                    {project.taskCount} task{project.taskCount === 1 ? "" : "s"}
+                  </span>
+                  <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground/70">
+                    <TrendingUp className="size-3" />
+                    {formatStatus(project.status)}
+                  </span>
+                </div>
               </Link>
             ))}
           </div>
