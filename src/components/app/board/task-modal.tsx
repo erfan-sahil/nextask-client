@@ -82,7 +82,12 @@ export function TaskModal({
   initialColumnId,
 }: TaskModalProps) {
   const kanban = useKanban(workspaceId, projectId, boardId);
-  const comments = useTaskComments(workspaceId, projectId, boardId, task?._id);
+  const comments = useTaskComments(
+    workspaceId,
+    projectId,
+    boardId,
+    mode === "details" ? task?._id : undefined,
+  );
   const workspaceMembers = useWorkspaceMembers(workspaceId);
   const projectMembers = useProjectMembers(workspaceId, projectId);
   const [title, setTitle] = useState(task?.title ?? "");
@@ -221,7 +226,7 @@ export function TaskModal({
         ? "Edit task"
         : "Create task";
   const selectedDueDate = dueDate ? new Date(`${dueDate}T00:00:00`) : undefined;
-  const hasScrollableTaskContent = Boolean(task) && !isDeleting;
+  const hasScrollableTaskContent = !isDeleting;
 
   return (
     <Dialog
@@ -233,17 +238,17 @@ export function TaskModal({
       <DialogContent
         className={
           isDetails
-            ? "h-[min(40rem,calc(100svh-2rem))] max-w-3xl overflow-hidden p-0"
+            ? "h-[min(32rem,calc(100svh-2rem))] max-w-3xl overflow-hidden p-0"
             : isDeleting
               ? "max-w-md overflow-hidden p-0"
               : hasScrollableTaskContent
-                ? "h-[min(40rem,calc(100svh-2rem))] overflow-hidden p-0"
+                ? "h-[min(32rem,calc(100svh-2rem))] overflow-hidden p-0"
                 : "overflow-hidden p-0"
         }
       >
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <DialogHeader className="relative shrink-0 border-b border-border px-6 py-4 pr-16">
-            <DialogTitle className={!task && !isDeleting ? "text-primary" : undefined}>
+            <DialogTitle className={!isDeleting ? "text-primary" : undefined}>
               {heading}
             </DialogTitle>
             <DialogDescription>
@@ -547,7 +552,7 @@ export function TaskModal({
           </div>
         )}
 
-        {task && !isDeleting && (
+        {isDetails && task && (
           <section className="mt-6 border-t border-border pt-5">
             <div className="flex items-center gap-2"><MessageSquare className="size-4 text-muted-foreground" /><h3 className="text-sm font-semibold">Comments</h3></div>
             <div className="mt-3 space-y-3">

@@ -17,9 +17,9 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
+  ArrowDown,
+  ArrowUp,
   Calendar,
-  ChevronDown,
-  ChevronUp,
   Eye,
   MessageSquare,
   MoreHorizontal,
@@ -60,10 +60,10 @@ type ColumnModalState =
   | null;
 
 const priorityClass = {
-  LOW: "text-muted-foreground",
-  MEDIUM: "text-chart-4",
-  HIGH: "text-orange-500",
-  URGENT: "text-destructive",
+  LOW: "border-border/80 bg-muted/70 text-muted-foreground",
+  MEDIUM: "border-chart-4/20 bg-chart-4/10 text-chart-4",
+  HIGH: "border-orange-500/20 bg-orange-500/10 text-orange-600 dark:text-orange-400",
+  URGENT: "border-destructive/20 bg-destructive/10 text-destructive",
 } as const;
 
 function taskColumnId(task: TaskDoc) {
@@ -102,25 +102,31 @@ function TaskCard({
   return (
     <div
       className={cn(
-        "group w-full rounded-xl border border-border bg-card p-3 text-left shadow-sm transition-all",
+        "group w-full rounded-xl border border-border bg-card p-3 text-left transition-colors",
+        onClick && "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         isDragging
-          ? "opacity-40 shadow-none"
-          : "hover:border-primary/30 hover:shadow-md",
+          ? "opacity-40"
+          : "hover:border-primary/35 hover:bg-primary/[0.035] dark:hover:border-primary/30 dark:hover:bg-muted/40",
       )}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={(event) => {
+        if (onClick && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          onClick();
+        }
+      }}
     >
       <div className="flex items-start gap-2">
-        <button
-          type="button"
-          onClick={onClick}
-          className="min-w-0 flex-1 cursor-pointer text-left"
-          aria-label={`View details for ${task.title}`}
-        >
+        <div className="min-w-0 flex-1">
           <p className="line-clamp-2 text-sm font-medium leading-snug text-foreground">{task.title}</p>
-        </button>
+        </div>
         {(onEdit || onDelete) && (
           <DropdownMenu>
             <DropdownMenuTrigger
               onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => event.stopPropagation()}
               className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               aria-label={`Options for ${task.title}`}
             >
@@ -152,20 +158,20 @@ function TaskCard({
           </DropdownMenu>
         )}
       </div>
-      <button
-        type="button"
-        onClick={onClick}
-        className="mt-2.5 w-full cursor-pointer text-left"
-        aria-label={`View details for ${task.title}`}
-      >
-        <div className="flex items-center gap-2">
-          <span className={cn("rounded-full bg-muted px-2 py-0.5 text-[0.65rem] font-semibold tracking-wide", priorityClass[task.priority])}>
+      <div className="mt-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={cn(
+              "rounded-md border px-2 py-0.5 text-[0.65rem] font-semibold tracking-wide",
+              priorityClass[task.priority],
+            )}
+          >
             {task.priority[0]}{task.priority.slice(1).toLowerCase()}
           </span>
           {task.dueDate && (
             <span
               className={cn(
-                "flex items-center gap-1 text-xs",
+                "flex items-center gap-1 text-xs tabular-nums",
                 isOverdue ? "text-destructive" : "text-muted-foreground",
               )}
             >
@@ -176,52 +182,61 @@ function TaskCard({
               })}
             </span>
           )}
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1 rounded-md bg-muted px-1.5 py-1 text-[0.7rem] font-medium tabular-nums text-muted-foreground transition-colors group-hover:bg-background dark:group-hover:bg-card">
             <MessageSquare className="size-3" />
             {task.commentCount ?? 0}
           </span>
           {task.assignees.length > 0 && (
-            <span className="ml-auto flex -space-x-1.5">
-              {task.assignees.slice(0, 3).map((assignee) => (
-                <UserAvatar
-                  key={assignee._id}
-                  name={`${assignee.firstName} ${assignee.lastName}`}
-                  avatar={assignee.avatar}
-                  title={`${assignee.firstName} ${assignee.lastName}`}
-                  size="sm"
-                  className="size-6 border-2 border-card text-[0.6rem]"
-                />
-              ))}
-              {task.assignees.length > 3 && (
-                <span className="flex size-6 items-center justify-center rounded-full border-2 border-card bg-muted text-[0.6rem] font-semibold text-muted-foreground">
-                  +{task.assignees.length - 3}
-                </span>
-              )}
+            <span className="ml-auto flex items-center rounded-full border border-border/70 bg-background p-0.5 transition-colors group-hover:bg-card">
+              <span className="sr-only">Assigned to </span>
+              <span className="flex -space-x-1.5">
+                {task.assignees.slice(0, 3).map((assignee) => (
+                  <UserAvatar
+                    key={assignee._id}
+                    name={`${assignee.firstName} ${assignee.lastName}`}
+                    avatar={assignee.avatar}
+                    title={`${assignee.firstName} ${assignee.lastName}`}
+                    size="sm"
+                    className="size-6 border-2 border-card text-[0.6rem]"
+                  />
+                ))}
+                {task.assignees.length > 3 && (
+                  <span className="flex size-6 items-center justify-center rounded-full border-2 border-background bg-muted text-[0.6rem] font-semibold text-muted-foreground group-hover:border-card">
+                    +{task.assignees.length - 3}
+                  </span>
+                )}
+              </span>
             </span>
           )}
         </div>
-      </button>
+      </div>
       {(onMoveUp || onMoveDown) && (
         <div className="mt-2 flex justify-end gap-1 border-t border-border pt-2">
           <button
             type="button"
-            onClick={onMoveUp}
+            onClick={(event) => {
+              event.stopPropagation();
+              onMoveUp?.();
+            }}
             onPointerDown={(event) => event.stopPropagation()}
             disabled={!canMoveUp}
-            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+            className="flex size-7 items-center justify-center rounded-md border border-transparent bg-background text-muted-foreground transition-colors hover:border-primary/25 hover:bg-primary/10 hover:text-primary disabled:pointer-events-none disabled:opacity-40"
             aria-label={`Move ${task.title} up`}
           >
-            <ChevronUp className="size-3.5" />
+            <ArrowUp className="size-3.5" />
           </button>
           <button
             type="button"
-            onClick={onMoveDown}
+            onClick={(event) => {
+              event.stopPropagation();
+              onMoveDown?.();
+            }}
             onPointerDown={(event) => event.stopPropagation()}
             disabled={!canMoveDown}
-            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+            className="flex size-7 items-center justify-center rounded-md border border-transparent bg-background text-muted-foreground transition-colors hover:border-primary/25 hover:bg-primary/10 hover:text-primary disabled:pointer-events-none disabled:opacity-40"
             aria-label={`Move ${task.title} down`}
           >
-            <ChevronDown className="size-3.5" />
+            <ArrowDown className="size-3.5" />
           </button>
         </div>
       )}
@@ -459,21 +474,26 @@ export function LiveKanbanBoard({
 
   return (
     <>
-      <div className="flex items-center justify-between gap-4 border-b border-border px-4 py-4 sm:px-6">
-        <div>
-          <h1 className="text-xl font-bold">{boardName}</h1>
-          <p className="text-xs text-muted-foreground">
-            {kanban.tasks.data?.pagination.total ?? 0} tasks
-          </p>
+      <div className="border-b border-border bg-background/95 px-4 py-4 backdrop-blur supports-backdrop-filter:bg-background/75 sm:px-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="mb-1 text-xs font-medium text-muted-foreground">Project board</p>
+            <div className="flex items-center gap-2">
+              <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground">{boardName}</h1>
+              <span className="shrink-0 rounded-md border border-border bg-muted/60 px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
+                {kanban.tasks.data?.pagination.total ?? 0} tasks
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setColumnModal({ mode: "create" })}
+            className="shrink-0 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            <Plus className="mr-1 inline size-3.5" />
+            Add column
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => setColumnModal({ mode: "create" })}
-          className="rounded-xl border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
-        >
-          <Plus className="mr-1 inline size-3.5" />
-          Add column
-        </button>
       </div>
 
       <DndContext
