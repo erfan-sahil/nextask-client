@@ -48,7 +48,7 @@ type LiveKanbanBoardProps = {
 
 type TaskModalState =
   | { mode: "create"; columnId: string }
-  | { mode: "edit" | "delete"; task: TaskDoc }
+  | { mode: "details" | "edit" | "delete"; task: TaskDoc }
   | null;
 
 type ColumnModalState =
@@ -74,6 +74,8 @@ function TaskCard({
   task,
   isDragging = false,
   onClick,
+  onEdit,
+  onDelete,
   onMoveUp,
   onMoveDown,
   canMoveUp = false,
@@ -82,6 +84,8 @@ function TaskCard({
   task: TaskDoc;
   isDragging?: boolean;
   onClick?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   canMoveUp?: boolean;
@@ -95,16 +99,59 @@ function TaskCard({
   return (
     <div
       className={cn(
-        "w-full rounded-xl border border-border bg-card p-3 text-left shadow-sm transition-all",
+        "group w-full rounded-xl border border-border bg-card p-3 text-left shadow-sm transition-all",
         isDragging
           ? "opacity-40 shadow-none"
           : "hover:border-primary/30 hover:shadow-md",
       )}
     >
-      <button type="button" onClick={onClick} className="w-full text-left">
-        <p className="text-sm font-medium leading-snug text-foreground">{task.title}</p>
-        <div className="mt-2.5 flex items-center gap-2">
-          <span className={cn("text-xs font-medium", priorityClass[task.priority])}>
+      <div className="flex items-start gap-2">
+        <button
+          type="button"
+          onClick={onClick}
+          className="min-w-0 flex-1 cursor-pointer text-left"
+          aria-label={`View details for ${task.title}`}
+        >
+          <p className="line-clamp-2 text-sm font-medium leading-snug text-foreground">{task.title}</p>
+        </button>
+        {(onEdit || onDelete) && (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              onPointerDown={(event) => event.stopPropagation()}
+              className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              aria-label={`Options for ${task.title}`}
+            >
+              <MoreHorizontal className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-36">
+              {onEdit && (
+                <DropdownMenuItem onClick={onEdit} className="gap-2">
+                  <Pencil className="size-3.5" />
+                  Edit task
+                </DropdownMenuItem>
+              )}
+              {onEdit && onDelete && <DropdownMenuSeparator />}
+              {onDelete && (
+                <DropdownMenuItem
+                  onClick={onDelete}
+                  className="gap-2 text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="size-3.5" />
+                  Delete task
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={onClick}
+        className="mt-2.5 w-full cursor-pointer text-left"
+        aria-label={`View details for ${task.title}`}
+      >
+        <div className="flex items-center gap-2">
+          <span className={cn("rounded-full bg-muted px-2 py-0.5 text-[0.65rem] font-semibold tracking-wide", priorityClass[task.priority])}>
             {task.priority.toLowerCase()}
           </span>
           {task.dueDate && (
@@ -121,9 +168,22 @@ function TaskCard({
               })}
             </span>
           )}
-          {task.assignees[0] && (
-            <span className="ml-auto flex size-6 items-center justify-center rounded-full bg-primary/10 text-[0.6rem] font-bold text-primary">
-              {`${task.assignees[0].firstName[0] ?? ""}${task.assignees[0].lastName[0] ?? ""}`}
+          {task.assignees.length > 0 && (
+            <span className="ml-auto flex -space-x-1.5">
+              {task.assignees.slice(0, 3).map((assignee) => (
+                <span
+                  key={assignee._id}
+                  title={`${assignee.firstName} ${assignee.lastName}`}
+                  className="flex size-6 items-center justify-center rounded-full border-2 border-card bg-primary/10 text-[0.6rem] font-bold text-primary"
+                >
+                  {`${assignee.firstName[0] ?? ""}${assignee.lastName[0] ?? ""}`}
+                </span>
+              ))}
+              {task.assignees.length > 3 && (
+                <span className="flex size-6 items-center justify-center rounded-full border-2 border-card bg-muted text-[0.6rem] font-semibold text-muted-foreground">
+                  +{task.assignees.length - 3}
+                </span>
+              )}
             </span>
           )}
         </div>
@@ -159,6 +219,8 @@ function TaskCard({
 function SortableTaskCard({
   task,
   onClick,
+  onEdit,
+  onDelete,
   onMoveUp,
   onMoveDown,
   canMoveUp,
@@ -166,6 +228,8 @@ function SortableTaskCard({
 }: {
   task: TaskDoc;
   onClick: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
   canMoveUp: boolean;
@@ -186,6 +250,8 @@ function SortableTaskCard({
         task={task}
         isDragging={isDragging}
         onClick={onClick}
+        onEdit={onEdit}
+        onDelete={onDelete}
         onMoveUp={onMoveUp}
         onMoveDown={onMoveDown}
         canMoveUp={canMoveUp}
@@ -202,6 +268,7 @@ function KanbanColumn({
   onEditColumn,
   onDeleteColumn,
   onOpenTask,
+  onDeleteTask,
   onMoveTask,
 }: {
   column: ColumnDoc;
@@ -210,6 +277,7 @@ function KanbanColumn({
   onEditColumn: () => void;
   onDeleteColumn: () => void;
   onOpenTask: (task: TaskDoc) => void;
+  onDeleteTask: (task: TaskDoc) => void;
   onMoveTask: (task: TaskDoc, position: number) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: column._id });
@@ -273,6 +341,8 @@ function KanbanColumn({
               key={task._id}
               task={task}
               onClick={() => onOpenTask(task)}
+              onEdit={() => onOpenTask(task)}
+              onDelete={() => onDeleteTask(task)}
               onMoveUp={() => onMoveTask(task, index - 1)}
               onMoveDown={() => onMoveTask(task, index + 1)}
               canMoveUp={index > 0}
@@ -410,7 +480,8 @@ export function LiveKanbanBoard({
                 onCreateTask={() => setTaskModal({ mode: "create", columnId: column._id })}
                 onEditColumn={() => setColumnModal({ mode: "edit", column })}
                 onDeleteColumn={() => setColumnModal({ mode: "delete", column })}
-                onOpenTask={(task) => setTaskModal({ mode: "edit", task })}
+                onOpenTask={(task) => setTaskModal({ mode: "details", task })}
+                onDeleteTask={(task) => setTaskModal({ mode: "delete", task })}
                 onMoveTask={moveTask}
               />
             ))}

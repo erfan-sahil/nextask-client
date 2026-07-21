@@ -1,8 +1,19 @@
 "use client";
 
-import { MessageSquare, Trash2, Users } from "lucide-react";
+import {
+  CalendarDays,
+  CircleDot,
+  Flag,
+  ListTodo,
+  MessageSquare,
+  Search,
+  Trash2,
+  Users,
+  X,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { UserAvatar } from "@/components/app/user-avatar";
 import {
   Dialog,
   DialogContent,
@@ -46,7 +57,7 @@ type TaskModalProps = {
   projectId: string;
   boardId: string;
   columns: ColumnDoc[];
-  mode: "create" | "edit" | "delete";
+  mode: "create" | "details" | "edit" | "delete";
   task?: TaskDoc;
   initialColumnId?: string;
 };
@@ -75,10 +86,12 @@ export function TaskModal({
   const [assigneeIds, setAssigneeIds] = useState(
     task?.assignees.map((assignee) => assignee._id) ?? [],
   );
+  const [memberSearch, setMemberSearch] = useState("");
   const [comment, setComment] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [isDeleteConfirmation, setIsDeleteConfirmation] = useState(false);
   const isDeleting = mode === "delete" || isDeleteConfirmation;
+  const isDetails = mode === "details";
   const isPending =
     kanban.createTask.isPending ||
     kanban.updateTask.isPending ||
@@ -95,6 +108,14 @@ export function TaskModal({
       ),
     [projectMembers.data?.members, workspaceMembers.data?.members],
   );
+  const filteredMembers = useMemo(() => {
+    const search = memberSearch.trim().toLowerCase();
+    if (!search) return members;
+
+    return members.filter((member) =>
+      `${member.firstName} ${member.lastName} ${member.email}`.toLowerCase().includes(search),
+    );
+  }, [memberSearch, members]);
 
   function toggleAssignee(memberId: string) {
     setAssigneeIds((currentAssigneeIds) =>
@@ -169,7 +190,13 @@ export function TaskModal({
     }
   }
 
-  const heading = isDeleting ? "Delete task" : task ? "Edit task" : "Create task";
+  const heading = isDeleting
+    ? "Delete task"
+    : isDetails
+      ? task?.title ?? "Task details"
+      : task
+        ? "Edit task"
+        : "Create task";
 
   return (
     <Dialog
@@ -178,17 +205,123 @@ export function TaskModal({
         if (!nextOpen) closeModal();
       }}
     >
-      <DialogContent>
+      <DialogContent className={isDetails ? "max-w-3xl" : undefined}>
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <DialogHeader>
+          <DialogHeader className={isDetails ? "relative pr-10" : undefined}>
             <DialogTitle>{heading}</DialogTitle>
             <DialogDescription>
-          {isDeleting ? `This will permanently delete ${task?.title}.` : "Add the details needed to complete this work."}
+              {isDeleting
+                ? `This will permanently delete ${task?.title}.`
+                : isDetails
+                  ? "Task details and discussion."
+                  : "Add the details needed to complete this work."}
             </DialogDescription>
+            {isDetails && (
+              <button
+                type="button"
+                onClick={closeModal}
+                className="absolute top-0 right-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label="Close task details"
+              >
+                <X className="size-4" />
+              </button>
+            )}
           </DialogHeader>
 
         {isDeleting ? (
           <p className="mt-6 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">This action cannot be undone.</p>
+        ) : isDetails && task ? (
+          <section className="mt-6 space-y-5">
+            <div className="rounded-xl border border-border bg-muted/30 p-4">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <ListTodo className="size-3.5" />
+                Description
+              </div>
+              {task.description ? (
+                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-foreground/80">
+                  {task.description}
+                </p>
+              ) : (
+                <div className="mt-3 rounded-xl border border-dashed border-border bg-background/60 px-4 py-4 text-center">
+                  <p className="text-sm font-medium text-foreground/80">No description yet</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    This task does not have any additional context.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Task info
+              </p>
+              <dl className="mt-3 grid gap-2.5 sm:grid-cols-3">
+                <div className="flex gap-3 rounded-xl bg-muted/50 p-3">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-background text-primary shadow-sm ring-1 ring-border/70">
+                    <CircleDot className="size-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <dt className="text-xs text-muted-foreground">Column</dt>
+                    <dd className="mt-1 truncate text-sm font-semibold">
+                      {columns.find((column) => column._id === getColumnId(task.columnId))?.name ?? "Unknown"}
+                    </dd>
+                  </div>
+                </div>
+                <div className="flex gap-3 rounded-xl bg-muted/50 p-3">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-background text-orange-500 shadow-sm ring-1 ring-border/70">
+                    <Flag className="size-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <dt className="text-xs text-muted-foreground">Priority</dt>
+                    <dd className="mt-1 text-sm font-semibold">
+                      {task.priority[0]}{task.priority.slice(1).toLowerCase()}
+                    </dd>
+                  </div>
+                </div>
+                <div className="flex gap-3 rounded-xl bg-muted/50 p-3">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-background text-chart-4 shadow-sm ring-1 ring-border/70">
+                    <CalendarDays className="size-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <dt className="text-xs text-muted-foreground">Due date</dt>
+                    <dd className="mt-1 text-sm font-semibold">
+                      {task.dueDate
+                        ? new Date(task.dueDate).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })
+                        : "No due date"}
+                    </dd>
+                  </div>
+                </div>
+              </dl>
+            </div>
+
+            {task.assignees.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <Users className="size-4 text-muted-foreground" />
+                  Assignees
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {task.assignees.map((assignee) => (
+                    <div
+                      key={assignee._id}
+                      className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pr-3 pl-1"
+                    >
+                      <span className="flex size-6 items-center justify-center rounded-full bg-primary/10 text-[0.6rem] font-bold text-primary">
+                        {`${assignee.firstName[0] ?? ""}${assignee.lastName[0] ?? ""}`}
+                      </span>
+                      <span className="text-xs font-medium">
+                        {assignee.firstName} {assignee.lastName}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
         ) : (
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
@@ -248,34 +381,58 @@ export function TaskModal({
               <Label>Assignees</Label>
               <DropdownMenu>
                 <DropdownMenuTrigger
-                  className="flex h-10 w-full items-center gap-2 rounded-xl border border-input bg-background px-3 text-sm text-muted-foreground outline-none hover:bg-accent hover:text-accent-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                  className="flex h-10 w-full items-center gap-2 rounded-xl border border-input bg-background px-3 text-left text-sm outline-none hover:bg-accent focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                   aria-label="Select task assignees"
                 >
-                  <Users className="size-4" />
-                  <span className="truncate">
+                  <Users className="size-4 shrink-0 text-muted-foreground" />
+                  <span className="truncate text-muted-foreground">
                     {assigneeIds.length
                       ? `${assigneeIds.length} member${assigneeIds.length === 1 ? "" : "s"} assigned`
                       : "Assign members"}
                   </span>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-64">
+                <DropdownMenuContent align="start" className="w-80 p-2">
+                  <div className="relative mb-2">
+                    <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={memberSearch}
+                      onChange={(event) => setMemberSearch(event.target.value)}
+                      onPointerDown={(event) => event.stopPropagation()}
+                      placeholder="Search members..."
+                      className="h-9 pl-8"
+                      aria-label="Search members"
+                    />
+                  </div>
                   {workspaceMembers.isLoading || projectMembers.isLoading ? (
                     <p className="px-2 py-1.5 text-sm text-muted-foreground">
                       Loading members…
                     </p>
-                  ) : members.length ? (
-                    members.map((member) => (
+                  ) : filteredMembers.length ? (
+                    <div className="max-h-52 overflow-y-auto">
+                      {filteredMembers.map((member) => (
                       <DropdownMenuCheckboxItem
                         key={member._id}
                         checked={assigneeIds.includes(member._id)}
                         onCheckedChange={() => toggleAssignee(member._id)}
+                        className="gap-2 px-2 py-2"
                       >
-                        {member.firstName} {member.lastName}
+                        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[0.65rem] font-semibold text-primary">
+                          {`${member.firstName[0] ?? ""}${member.lastName[0] ?? ""}`}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate font-medium">
+                            {member.firstName} {member.lastName}
+                          </span>
+                          <span className="block truncate text-xs text-muted-foreground">
+                            {member.email}
+                          </span>
+                        </span>
                       </DropdownMenuCheckboxItem>
-                    ))
+                      ))}
+                    </div>
                   ) : (
                     <p className="px-2 py-1.5 text-sm text-muted-foreground">
-                      No members available to assign.
+                      {members.length ? "No members match your search." : "No members available to assign."}
                     </p>
                   )}
                 </DropdownMenuContent>
@@ -288,12 +445,25 @@ export function TaskModal({
           <section className="mt-6 border-t border-border pt-5">
             <div className="flex items-center gap-2"><MessageSquare className="size-4 text-muted-foreground" /><h3 className="text-sm font-semibold">Comments</h3></div>
             <div className="mt-3 space-y-3">
-              {comments.isLoading ? <p className="text-xs text-muted-foreground">Loading comments…</p> : comments.data?.comments.map((item) => (
-                <article key={item._id} className="rounded-xl bg-muted/50 p-3 text-sm">
-                  <p className="font-medium">{`${item.createdBy.firstName} ${item.createdBy.lastName}`}</p>
-                  <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{item.content}</p>
-                </article>
-              ))}
+              {comments.isLoading ? <p className="text-xs text-muted-foreground">Loading comments…</p> : comments.data?.comments.map((item) => {
+                const authorName = `${item.createdBy.firstName} ${item.createdBy.lastName}`;
+
+                return (
+                  <article key={item._id} className="flex gap-3 rounded-xl bg-muted/50 p-3 text-sm">
+                    <UserAvatar
+                      name={authorName}
+                      avatar={item.createdBy.avatar}
+                      size="sm"
+                      fallback="first-letter"
+                      className="ring-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium">{authorName}</p>
+                      <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{item.content}</p>
+                    </div>
+                  </article>
+                );
+              })}
               {!comments.data?.comments.length && <p className="text-xs text-muted-foreground">No comments yet.</p>}
             </div>
             <div className="mt-3 flex gap-2">
@@ -304,8 +474,9 @@ export function TaskModal({
         )}
 
         {formError && <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{formError}</p>}
+        {!isDetails && (
         <div className="mt-6 flex justify-end gap-3">
-          {task && !isDeleting && (
+          {task && !isDeleting && !isDetails && (
             <Button
               type="button"
               variant="destructive"
@@ -316,11 +487,14 @@ export function TaskModal({
               Delete
             </Button>
           )}
-          <Button type="button" variant="outline" onClick={closeModal} disabled={isPending}>Cancel</Button>
-          <Button type="submit" variant={isDeleting ? "destructive" : "default"} disabled={isPending || (!isDeleting && (!title.trim() || !columnId))}>
-            {isPending ? "Saving…" : isDeleting ? "Delete task" : task ? "Save changes" : "Create task"}
-          </Button>
+          <>
+            <Button type="button" variant="outline" onClick={closeModal} disabled={isPending}>Cancel</Button>
+            <Button type="submit" variant={isDeleting ? "destructive" : "default"} disabled={isPending || (!isDeleting && (!title.trim() || !columnId))}>
+              {isPending ? "Saving…" : isDeleting ? "Delete task" : task ? "Save changes" : "Create task"}
+            </Button>
+          </>
         </div>
+        )}
         </form>
       </DialogContent>
     </Dialog>

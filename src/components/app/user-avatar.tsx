@@ -5,6 +5,7 @@ type UserAvatarProps = {
   name: string;
   avatar?: string | null;
   size?: "sm" | "md" | "lg";
+  fallback?: "initials" | "first-letter";
   className?: string;
 };
 
@@ -34,10 +35,15 @@ function getInitials(name: string) {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
+function getFirstLetter(name: string) {
+  return name.trim().charAt(0).toUpperCase() || "?";
+}
+
 export function UserAvatar({
   name,
   avatar,
   size = "md",
+  fallback = "initials",
   className,
 }: UserAvatarProps) {
   if (avatar) {
@@ -67,7 +73,7 @@ export function UserAvatar({
       )}
       aria-hidden
     >
-      {getInitials(name)}
+      {fallback === "first-letter" ? getFirstLetter(name) : getInitials(name)}
     </div>
   );
 }
