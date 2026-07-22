@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { workflowApi } from "@/lib/api/workflow";
 import { workflowQueryKeys } from "@/lib/api/query-keys";
-import type { ListResult, TaskDoc } from "@/types/domain";
+import type { CalendarEventDoc, ListResult, TaskDoc } from "@/types/domain";
 
 export function useWorkspaces() {
   const queryClient = useQueryClient();
@@ -16,19 +16,38 @@ export function useWorkspaces() {
     ...query,
     create: useMutation({
       mutationFn: workflowApi.createWorkspace,
-      onSuccess: () => queryClient.invalidateQueries({ queryKey: workflowQueryKeys.workspaces }),
+      onSuccess: () =>
+        queryClient.invalidateQueries({
+          queryKey: workflowQueryKeys.workspaces,
+        }),
     }),
     update: useMutation({
-      mutationFn: ({ workspaceId, ...data }: { workspaceId: string; name?: string; slug?: string; description?: string; visibility?: "PRIVATE" | "TEAM" | "PUBLIC"; status?: "ACTIVE" | "ARCHIVED" }) =>
-        workflowApi.updateWorkspace(workspaceId, data),
+      mutationFn: ({
+        workspaceId,
+        ...data
+      }: {
+        workspaceId: string;
+        name?: string;
+        slug?: string;
+        description?: string;
+        visibility?: "PRIVATE" | "TEAM" | "PUBLIC";
+        status?: "ACTIVE" | "ARCHIVED";
+      }) => workflowApi.updateWorkspace(workspaceId, data),
       onSuccess: (_, input) => {
-        queryClient.invalidateQueries({ queryKey: workflowQueryKeys.workspaces });
-        queryClient.invalidateQueries({ queryKey: workflowQueryKeys.workspace(input.workspaceId) });
+        queryClient.invalidateQueries({
+          queryKey: workflowQueryKeys.workspaces,
+        });
+        queryClient.invalidateQueries({
+          queryKey: workflowQueryKeys.workspace(input.workspaceId),
+        });
       },
     }),
     remove: useMutation({
       mutationFn: workflowApi.deleteWorkspace,
-      onSuccess: () => queryClient.invalidateQueries({ queryKey: workflowQueryKeys.workspaces }),
+      onSuccess: () =>
+        queryClient.invalidateQueries({
+          queryKey: workflowQueryKeys.workspaces,
+        }),
     }),
   };
 }
@@ -46,16 +65,57 @@ export function useGoals(workspaceId?: string) {
   const key = workflowQueryKeys.goals(workspaceId ?? "");
   const query = useQuery({
     queryKey: key,
-    queryFn: () => workflowApi.listGoals({ workspaceId: workspaceId!, limit: 100 }),
+    queryFn: () =>
+      workflowApi.listGoals({ workspaceId: workspaceId!, limit: 100 }),
     enabled: Boolean(workspaceId),
   });
   const invalidate = () => queryClient.invalidateQueries({ queryKey: key });
 
   return {
     ...query,
-    create: useMutation({ mutationFn: workflowApi.createGoal, onSuccess: invalidate }),
-    update: useMutation({ mutationFn: workflowApi.updateGoal, onSuccess: invalidate }),
-    remove: useMutation({ mutationFn: workflowApi.deleteGoal, onSuccess: invalidate }),
+    create: useMutation({
+      mutationFn: workflowApi.createGoal,
+      onSuccess: invalidate,
+    }),
+    update: useMutation({
+      mutationFn: workflowApi.updateGoal,
+      onSuccess: invalidate,
+    }),
+    remove: useMutation({
+      mutationFn: workflowApi.deleteGoal,
+      onSuccess: invalidate,
+    }),
+  };
+}
+
+export function useCalendar(
+  workspaceId: string | undefined,
+  startDate: string,
+  endDate: string,
+) {
+  const queryClient = useQueryClient();
+  const key = workflowQueryKeys.calendar(workspaceId ?? "", startDate, endDate);
+  const query = useQuery({
+    queryKey: key,
+    queryFn: () =>
+      workflowApi.getCalendarEvents({
+        workspaceId: workspaceId!,
+        startDate,
+        endDate,
+      }),
+    enabled: Boolean(workspaceId),
+  });
+
+  return {
+    ...query,
+    events: query.data ?? ([] as CalendarEventDoc[]),
+    createMeeting: useMutation({
+      mutationFn: workflowApi.createMeeting,
+      onSuccess: () =>
+        queryClient.invalidateQueries({
+          queryKey: ["workspaces", workspaceId, "calendar"],
+        }),
+    }),
   };
 }
 
@@ -63,25 +123,41 @@ export function useProjects(workspaceId?: string) {
   const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: workflowQueryKeys.projects(workspaceId ?? ""),
-    queryFn: () => workflowApi.listProjects({ workspaceId: workspaceId!, limit: 100 }),
+    queryFn: () =>
+      workflowApi.listProjects({ workspaceId: workspaceId!, limit: 100 }),
     enabled: Boolean(workspaceId),
   });
 
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: workflowQueryKeys.projects(workspaceId ?? "") });
+    queryClient.invalidateQueries({
+      queryKey: workflowQueryKeys.projects(workspaceId ?? ""),
+    });
 
   return {
     ...query,
-    create: useMutation({ mutationFn: workflowApi.createProject, onSuccess: invalidate }),
-    update: useMutation({ mutationFn: workflowApi.updateProject, onSuccess: invalidate }),
-    remove: useMutation({ mutationFn: workflowApi.deleteProject, onSuccess: invalidate }),
+    create: useMutation({
+      mutationFn: workflowApi.createProject,
+      onSuccess: invalidate,
+    }),
+    update: useMutation({
+      mutationFn: workflowApi.updateProject,
+      onSuccess: invalidate,
+    }),
+    remove: useMutation({
+      mutationFn: workflowApi.deleteProject,
+      onSuccess: invalidate,
+    }),
   };
 }
 
 export function useProject(workspaceId?: string, projectId?: string) {
   return useQuery({
     queryKey: workflowQueryKeys.project(workspaceId ?? "", projectId ?? ""),
-    queryFn: () => workflowApi.getProject({ workspaceId: workspaceId!, projectId: projectId! }),
+    queryFn: () =>
+      workflowApi.getProject({
+        workspaceId: workspaceId!,
+        projectId: projectId!,
+      }),
     enabled: Boolean(workspaceId && projectId),
   });
 }
@@ -91,31 +167,67 @@ export function useBoards(workspaceId?: string, projectId?: string) {
   const key = workflowQueryKeys.boards(workspaceId ?? "", projectId ?? "");
   const query = useQuery({
     queryKey: key,
-    queryFn: () => workflowApi.listBoards({ workspaceId: workspaceId!, projectId: projectId!, limit: 100 }),
+    queryFn: () =>
+      workflowApi.listBoards({
+        workspaceId: workspaceId!,
+        projectId: projectId!,
+        limit: 100,
+      }),
     enabled: Boolean(workspaceId && projectId),
   });
   const invalidate = () => queryClient.invalidateQueries({ queryKey: key });
   return {
     ...query,
-    create: useMutation({ mutationFn: workflowApi.createBoard, onSuccess: invalidate }),
-    update: useMutation({ mutationFn: workflowApi.updateBoard, onSuccess: invalidate }),
-    remove: useMutation({ mutationFn: workflowApi.deleteBoard, onSuccess: invalidate }),
+    create: useMutation({
+      mutationFn: workflowApi.createBoard,
+      onSuccess: invalidate,
+    }),
+    update: useMutation({
+      mutationFn: workflowApi.updateBoard,
+      onSuccess: invalidate,
+    }),
+    remove: useMutation({
+      mutationFn: workflowApi.deleteBoard,
+      onSuccess: invalidate,
+    }),
   };
 }
 
-export function useKanban(workspaceId?: string, projectId?: string, boardId?: string) {
+export function useKanban(
+  workspaceId?: string,
+  projectId?: string,
+  boardId?: string,
+) {
   const queryClient = useQueryClient();
-  const columnsKey = workflowQueryKeys.columns(workspaceId ?? "", projectId ?? "", boardId ?? "");
-  const tasksKey = workflowQueryKeys.tasks(workspaceId ?? "", projectId ?? "", boardId ?? "");
+  const columnsKey = workflowQueryKeys.columns(
+    workspaceId ?? "",
+    projectId ?? "",
+    boardId ?? "",
+  );
+  const tasksKey = workflowQueryKeys.tasks(
+    workspaceId ?? "",
+    projectId ?? "",
+    boardId ?? "",
+  );
   const enabled = Boolean(workspaceId && projectId && boardId);
   const columns = useQuery({
     queryKey: columnsKey,
-    queryFn: () => workflowApi.listColumns({ workspaceId: workspaceId!, projectId: projectId!, boardId: boardId! }),
+    queryFn: () =>
+      workflowApi.listColumns({
+        workspaceId: workspaceId!,
+        projectId: projectId!,
+        boardId: boardId!,
+      }),
     enabled,
   });
   const tasks = useQuery({
     queryKey: tasksKey,
-    queryFn: () => workflowApi.listTasks({ workspaceId: workspaceId!, projectId: projectId!, boardId: boardId! }),
+    queryFn: () =>
+      workflowApi.listTasks({
+        workspaceId: workspaceId!,
+        projectId: projectId!,
+        boardId: boardId!,
+      }),
     enabled,
   });
   const invalidate = () => {
@@ -128,10 +240,22 @@ export function useKanban(workspaceId?: string, projectId?: string, boardId?: st
   return {
     columns,
     tasks,
-    createColumn: useMutation({ mutationFn: workflowApi.createColumn, onSuccess: invalidate }),
-    updateColumn: useMutation({ mutationFn: workflowApi.updateColumn, onSuccess: invalidate }),
-    deleteColumn: useMutation({ mutationFn: workflowApi.deleteColumn, onSuccess: invalidate }),
-    createTask: useMutation({ mutationFn: workflowApi.createTask, onSuccess: invalidate }),
+    createColumn: useMutation({
+      mutationFn: workflowApi.createColumn,
+      onSuccess: invalidate,
+    }),
+    updateColumn: useMutation({
+      mutationFn: workflowApi.updateColumn,
+      onSuccess: invalidate,
+    }),
+    deleteColumn: useMutation({
+      mutationFn: workflowApi.deleteColumn,
+      onSuccess: invalidate,
+    }),
+    createTask: useMutation({
+      mutationFn: workflowApi.createTask,
+      onSuccess: invalidate,
+    }),
     updateTask: useMutation({
       mutationFn: workflowApi.updateTask,
       onMutate: async (input) => {
@@ -140,13 +264,16 @@ export function useKanban(workspaceId?: string, projectId?: string, boardId?: st
         }
 
         await queryClient.cancelQueries({ queryKey: tasksKey });
-        const previousTasks = queryClient.getQueryData<ListResult<TaskDoc, "tasks">>(tasksKey);
+        const previousTasks =
+          queryClient.getQueryData<ListResult<TaskDoc, "tasks">>(tasksKey);
 
         if (!previousTasks) {
           return;
         }
 
-        const task = previousTasks.tasks.find((item) => item._id === input.taskId);
+        const task = previousTasks.tasks.find(
+          (item) => item._id === input.taskId,
+        );
 
         if (!task) {
           return { previousTasks };
@@ -155,7 +282,8 @@ export function useKanban(workspaceId?: string, projectId?: string, boardId?: st
         const sourceColumnId = taskColumnId(task);
         const destinationColumnId = input.columnId ?? sourceColumnId;
         const sourceTasks = previousTasks.tasks.filter(
-          (item) => taskColumnId(item) === sourceColumnId && item._id !== task._id,
+          (item) =>
+            taskColumnId(item) === sourceColumnId && item._id !== task._id,
         );
         const destinationTasks =
           destinationColumnId === sourceColumnId
@@ -176,8 +304,12 @@ export function useKanban(workspaceId?: string, projectId?: string, boardId?: st
         });
 
         const nextPositions = new Map<string, number>();
-        sourceTasks.forEach((item, index) => nextPositions.set(item._id, index));
-        destinationTasks.forEach((item, index) => nextPositions.set(item._id, index));
+        sourceTasks.forEach((item, index) =>
+          nextPositions.set(item._id, index),
+        );
+        destinationTasks.forEach((item, index) =>
+          nextPositions.set(item._id, index),
+        );
 
         queryClient.setQueryData<ListResult<TaskDoc, "tasks">>(tasksKey, {
           ...previousTasks,
@@ -190,7 +322,8 @@ export function useKanban(workspaceId?: string, projectId?: string, boardId?: st
 
             return {
               ...item,
-              columnId: item._id === task._id ? destinationColumnId : item.columnId,
+              columnId:
+                item._id === task._id ? destinationColumnId : item.columnId,
               position,
             };
           }),
@@ -205,7 +338,10 @@ export function useKanban(workspaceId?: string, projectId?: string, boardId?: st
       },
       onSettled: invalidate,
     }),
-    deleteTask: useMutation({ mutationFn: workflowApi.deleteTask, onSuccess: invalidate }),
+    deleteTask: useMutation({
+      mutationFn: workflowApi.deleteTask,
+      onSuccess: invalidate,
+    }),
   };
 }
 
@@ -214,32 +350,62 @@ export function useWorkspaceMembers(workspaceId?: string) {
   const key = workflowQueryKeys.workspaceMembers(workspaceId ?? "");
   const query = useQuery({
     queryKey: key,
-    queryFn: () => workflowApi.listWorkspaceMembers({ workspaceId: workspaceId!, limit: 100 }),
+    queryFn: () =>
+      workflowApi.listWorkspaceMembers({
+        workspaceId: workspaceId!,
+        limit: 100,
+      }),
     enabled: Boolean(workspaceId),
   });
   const invalidate = () => queryClient.invalidateQueries({ queryKey: key });
   return {
     ...query,
-    invite: useMutation({ mutationFn: workflowApi.inviteWorkspaceMember, onSuccess: invalidate }),
-    updateRole: useMutation({ mutationFn: workflowApi.updateWorkspaceMember, onSuccess: invalidate }),
-    remove: useMutation({ mutationFn: workflowApi.deleteWorkspaceMember, onSuccess: invalidate }),
+    invite: useMutation({
+      mutationFn: workflowApi.inviteWorkspaceMember,
+      onSuccess: invalidate,
+    }),
+    updateRole: useMutation({
+      mutationFn: workflowApi.updateWorkspaceMember,
+      onSuccess: invalidate,
+    }),
+    remove: useMutation({
+      mutationFn: workflowApi.deleteWorkspaceMember,
+      onSuccess: invalidate,
+    }),
   };
 }
 
 export function useProjectMembers(workspaceId?: string, projectId?: string) {
   const queryClient = useQueryClient();
-  const key = workflowQueryKeys.projectMembers(workspaceId ?? "", projectId ?? "");
+  const key = workflowQueryKeys.projectMembers(
+    workspaceId ?? "",
+    projectId ?? "",
+  );
   const query = useQuery({
     queryKey: key,
-    queryFn: () => workflowApi.listProjectMembers({ workspaceId: workspaceId!, projectId: projectId!, limit: 100 }),
+    queryFn: () =>
+      workflowApi.listProjectMembers({
+        workspaceId: workspaceId!,
+        projectId: projectId!,
+        limit: 100,
+      }),
     enabled: Boolean(workspaceId && projectId),
   });
   const invalidate = () => queryClient.invalidateQueries({ queryKey: key });
   return {
     ...query,
-    invite: useMutation({ mutationFn: workflowApi.inviteProjectMember, onSuccess: invalidate }),
-    updateRole: useMutation({ mutationFn: workflowApi.updateProjectMember, onSuccess: invalidate }),
-    remove: useMutation({ mutationFn: workflowApi.deleteProjectMember, onSuccess: invalidate }),
+    invite: useMutation({
+      mutationFn: workflowApi.inviteProjectMember,
+      onSuccess: invalidate,
+    }),
+    updateRole: useMutation({
+      mutationFn: workflowApi.updateProjectMember,
+      onSuccess: invalidate,
+    }),
+    remove: useMutation({
+      mutationFn: workflowApi.deleteProjectMember,
+      onSuccess: invalidate,
+    }),
   };
 }
 
@@ -250,11 +416,27 @@ export function useTaskComments(
   taskId?: string,
 ) {
   const queryClient = useQueryClient();
-  const key = workflowQueryKeys.comments(workspaceId ?? "", projectId ?? "", boardId ?? "", taskId ?? "");
-  const tasksKey = workflowQueryKeys.tasks(workspaceId ?? "", projectId ?? "", boardId ?? "");
+  const key = workflowQueryKeys.comments(
+    workspaceId ?? "",
+    projectId ?? "",
+    boardId ?? "",
+    taskId ?? "",
+  );
+  const tasksKey = workflowQueryKeys.tasks(
+    workspaceId ?? "",
+    projectId ?? "",
+    boardId ?? "",
+  );
   const query = useQuery({
     queryKey: key,
-    queryFn: () => workflowApi.listComments({ workspaceId: workspaceId!, projectId: projectId!, boardId: boardId!, taskId: taskId!, limit: 100 }),
+    queryFn: () =>
+      workflowApi.listComments({
+        workspaceId: workspaceId!,
+        projectId: projectId!,
+        boardId: boardId!,
+        taskId: taskId!,
+        limit: 100,
+      }),
     enabled: Boolean(workspaceId && projectId && boardId && taskId),
   });
   const invalidate = () => {
@@ -263,8 +445,17 @@ export function useTaskComments(
   };
   return {
     ...query,
-    create: useMutation({ mutationFn: workflowApi.createComment, onSuccess: invalidate }),
-    update: useMutation({ mutationFn: workflowApi.updateComment, onSuccess: invalidate }),
-    remove: useMutation({ mutationFn: workflowApi.deleteComment, onSuccess: invalidate }),
+    create: useMutation({
+      mutationFn: workflowApi.createComment,
+      onSuccess: invalidate,
+    }),
+    update: useMutation({
+      mutationFn: workflowApi.updateComment,
+      onSuccess: invalidate,
+    }),
+    remove: useMutation({
+      mutationFn: workflowApi.deleteComment,
+      onSuccess: invalidate,
+    }),
   };
 }

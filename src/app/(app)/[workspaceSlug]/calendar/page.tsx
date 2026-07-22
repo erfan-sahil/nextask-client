@@ -1,4 +1,4 @@
-import { WorkspaceCalendar } from "@/components/app/calendar/workspace-calendar";
+import { WorkspaceCalendarView } from "@/components/app/calendar/workspace-calendar-view";
 import { getWorkspaceForRoute } from "@/lib/mock/workspace-route";
 
 type Props = {
@@ -15,5 +15,5 @@ export default async function WorkspaceCalendarRoute({ params }: Props) {
   const { workspaceSlug } = await params;
   const workspace = getWorkspaceForRoute(workspaceSlug);
 
-  return <WorkspaceCalendar workspace={workspace} />;
+  return <WorkspaceCalendarView workspaceSlug={workspace.slug} />;
 }

@@ -4,11 +4,7 @@ export type MemberRole = "OWNER" | "ADMIN" | "MEMBER";
 export type ProjectStatus = "PLANNING" | "ACTIVE" | "ON_HOLD" | "COMPLETED";
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 export type GoalStatus =
-  | "PLANNING"
-  | "IN_PROGRESS"
-  | "ON_HOLD"
-  | "COMPLETED"
-  | "CANCELLED";
+  "PLANNING" | "IN_PROGRESS" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
 export type GoalPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
 export type ApiUser = {
@@ -74,7 +70,12 @@ export type TaskDoc = {
   workspaceId: Id;
   projectId: Id;
   boardId: Id;
-  columnId: Id | Pick<ColumnDoc, "_id" | "name" | "position" | "color" | "isCompletedColumn">;
+  columnId:
+    | Id
+    | Pick<
+        ColumnDoc,
+        "_id" | "name" | "position" | "color" | "isCompletedColumn"
+      >;
   position: number;
   title: string;
   description: string;
@@ -120,6 +121,36 @@ export type GoalDoc = {
   priority: GoalPriority;
   createdBy: ApiUser;
   completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CalendarEventType = "task-deadline" | "goal-deadline" | "meeting";
+
+export type CalendarEventDoc = {
+  id: string;
+  resourceId: Id;
+  type: CalendarEventType;
+  title: string;
+  startsAt: string;
+  endsAt: string | null;
+  allDay: boolean;
+  projectId?: Id;
+  location?: string;
+  attendeeIds?: Id[];
+  createdBy?: Id;
+};
+
+export type MeetingDoc = {
+  _id: Id;
+  workspaceId: Id;
+  title: string;
+  description: string;
+  startsAt: string;
+  endsAt: string;
+  location: string;
+  attendees: Id[];
+  createdBy: Id;
   createdAt: string;
   updatedAt: string;
 };
