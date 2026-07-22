@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
+import { CalendarEventDetailsDialog } from "@/components/app/calendar/calendar-event-details-dialog";
 import { CreateMeetingDialog } from "@/components/app/calendar/create-meeting-dialog";
 import { Button } from "@/components/ui/button";
 import { useCalendar, useWorkspaceBySlug } from "@/hooks/use-workflow";
@@ -41,6 +42,12 @@ const EVENT_STYLE: Record<CalendarEventType, string> = {
   meeting: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
 };
 
+const EVENT_DOT_STYLE: Record<CalendarEventType, string> = {
+  "task-deadline": "bg-blue-500",
+  "goal-deadline": "bg-violet-500",
+  meeting: "bg-emerald-500",
+};
+
 const EVENT_ICON: Record<CalendarEventType, React.ElementType> = {
   "task-deadline": ListTodo,
   "goal-deadline": Target,
@@ -51,21 +58,32 @@ const toDateString = (date: Date) => format(date, "yyyy-MM-dd");
 const eventDate = (event: CalendarEventDoc) =>
   toDateString(new Date(event.startsAt));
 
-function EventPill({ event }: { event: CalendarEventDoc }) {
+function EventPill({
+  event,
+  onClick,
+}: {
+  event: CalendarEventDoc;
+  onClick: () => void;
+}) {
   const time =
     event.type === "meeting" ? format(new Date(event.startsAt), "p") : "Due";
 
   return (
-    <div
+    <button
+      type="button"
+      onClick={(clickEvent) => {
+        clickEvent.stopPropagation();
+        onClick();
+      }}
       title={`${event.title} · ${time}`}
       className={cn(
-        "truncate rounded-md px-1.5 py-0.5 text-[10px] font-medium",
+        "block w-full truncate rounded-md px-1.5 py-0.5 text-left text-[10px] font-medium transition-opacity hover:opacity-75",
         EVENT_STYLE[event.type],
       )}
     >
       {event.type === "meeting" && `${time} · `}
       {event.title}
-    </div>
+    </button>
   );
 }
 
@@ -80,6 +98,9 @@ export function WorkspaceCalendarView({
   );
   const [isMeetingDialogOpen, setIsMeetingDialogOpen] = useState(false);
   const [meetingDate, setMeetingDate] = useState(today);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEventDoc | null>(
+    null,
+  );
   const {
     workspace,
     isLoading: isWorkspaceLoading,
@@ -245,9 +266,8 @@ export function WorkspaceCalendarView({
                 const isToday = date === toDateString(today);
 
                 return (
-                  <button
+                  <div
                     key={date}
-                    type="button"
                     onClick={() =>
                       cell.currentMonth && openMeetingDialog(cell.date)
                     }
@@ -255,7 +275,7 @@ export function WorkspaceCalendarView({
                       "min-h-26 border-r border-b p-2 text-left transition-colors",
                       index % 7 === 6 && "border-r-0",
                       isToday && "bg-primary/5",
-                      cell.currentMonth && "hover:bg-muted/50",
+                      cell.currentMonth && "cursor-pointer hover:bg-muted/50",
                       !cell.currentMonth && "cursor-default opacity-50",
                     )}
                   >
@@ -273,7 +293,11 @@ export function WorkspaceCalendarView({
                     </div>
                     <div className="space-y-0.5">
                       {cellEvents.slice(0, 2).map((event) => (
-                        <EventPill key={event.id} event={event} />
+                        <EventPill
+                          key={event.id}
+                          event={event}
+                          onClick={() => setSelectedEvent(event)}
+                        />
                       ))}
                       {cellEvents.length > 2 && (
                         <p className="px-1 text-[10px] text-muted-foreground">
@@ -281,7 +305,7 @@ export function WorkspaceCalendarView({
                         </p>
                       )}
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -305,28 +329,34 @@ export function WorkspaceCalendarView({
                   const eventStartsAt = new Date(event.startsAt);
 
                   return (
-                    <li key={event.id} className="flex items-start gap-2.5">
-                      <div
-                        className={cn(
-                          "mt-1 flex size-5 shrink-0 items-center justify-center rounded-md",
-                          EVENT_STYLE[event.type],
-                        )}
+                    <li key={event.id}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedEvent(event)}
+                        className="flex w-full items-start gap-2.5 rounded-md text-left transition-colors hover:bg-muted/60"
                       >
-                        <Icon className="size-3" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-medium">
-                          {event.title}
-                        </p>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">
-                          {format(
-                            eventStartsAt,
-                            event.type === "meeting"
-                              ? "EEE, MMM d · p"
-                              : "EEE, MMM d",
+                        <div
+                          className={cn(
+                            "mt-1 flex size-5 shrink-0 items-center justify-center rounded-md",
+                            EVENT_STYLE[event.type],
                           )}
-                        </p>
-                      </div>
+                        >
+                          <Icon className="size-3" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-medium">
+                            {event.title}
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-muted-foreground">
+                            {format(
+                              eventStartsAt,
+                              event.type === "meeting"
+                                ? "EEE, MMM d · p"
+                                : "EEE, MMM d",
+                            )}
+                          </p>
+                        </div>
+                      </button>
                     </li>
                   );
                 })}
@@ -358,6 +388,10 @@ export function WorkspaceCalendarView({
           });
         }}
       />
+      <CalendarEventDetailsDialog
+        event={selectedEvent}
+        onOpenChange={(open) => !open && setSelectedEvent(null)}
+      />
     </div>
   );
 }
@@ -369,10 +403,19 @@ function LegendItem({
   type: CalendarEventType;
   label: string;
 }) {
+  const Icon = EVENT_ICON[type];
+
   return (
-    <div className="flex items-center gap-2">
-      <span className={cn("size-2 rounded-full", EVENT_STYLE[type])} />
-      {label}
+    <div className="flex items-center gap-2 rounded-md px-1 py-1 text-foreground">
+      <span
+        className={cn(
+          "flex size-5 shrink-0 items-center justify-center rounded-md text-white",
+          EVENT_DOT_STYLE[type],
+        )}
+      >
+        <Icon className="size-3" />
+      </span>
+      <span>{label}</span>
     </div>
   );
 }

@@ -25,9 +25,8 @@ import { cn } from "@/lib/utils";
 
 type MeetingInput = {
   title: string;
-  description?: string;
+  message?: string;
   startsAt: string;
-  endsAt: string;
   location?: string;
 };
 
@@ -52,39 +51,29 @@ export function CreateMeetingDialog({
   onCreate: (meeting: MeetingInput) => Promise<void>;
 }) {
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [message, setMessage] = useState("");
   const [location, setLocation] = useState("");
   const [startDate, setStartDate] = useState(defaultDate);
-  const [endDate, setEndDate] = useState(defaultDate);
   const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("10:00");
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const startsAt = toDateTime(startDate, startTime);
-    const endsAt = toDateTime(endDate, endTime);
-
-    if (endsAt <= startsAt) {
-      setError("End date and time must be later than the start.");
-      return;
-    }
 
     try {
       setError(null);
       await onCreate({
         title,
-        description: description || undefined,
+        message: message || undefined,
         startsAt: startsAt.toISOString(),
-        endsAt: endsAt.toISOString(),
         location: location || undefined,
       });
       setTitle("");
-      setDescription("");
+      setMessage("");
       setLocation("");
       setStartTime("09:00");
-      setEndTime("10:00");
       onOpenChange(false);
     } catch (createError) {
       setError(getErrorMessage(createError, "Unable to create the meeting."));
@@ -97,7 +86,7 @@ export function CreateMeetingDialog({
         <DialogHeader>
           <DialogTitle>Schedule meeting</DialogTitle>
           <DialogDescription>
-            Choose an exact start and end date and time for the meeting.
+            Choose the date and time for the meeting.
           </DialogDescription>
         </DialogHeader>
 
@@ -115,21 +104,13 @@ export function CreateMeetingDialog({
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div>
             <DateTimeField
-              label="Starts"
+              label="Date and time"
               date={startDate}
               time={startTime}
               onDateChange={setStartDate}
               onTimeChange={setStartTime}
-              disabled={isPending}
-            />
-            <DateTimeField
-              label="Ends"
-              date={endDate}
-              time={endTime}
-              onDateChange={setEndDate}
-              onTimeChange={setEndTime}
               disabled={isPending}
             />
           </div>
@@ -147,12 +128,12 @@ export function CreateMeetingDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="meeting-description">Description</Label>
+            <Label htmlFor="meeting-message">Message for attendees</Label>
             <Textarea
-              id="meeting-description"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              placeholder="Add an agenda or notes"
+              id="meeting-message"
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+              placeholder="Please join on time. We will discuss the sprint plan."
               maxLength={10000}
               rows={3}
               disabled={isPending}
@@ -203,32 +184,34 @@ function DateTimeField({
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      <Popover>
-        <PopoverTrigger
-          className={cn(
-            "flex h-8 w-full items-center justify-between rounded-lg border border-input bg-background px-2.5 text-left text-sm shadow-xs",
-            disabled && "pointer-events-none opacity-50",
-          )}
-        >
-          {format(date, "MMM d, yyyy")}
-          <CalendarDays className="size-4 text-muted-foreground" />
-        </PopoverTrigger>
-        <PopoverContent align="start" className="w-auto p-0">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={(nextDate) => nextDate && onDateChange(nextDate)}
-            captionLayout="dropdown"
-          />
-        </PopoverContent>
-      </Popover>
-      <Input
-        aria-label={`${label} time`}
-        type="time"
-        value={time}
-        onChange={(event) => onTimeChange(event.target.value)}
-        disabled={disabled}
-      />
+      <div className="grid grid-cols-2 gap-3">
+        <Popover>
+          <PopoverTrigger
+            className={cn(
+              "flex h-8 w-full items-center justify-between rounded-lg border border-input bg-background px-2.5 text-left text-sm shadow-xs",
+              disabled && "pointer-events-none opacity-50",
+            )}
+          >
+            {format(date, "MMM d, yyyy")}
+            <CalendarDays className="size-4 text-muted-foreground" />
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-auto p-0">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={(nextDate) => nextDate && onDateChange(nextDate)}
+              captionLayout="dropdown"
+            />
+          </PopoverContent>
+        </Popover>
+        <Input
+          aria-label={`${label} time`}
+          type="time"
+          value={time}
+          onChange={(event) => onTimeChange(event.target.value)}
+          disabled={disabled}
+        />
+      </div>
     </div>
   );
 }

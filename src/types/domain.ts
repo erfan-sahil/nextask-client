@@ -136,6 +136,8 @@ export type CalendarEventDoc = {
   endsAt: string | null;
   allDay: boolean;
   projectId?: Id;
+  description?: string;
+  message?: string;
   location?: string;
   attendeeIds?: Id[];
   createdBy?: Id;
@@ -145,9 +147,8 @@ export type MeetingDoc = {
   _id: Id;
   workspaceId: Id;
   title: string;
-  description: string;
+  message: string;
   startsAt: string;
-  endsAt: string;
   location: string;
   attendees: Id[];
   createdBy: Id;

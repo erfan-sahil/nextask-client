@@ -179,9 +179,8 @@ export const workflowApi = {
     ...input
   }: WorkspaceRef & {
     title: string;
-    description?: string;
+    message?: string;
     startsAt: string;
-    endsAt: string;
     location?: string;
     attendeeIds?: string[];
   }) {
