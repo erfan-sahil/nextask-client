@@ -35,6 +35,7 @@ import { useMemo, useState } from "react";
 import { LiveKanbanBoard } from "@/components/app/board/live-kanban-board";
 import { appRoutes } from "@/config/navigation";
 import { cn } from "@/lib/utils";
+import { canManageWorkspaceContent } from "@/lib/workspace-permissions";
 import { useWorkspaceBySlug } from "@/hooks/use-workflow";
 import type {
   Board,
@@ -297,6 +298,7 @@ function ConnectedBoardPage({
         projectId={projectId}
         boardId={boardId}
         boardName="Board"
+        canManageColumns={canManageWorkspaceContent(workspace.membershipRole)}
       />
     </div>
   );

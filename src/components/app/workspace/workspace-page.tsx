@@ -25,6 +25,7 @@ import {
 import { appRoutes } from "@/config/navigation";
 import { getErrorMessage } from "@/lib/api/get-error-message";
 import { useProjects, useWorkspaceBySlug } from "@/hooks/use-workflow";
+import { canManageWorkspaceContent } from "@/lib/workspace-permissions";
 import type { ProjectDoc } from "@/types/domain";
 
 const PROJECT_ACCENTS = [
@@ -70,6 +71,8 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
     );
   }
 
+  const canManageProjects = canManageWorkspaceContent(workspace.membershipRole);
+
   return (
     <div className="max-w-6xl px-4 py-6 sm:px-8">
       <section className="mb-8 overflow-hidden rounded-2xl border border-border bg-card">
@@ -87,14 +90,16 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
                 {workspace.description}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsCreateProjectModalOpen(true)}
-              className="hidden shrink-0 cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:inline-flex"
-            >
-              <Plus className="size-4" />
-              New project
-            </button>
+            {canManageProjects && (
+              <button
+                type="button"
+                onClick={() => setIsCreateProjectModalOpen(true)}
+                className="hidden shrink-0 cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:inline-flex"
+              >
+                <Plus className="size-4" />
+                New project
+              </button>
+            )}
           </div>
           <div className="mt-5 flex flex-wrap gap-3">
             <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
@@ -135,14 +140,16 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
             {projects.data?.pagination.total ?? 0} projects in this workspace
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setIsCreateProjectModalOpen(true)}
-          className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:hidden"
-        >
-          <Plus className="size-4" />
-          New project
-        </button>
+        {canManageProjects && (
+          <button
+            type="button"
+            onClick={() => setIsCreateProjectModalOpen(true)}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:hidden"
+          >
+            <Plus className="size-4" />
+            New project
+          </button>
+        )}
       </div>
 
       {projects.isLoading ? (
@@ -158,14 +165,16 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
           <p className="mt-1 max-w-xs text-xs text-muted-foreground">
             Create a project to organize boards, tasks, and your team&apos;s work.
           </p>
-          <button
-            type="button"
-            onClick={() => setIsCreateProjectModalOpen(true)}
-            className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            <Plus className="size-4" />
-            Create project
-          </button>
+          {canManageProjects && (
+            <button
+              type="button"
+              onClick={() => setIsCreateProjectModalOpen(true)}
+              className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              <Plus className="size-4" />
+              Create project
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -193,31 +202,33 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
                     </span>
                   </span>
                 </Link>
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    aria-label={`Project actions for ${project.name}`}
-                  >
-                    <MoreHorizontal className="size-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40">
-                    <DropdownMenuItem
-                      onClick={() => setProjectModal({ mode: "edit", project })}
-                      className="gap-2"
+                {canManageProjects && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      aria-label={`Project actions for ${project.name}`}
                     >
-                      <Pencil className="size-3.5" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => setProjectModal({ mode: "delete", project })}
-                      className="gap-2 text-destructive focus:text-destructive"
-                    >
-                      <Trash2 className="size-3.5" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <MoreHorizontal className="size-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-40">
+                      <DropdownMenuItem
+                        onClick={() => setProjectModal({ mode: "edit", project })}
+                        className="gap-2"
+                      >
+                        <Pencil className="size-3.5" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => setProjectModal({ mode: "delete", project })}
+                        className="gap-2 text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="size-3.5" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
               <div className="my-4 h-px bg-border" />
               <div className="flex items-center justify-between">
@@ -234,13 +245,15 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
           ))}
         </div>
       )}
-      <CreateProjectModal
-        isOpen={isCreateProjectModalOpen}
-        onOpenChange={setIsCreateProjectModalOpen}
-        workspaceId={workspace._id}
-        workspaceName={workspace.name}
-      />
-      {projectModal && (
+      {canManageProjects && (
+        <CreateProjectModal
+          isOpen={isCreateProjectModalOpen}
+          onOpenChange={setIsCreateProjectModalOpen}
+          workspaceId={workspace._id}
+          workspaceName={workspace.name}
+        />
+      )}
+      {canManageProjects && projectModal && (
         <ProjectModal
           key={`${projectModal.mode}-${projectModal.project._id}`}
           isOpen

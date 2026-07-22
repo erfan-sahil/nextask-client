@@ -47,6 +47,7 @@ type LiveKanbanBoardProps = {
   projectId: string;
   boardId: string;
   boardName: string;
+  canManageColumns: boolean;
 };
 
 type TaskModalState =
@@ -319,6 +320,7 @@ function KanbanColumn({
   onEditTask,
   onDeleteTask,
   onMoveTask,
+  canManageColumns,
 }: {
   column: ColumnDoc;
   tasks: TaskDoc[];
@@ -329,6 +331,7 @@ function KanbanColumn({
   onEditTask: (task: TaskDoc) => void;
   onDeleteTask: (task: TaskDoc) => void;
   onMoveTask: (task: TaskDoc, position: number) => void;
+  canManageColumns: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: column._id });
   const taskIds = useMemo(() => tasks.map((task) => task._id), [tasks]);
@@ -359,28 +362,30 @@ function KanbanColumn({
           >
             <Plus className="size-3.5" />
           </button>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              className="cursor-pointer rounded-lg p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
-              aria-label={`Options for ${column.name}`}
-            >
-              <MoreHorizontal className="size-3.5" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={onEditColumn} className="cursor-pointer gap-2">
-                <Pencil className="size-3.5" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={onDeleteColumn}
-                className="cursor-pointer gap-2 text-destructive focus:text-destructive"
+          {canManageColumns && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="cursor-pointer rounded-lg p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                aria-label={`Options for ${column.name}`}
               >
-                <Trash2 className="size-3.5" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <MoreHorizontal className="size-3.5" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem onClick={onEditColumn} className="cursor-pointer gap-2">
+                  <Pencil className="size-3.5" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={onDeleteColumn}
+                  className="cursor-pointer gap-2 text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="size-3.5" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 
@@ -424,6 +429,7 @@ export function LiveKanbanBoard({
   projectId,
   boardId,
   boardName,
+  canManageColumns,
 }: LiveKanbanBoardProps) {
   const kanban = useKanban(workspaceId, projectId, boardId);
   const [activeTask, setActiveTask] = useState<TaskDoc | null>(null);
@@ -505,14 +511,16 @@ export function LiveKanbanBoard({
               </span>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setColumnModal({ mode: "create" })}
-            className="shrink-0 cursor-pointer rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            <Plus className="mr-1 inline size-3.5" />
-            Add column
-          </button>
+          {canManageColumns && (
+            <button
+              type="button"
+              onClick={() => setColumnModal({ mode: "create" })}
+              className="shrink-0 cursor-pointer rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              <Plus className="mr-1 inline size-3.5" />
+              Add column
+            </button>
+          )}
         </div>
       </div>
 
@@ -539,16 +547,19 @@ export function LiveKanbanBoard({
                 onEditTask={(task) => setTaskModal({ mode: "edit", task })}
                 onDeleteTask={(task) => setTaskModal({ mode: "delete", task })}
                 onMoveTask={moveTask}
+                canManageColumns={canManageColumns}
               />
             ))}
-            <button
-              type="button"
-              onClick={() => setColumnModal({ mode: "create" })}
-              className="w-72 shrink-0 cursor-pointer rounded-2xl border-2 border-dashed border-border px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
-            >
-              <Plus className="mr-2 inline size-4" />
-              Add column
-            </button>
+            {canManageColumns && (
+              <button
+                type="button"
+                onClick={() => setColumnModal({ mode: "create" })}
+                className="w-72 shrink-0 cursor-pointer rounded-2xl border-2 border-dashed border-border px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
+              >
+                <Plus className="mr-2 inline size-4" />
+                Add column
+              </button>
+            )}
           </div>
         </div>
         <DragOverlay dropAnimation={{ duration: 150, easing: "ease" }}>
@@ -570,7 +581,7 @@ export function LiveKanbanBoard({
           initialColumnId={taskModal.mode === "create" ? taskModal.columnId : undefined}
         />
       )}
-      {columnModal && (
+      {canManageColumns && columnModal && (
         <ColumnModal
           key={columnModal.mode === "create" ? "create" : `${columnModal.mode}-${columnModal.column._id}`}
           isOpen

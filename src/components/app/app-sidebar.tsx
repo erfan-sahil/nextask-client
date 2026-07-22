@@ -22,6 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { appRoutes, reservedAppSegments } from "@/config/navigation";
 import { useProjects, useWorkspaces } from "@/hooks/use-workflow";
 import { cn } from "@/lib/utils";
+import { canManageWorkspaceContent } from "@/lib/workspace-permissions";
 
 type AppSidebarProps = {
   className?: string;
@@ -86,6 +87,9 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
   const allProjectsHref = activeWorkspace
     ? appRoutes.workspace(activeWorkspace.slug)
     : appRoutes.workspaces;
+  const canManageProjects = canManageWorkspaceContent(
+    activeWorkspace?.membershipRole,
+  );
 
   const isAllProjectsActive =
     pathname === allProjectsHref ||
@@ -182,14 +186,16 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Projects
               </p>
-              <button
-                type="button"
-                onClick={() => setIsCreateProjectModalOpen(true)}
-                className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                aria-label="New project"
-              >
-                <Plus className="size-3.5" />
-              </button>
+              {canManageProjects && (
+                <button
+                  type="button"
+                  onClick={() => setIsCreateProjectModalOpen(true)}
+                  className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  aria-label="New project"
+                >
+                  <Plus className="size-3.5" />
+                </button>
+              )}
             </div>
 
             <nav className="space-y-0.5" aria-label="Project navigation">
@@ -255,7 +261,7 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
         </nav>
 
       </div>
-      {activeWorkspace && (
+      {activeWorkspace && canManageProjects && (
         <CreateProjectModal
           isOpen={isCreateProjectModalOpen}
           onOpenChange={setIsCreateProjectModalOpen}

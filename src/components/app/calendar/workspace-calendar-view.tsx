@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { useCalendar, useWorkspaceBySlug } from "@/hooks/use-workflow";
 import { getErrorMessage } from "@/lib/api/get-error-message";
 import { cn } from "@/lib/utils";
+import { canManageWorkspaceContent } from "@/lib/workspace-permissions";
 import type { CalendarEventDoc, CalendarEventType } from "@/types/domain";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -183,6 +184,8 @@ export function WorkspaceCalendarView({
     );
   }
 
+  const canCreateMeetings = canManageWorkspaceContent(workspace.membershipRole);
+
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -197,10 +200,12 @@ export function WorkspaceCalendarView({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Button size="sm" onClick={() => openMeetingDialog(today)}>
-            <Plus className="size-4" />
-            Schedule meeting
-          </Button>
+          {canCreateMeetings && (
+            <Button size="sm" onClick={() => openMeetingDialog(today)}>
+              <Plus className="size-4" />
+              Schedule meeting
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -269,13 +274,17 @@ export function WorkspaceCalendarView({
                   <div
                     key={date}
                     onClick={() =>
-                      cell.currentMonth && openMeetingDialog(cell.date)
+                      canCreateMeetings &&
+                      cell.currentMonth &&
+                      openMeetingDialog(cell.date)
                     }
                     className={cn(
                       "min-h-26 border-r border-b p-2 text-left transition-colors",
                       index % 7 === 6 && "border-r-0",
                       isToday && "bg-primary/5",
-                      cell.currentMonth && "cursor-pointer hover:bg-muted/50",
+                      canCreateMeetings &&
+                        cell.currentMonth &&
+                        "cursor-pointer hover:bg-muted/50",
                       !cell.currentMonth && "cursor-default opacity-50",
                     )}
                   >
@@ -375,19 +384,21 @@ export function WorkspaceCalendarView({
         </aside>
       </div>
 
-      <CreateMeetingDialog
-        key={`${isMeetingDialogOpen}-${toDateString(meetingDate)}`}
-        open={isMeetingDialogOpen}
-        defaultDate={meetingDate}
-        isPending={calendar.createMeeting.isPending}
-        onOpenChange={setIsMeetingDialogOpen}
-        onCreate={async (meeting) => {
-          await calendar.createMeeting.mutateAsync({
-            workspaceId: workspace._id,
-            ...meeting,
-          });
-        }}
-      />
+      {canCreateMeetings && (
+        <CreateMeetingDialog
+          key={`${isMeetingDialogOpen}-${toDateString(meetingDate)}`}
+          open={isMeetingDialogOpen}
+          defaultDate={meetingDate}
+          isPending={calendar.createMeeting.isPending}
+          onOpenChange={setIsMeetingDialogOpen}
+          onCreate={async (meeting) => {
+            await calendar.createMeeting.mutateAsync({
+              workspaceId: workspace._id,
+              ...meeting,
+            });
+          }}
+        />
+      )}
       <CalendarEventDetailsDialog
         event={selectedEvent}
         onOpenChange={(open) => !open && setSelectedEvent(null)}

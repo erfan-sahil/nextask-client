@@ -20,6 +20,7 @@ import { BoardModal } from "@/components/app/board/board-modal";
 import { appRoutes } from "@/config/navigation";
 import { mockBoards } from "@/lib/mock/dashboard-data";
 import { cn } from "@/lib/utils";
+import { canManageWorkspaceContent } from "@/lib/workspace-permissions";
 import type { BoardDoc } from "@/types/domain";
 import type { BoardMeta, Project, Workspace } from "@/types/workspace";
 import { useBoards, useProject, useWorkspaceBySlug } from "@/hooks/use-workflow";
@@ -226,6 +227,8 @@ function ConnectedProjectPage({
     return <div className="p-8 text-sm text-destructive">Project not found or you do not have access.</div>;
   }
 
+  const canManageBoards = canManageWorkspaceContent(workspace.membershipRole);
+
   return (
     <div className="max-w-6xl px-4 py-6 sm:px-8">
       <nav className="mb-8 flex gap-2 text-sm text-muted-foreground">
@@ -246,14 +249,16 @@ function ConnectedProjectPage({
                 {project.data.description}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setBoardModal({ mode: "create" })}
-              className="inline-flex cursor-pointer items-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-            >
-              <Plus className="mr-2 inline size-4" />
-              New board
-            </button>
+            {canManageBoards && (
+              <button
+                type="button"
+                onClick={() => setBoardModal({ mode: "create" })}
+                className="inline-flex cursor-pointer items-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                <Plus className="mr-2 inline size-4" />
+                New board
+              </button>
+            )}
           </div>
           <div className="mt-5 flex flex-wrap gap-3">
             <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
@@ -295,13 +300,15 @@ function ConnectedProjectPage({
         <div className="rounded-2xl border-2 border-dashed border-border py-16 text-center">
           <Columns3 className="mx-auto size-8 text-muted-foreground" />
           <p className="mt-3 font-semibold">No boards yet</p>
-          <button
-            type="button"
-            onClick={() => setBoardModal({ mode: "create" })}
-            className="mt-4 inline-flex cursor-pointer items-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
-            Create board
-          </button>
+          {canManageBoards && (
+            <button
+              type="button"
+              onClick={() => setBoardModal({ mode: "create" })}
+              className="mt-4 inline-flex cursor-pointer items-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              Create board
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -338,41 +345,43 @@ function ConnectedProjectPage({
                       </div>
                     </div>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      onClick={(event) => event.stopPropagation()}
-                      onPointerDown={(event) => event.stopPropagation()}
-                      className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                      aria-label={`Board actions for ${board.name}`}
-                    >
-                      <MoreHorizontal className="size-4" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40">
-                      <DropdownMenuItem
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setBoardModal({ mode: "edit", board });
-                        }}
+                  {canManageBoards && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        onClick={(event) => event.stopPropagation()}
                         onPointerDown={(event) => event.stopPropagation()}
-                        className="gap-2"
+                        className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        aria-label={`Board actions for ${board.name}`}
                       >
-                        <Pencil className="size-3.5" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setBoardModal({ mode: "delete", board });
-                        }}
-                        onPointerDown={(event) => event.stopPropagation()}
-                        className="gap-2 text-destructive focus:text-destructive"
-                      >
-                        <Trash2 className="size-3.5" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        <MoreHorizontal className="size-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setBoardModal({ mode: "edit", board });
+                          }}
+                          onPointerDown={(event) => event.stopPropagation()}
+                          className="gap-2"
+                        >
+                          <Pencil className="size-3.5" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setBoardModal({ mode: "delete", board });
+                          }}
+                          onPointerDown={(event) => event.stopPropagation()}
+                          className="gap-2 text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="size-3.5" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
               </article>
             );
@@ -380,7 +389,7 @@ function ConnectedProjectPage({
         </div>
       )}
 
-      {boardModal && (
+      {canManageBoards && boardModal && (
         <BoardModal
           key={boardModal.mode === "create" ? "create" : `${boardModal.mode}-${boardModal.board._id}`}
           isOpen
