@@ -1,5 +1,4 @@
 import { WorkspaceGoals } from "@/components/app/goals/workspace-goals";
-import { getWorkspaceForRoute } from "@/lib/mock/workspace-route";
 
 type Props = {
   params: Promise<{ workspaceSlug: string }>;
@@ -7,13 +6,11 @@ type Props = {
 
 export async function generateMetadata({ params }: Props) {
   const { workspaceSlug } = await params;
-  const workspace = getWorkspaceForRoute(workspaceSlug);
-  return { title: `Goals · ${workspace.name} — NexTask` };
+  return { title: `Goals · ${workspaceSlug} — NexTask` };
 }
 
 export default async function WorkspaceGoalsRoute({ params }: Props) {
   const { workspaceSlug } = await params;
-  const workspace = getWorkspaceForRoute(workspaceSlug);
 
-  return <WorkspaceGoals workspace={workspace} />;
+  return <WorkspaceGoals workspaceSlug={workspaceSlug} />;
 }

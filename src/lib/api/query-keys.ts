@@ -42,6 +42,8 @@ export const workflowQueryKeys = {
     ] as const,
   workspaceMembers: (workspaceId: string) =>
     ["workspaces", workspaceId, "members"] as const,
+  goals: (workspaceId: string) =>
+    ["workspaces", workspaceId, "goals"] as const,
   projectMembers: (workspaceId: string, projectId: string) =>
     ["workspaces", workspaceId, "projects", projectId, "members"] as const,
   comments: (

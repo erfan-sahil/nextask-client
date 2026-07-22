@@ -55,7 +55,7 @@ export function LoginForm() {
         password: result.data.password,
       },
       {
-        onSuccess: (data) => {
+        onSuccess: () => {
           const callbackUrl = searchParams.get("callbackUrl");
           router.push(
             callbackUrl && callbackUrl.startsWith("/")
@@ -132,7 +132,9 @@ export function LoginForm() {
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
         <Link
-          href={authRoutes.register}
+          href={`${authRoutes.register}?callbackUrl=${encodeURIComponent(
+            searchParams.get("callbackUrl") ?? appRoutes.dashboard,
+          )}`}
           className="font-semibold text-primary transition-colors hover:text-primary-hover"
         >
           Create one

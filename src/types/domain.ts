@@ -3,6 +3,13 @@ export type Id = string;
 export type MemberRole = "OWNER" | "ADMIN" | "MEMBER";
 export type ProjectStatus = "PLANNING" | "ACTIVE" | "ON_HOLD" | "COMPLETED";
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+export type GoalStatus =
+  | "PLANNING"
+  | "IN_PROGRESS"
+  | "ON_HOLD"
+  | "COMPLETED"
+  | "CANCELLED";
+export type GoalPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
 export type ApiUser = {
   _id: Id;
@@ -98,6 +105,21 @@ export type TaskCommentDoc = {
   content: string;
   createdBy: ApiUser;
   updatedBy: ApiUser;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type GoalDoc = {
+  _id: Id;
+  workspaceId: Id | Pick<WorkspaceDoc, "_id" | "name" | "slug">;
+  title: string;
+  description: string;
+  status: GoalStatus;
+  startDate: string | null;
+  dueDate: string | null;
+  priority: GoalPriority;
+  createdBy: ApiUser;
+  completedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };

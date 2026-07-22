@@ -111,7 +111,7 @@ function RoleSelect({
     <div className="space-y-2">
       <Label htmlFor="member-role">Role</Label>
       <Select value={value} onValueChange={(nextRole) => onValueChange(nextRole as MemberRole)}>
-        <SelectTrigger id="member-role" className="w-full">
+        <SelectTrigger id="member-role" className="w-full cursor-pointer">
           <span>{roleConfig[value].label}</span>
         </SelectTrigger>
         <SelectContent side="bottom" align="start" alignItemWithTrigger={false}>
@@ -284,13 +284,15 @@ function MemberModal({
 
 function MemberCard({
   member,
-  canManage,
+  canUpdateRole,
+  canRemove,
   onOpenDetails,
   onEditRole,
   onRemove,
 }: {
   member: MemberDoc;
-  canManage: boolean;
+  canUpdateRole: boolean;
+  canRemove: boolean;
   onOpenDetails: () => void;
   onEditRole: () => void;
   onRemove: () => void;
@@ -315,7 +317,7 @@ function MemberCard({
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
             <h2 className="truncate text-sm font-semibold text-foreground">{name}</h2>
-            <div className="sm:hidden">
+            <div className="w-19 shrink-0 text-right sm:hidden">
               <RoleBadge role={member.role} />
             </div>
           </div>
@@ -328,32 +330,45 @@ function MemberCard({
             </span>
           </p>
         </div>
-        <div className="hidden shrink-0 sm:block">
+        <div className="hidden w-24 shrink-0 text-center sm:block">
           <RoleBadge role={member.role} />
         </div>
-        {canManage && (
+        {(canUpdateRole || canRemove) && (
           <DropdownMenu>
             <DropdownMenuTrigger
               aria-label={`Actions for ${name}`}
               onClick={(event) => event.stopPropagation()}
               onKeyDown={(event) => event.stopPropagation()}
-              className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-all hover:bg-muted hover:text-foreground sm:opacity-0 sm:group-hover:opacity-100"
+              className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
             >
               <MoreHorizontal className="size-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem className="gap-2" onClick={onEditRole}>
-                <Pencil className="size-3.5" />
-                Edit role
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="gap-2 text-destructive focus:text-destructive"
-                onClick={onRemove}
-              >
-                <LogOut className="size-3.5" />
-                Remove member
-              </DropdownMenuItem>
+              {canUpdateRole && (
+                <DropdownMenuItem
+                  className="gap-2"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onEditRole();
+                  }}
+                >
+                  <Pencil className="size-3.5" />
+                  Edit role
+                </DropdownMenuItem>
+              )}
+              {canUpdateRole && canRemove && <DropdownMenuSeparator />}
+              {canRemove && (
+                <DropdownMenuItem
+                  className="gap-2 text-destructive focus:text-destructive"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onRemove();
+                  }}
+                >
+                  <LogOut className="size-3.5" />
+                  Remove member
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         )}
@@ -416,7 +431,9 @@ export function WorkspaceMembers({ workspaceSlug }: { workspaceSlug: string }) {
   const memberCount = workspaceMembers.filter((member) => member.role === "MEMBER").length;
   const canManageMembers =
     workspace.membershipRole === "OWNER" || workspace.membershipRole === "ADMIN";
-  const canManageMember = (member: MemberDoc) =>
+  const canUpdateMemberRole = (member: MemberDoc) =>
+    workspace.membershipRole === "OWNER" && member.role !== "OWNER";
+  const canRemoveMember = (member: MemberDoc) =>
     (workspace.membershipRole === "OWNER" && member.role !== "OWNER") ||
     (workspace.membershipRole === "ADMIN" && member.role === "MEMBER");
 
@@ -460,18 +477,21 @@ export function WorkspaceMembers({ workspaceSlug }: { workspaceSlug: string }) {
               {members.isLoading ? "Loading members…" : `${workspaceMembers.length} people with workspace access`}
             </p>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-1.5 shadow-sm sm:flex-row sm:items-center">
             <div className="relative min-w-0 sm:w-72">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search name or email…"
-                className="h-10 rounded-xl pl-9"
+                className="h-10 rounded-lg border-0 bg-transparent pl-9 shadow-none focus-visible:ring-1"
               />
             </div>
             <Select value={roleFilter} onValueChange={(value) => setRoleFilter(value as MemberRole | "ALL")}>
-              <SelectTrigger aria-label="Filter members by role" className="h-10 w-full gap-2 rounded-xl sm:w-36">
+              <SelectTrigger
+                aria-label="Filter members by role"
+                className="h-10 w-full cursor-pointer gap-2 rounded-lg bg-muted/70 sm:w-40"
+              >
                 <ListFilter className="size-3.5 text-muted-foreground" />
                 <span>{ROLE_FILTER_OPTIONS.find((option) => option.value === roleFilter)?.label}</span>
               </SelectTrigger>
@@ -521,7 +541,8 @@ export function WorkspaceMembers({ workspaceSlug }: { workspaceSlug: string }) {
               <MemberCard
                 key={member._id}
                 member={member}
-                canManage={canManageMember(member)}
+                canUpdateRole={canUpdateMemberRole(member)}
+                canRemove={canRemoveMember(member)}
                 onOpenDetails={() => setModalState({ mode: "details", member })}
                 onEditRole={() => setModalState({ mode: "role", member })}
                 onRemove={() => setModalState({ mode: "remove", member })}

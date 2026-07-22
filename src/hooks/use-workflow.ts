@@ -41,6 +41,24 @@ export function useWorkspaceBySlug(slug: string) {
   };
 }
 
+export function useGoals(workspaceId?: string) {
+  const queryClient = useQueryClient();
+  const key = workflowQueryKeys.goals(workspaceId ?? "");
+  const query = useQuery({
+    queryKey: key,
+    queryFn: () => workflowApi.listGoals({ workspaceId: workspaceId!, limit: 100 }),
+    enabled: Boolean(workspaceId),
+  });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: key });
+
+  return {
+    ...query,
+    create: useMutation({ mutationFn: workflowApi.createGoal, onSuccess: invalidate }),
+    update: useMutation({ mutationFn: workflowApi.updateGoal, onSuccess: invalidate }),
+    remove: useMutation({ mutationFn: workflowApi.deleteGoal, onSuccess: invalidate }),
+  };
+}
+
 export function useProjects(workspaceId?: string) {
   const queryClient = useQueryClient();
   const query = useQuery({

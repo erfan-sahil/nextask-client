@@ -2,6 +2,9 @@ import type { ApiSuccessResponse } from "@/types/api";
 import type {
   BoardDoc,
   ColumnDoc,
+  GoalDoc,
+  GoalPriority,
+  GoalStatus,
   ListResult,
   MemberDoc,
   MemberRole,
@@ -19,6 +22,7 @@ type WorkspaceRef = { workspaceId: string };
 type ProjectRef = WorkspaceRef & { projectId: string };
 type BoardRef = ProjectRef & { boardId: string };
 type TaskRef = BoardRef & { taskId: string };
+type GoalRef = WorkspaceRef & { goalId: string };
 
 const unwrap = <T>(response: { data: ApiSuccessResponse<T> }) =>
   response.data.data;
@@ -73,6 +77,65 @@ export const workflowApi = {
   },
   async deleteWorkspace(workspaceId: string) {
     await apiClient.delete(`/workspaces/${workspaceId}`);
+  },
+
+  async listGoals({
+    workspaceId,
+    ...params
+  }: WorkspaceRef &
+    ListParams & { status?: GoalStatus; priority?: GoalPriority }) {
+    return unwrap(
+      await apiClient.get<ApiSuccessResponse<ListResult<GoalDoc, "goals">>>(
+        `/workspaces/${workspaceId}/goals`,
+        { params },
+      ),
+    );
+  },
+  async createGoal({
+    workspaceId,
+    ...input
+  }: WorkspaceRef & {
+    title: string;
+    description?: string;
+    status?: GoalStatus;
+    startDate?: string | null;
+    dueDate?: string | null;
+    priority?: GoalPriority;
+    completedAt?: string | null;
+  }) {
+    return unwrap(
+      await apiClient.post<ApiSuccessResponse<{ goal: GoalDoc }>>(
+        `/workspaces/${workspaceId}/goals`,
+        input,
+      ),
+    ).goal;
+  },
+  async updateGoal({
+    workspaceId,
+    goalId,
+    ...input
+  }: GoalRef &
+    Partial<
+      Pick<
+        GoalDoc,
+        | "title"
+        | "description"
+        | "status"
+        | "startDate"
+        | "dueDate"
+        | "priority"
+        | "completedAt"
+      >
+    >) {
+    return unwrap(
+      await apiClient.patch<ApiSuccessResponse<{ goal: GoalDoc }>>(
+        `/workspaces/${workspaceId}/goals/${goalId}`,
+        input,
+      ),
+    ).goal;
+  },
+  async deleteGoal({ workspaceId, goalId }: GoalRef) {
+    await apiClient.delete(`/workspaces/${workspaceId}/goals/${goalId}`);
   },
 
   async listProjects({ workspaceId, ...params }: WorkspaceRef & ListParams) {

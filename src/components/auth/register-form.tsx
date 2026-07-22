@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AuthAlert, AuthField } from "@/components/auth/auth-field";
 import { AuthDivider } from "@/components/auth/auth-divider";
 import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
-import { authRoutes } from "@/config/navigation";
+import { appRoutes, authRoutes } from "@/config/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { setPendingVerificationEmail } from "@/lib/auth/pending-verification";
 import {
@@ -22,6 +22,7 @@ import {
 
 export function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
@@ -76,7 +77,12 @@ export function RegisterForm() {
       {
         onSuccess: (data) => {
           setPendingVerificationEmail(data.email);
-          router.push(authRoutes.verifyEmail);
+          const callbackUrl = searchParams.get("callbackUrl");
+          const verifyUrl =
+            callbackUrl && callbackUrl.startsWith("/")
+              ? `${authRoutes.verifyEmail}?callbackUrl=${encodeURIComponent(callbackUrl)}`
+              : authRoutes.verifyEmail;
+          router.push(verifyUrl);
         },
         onError: (error) => {
           const apiFieldErrors = getAuthFormErrors(error);
@@ -211,12 +217,16 @@ export function RegisterForm() {
 
       <AuthDivider className="my-5" />
 
-      <GoogleSignInButton />
+      <GoogleSignInButton
+        callbackUrl={searchParams.get("callbackUrl") ?? appRoutes.dashboard}
+      />
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link
-          href={authRoutes.login}
+          href={`${authRoutes.login}?callbackUrl=${encodeURIComponent(
+            searchParams.get("callbackUrl") ?? appRoutes.dashboard,
+          )}`}
           className="font-semibold text-primary transition-colors hover:text-primary-hover"
         >
           Sign in

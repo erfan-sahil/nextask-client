@@ -3,9 +3,6 @@
 import {
   Ban,
   CheckCircle2,
-  ChevronDown,
-  ChevronRight,
-  Circle,
   CircleDashed,
   CirclePause,
   Loader2,
@@ -19,15 +16,36 @@ import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { mockGoals, mockProjects } from "@/lib/mock/dashboard-data";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useGoals, useWorkspaceBySlug } from "@/hooks/use-workflow";
+import { getErrorMessage } from "@/lib/api/get-error-message";
 import { cn } from "@/lib/utils";
-import type { Goal, GoalStatus, KeyResult, Workspace } from "@/types/workspace";
+import type {
+  GoalDoc,
+  GoalPriority,
+  GoalStatus,
+} from "@/types/domain";
 
 // ─── Status config ─────────────────────────────────────────────────────────
 
@@ -41,15 +59,15 @@ type StatusConfig = {
 };
 
 const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
-  not_started: {
-    label: "Not Started",
+  PLANNING: {
+    label: "Planning",
     icon: CircleDashed,
     badgeClass: "border-muted-foreground/25 bg-muted/60 text-muted-foreground",
     ringClass: "stroke-muted-foreground/40",
     borderAccent: "border-l-muted-foreground/30",
     bgAccent: "bg-muted-foreground/30",
   },
-  in_progress: {
+  IN_PROGRESS: {
     label: "In Progress",
     icon: Loader2,
     badgeClass:
@@ -58,7 +76,7 @@ const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
     borderAccent: "border-l-blue-500",
     bgAccent: "bg-blue-500",
   },
-  on_hold: {
+  ON_HOLD: {
     label: "On Hold",
     icon: CirclePause,
     badgeClass:
@@ -67,7 +85,7 @@ const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
     borderAccent: "border-l-amber-500",
     bgAccent: "bg-amber-500",
   },
-  completed: {
+  COMPLETED: {
     label: "Completed",
     icon: CheckCircle2,
     badgeClass:
@@ -76,7 +94,7 @@ const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
     borderAccent: "border-l-violet-500",
     bgAccent: "bg-violet-500",
   },
-  cancelled: {
+  CANCELLED: {
     label: "Cancelled",
     icon: Ban,
     badgeClass:
@@ -130,90 +148,41 @@ function ProgressRing({
   );
 }
 
-// ─── Key result row ─────────────────────────────────────────────────────────
-
-function KeyResultRow({ kr }: { kr: KeyResult }) {
-  const pct =
-    kr.target === 0
-      ? 100
-      : Math.min(100, Math.round((kr.current / kr.target) * 100));
-  const isComplete = pct >= 100;
-
-  return (
-    <div className="flex items-start gap-3 py-2.5">
-      {isComplete ? (
-        <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-emerald-500" />
-      ) : (
-        <Circle className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/40" />
-      )}
-      <div className="min-w-0 flex-1">
-        <div className="mb-1.5 flex items-center justify-between gap-2">
-          <p
-            className={cn(
-              "truncate text-xs font-medium",
-              isComplete && "line-through text-muted-foreground/60",
-            )}
-          >
-            {kr.title}
-          </p>
-          <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
-            {kr.current.toLocaleString()}
-            <span className="opacity-50">
-              /{kr.target.toLocaleString()} {kr.unit}
-            </span>
-          </span>
-        </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            className={cn(
-              "h-full rounded-full transition-all duration-700",
-              isComplete ? "bg-emerald-500" : "bg-primary",
-            )}
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        <p className="mt-1 text-[10px] text-muted-foreground/60">
-          {pct}% complete
-        </p>
-      </div>
-    </div>
-  );
-}
-
 // ─── Goal card ─────────────────────────────────────────────────────────────
 
-function goalProgress(goal: Goal): number {
-  if (goal.keyResults.length === 0) return 0;
-  const total = goal.keyResults.reduce((sum, kr) => {
-    const pct =
-      kr.target === 0 ? 100 : Math.min(100, (kr.current / kr.target) * 100);
-    return sum + pct;
-  }, 0);
-  return Math.round(total / goal.keyResults.length);
+function goalProgress(goal: GoalDoc): number {
+  return goal.status === "COMPLETED" ? 100 : 0;
 }
 
 function GoalCard({
   goal,
-  projectNames,
+  canManage,
   onEdit,
   onDelete,
 }: {
-  goal: Goal;
-  projectNames: string[];
-  onEdit: (id: string) => void;
+  goal: GoalDoc;
+  canManage: boolean;
+  onEdit: (goal: GoalDoc) => void;
   onDelete: (id: string) => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
   const pct = goalProgress(goal);
   const cfg = STATUS_CONFIG[goal.status];
   const StatusIcon = cfg.icon;
   const isOverdue =
+    goal.dueDate !== null &&
     new Date(goal.dueDate) < new Date() &&
-    goal.status !== "completed" &&
-    goal.status !== "cancelled";
-  const completedKRs = goal.keyResults.filter(
-    (kr) => (kr.target === 0 ? 100 : (kr.current / kr.target) * 100) >= 100,
-  ).length;
+    goal.status !== "COMPLETED" &&
+    goal.status !== "CANCELLED";
+  const ownerName =
+    `${goal.createdBy.firstName} ${goal.createdBy.lastName}`.trim() ||
+    goal.createdBy.username ||
+    goal.createdBy.email;
+  const ownerInitials = ownerName
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <div
@@ -271,79 +240,37 @@ function GoalCard({
             {/* Owner */}
             <div className="flex items-center gap-1.5">
               <div
-                className={cn(
-                  "flex size-5 items-center justify-center rounded-full text-[9px] font-bold",
-                  goal.ownerColor,
-                )}
+                className="flex size-5 items-center justify-center rounded-full bg-primary/15 text-[9px] font-bold text-primary"
               >
-                {goal.ownerInitials}
+                {ownerInitials}
               </div>
               <span className="text-[11px] text-muted-foreground">
-                {goal.ownerName}
+                {ownerName}
               </span>
             </div>
 
             {/* Due date */}
-            <span
-              className={cn(
-                "text-[11px] text-muted-foreground",
-                isOverdue && "text-destructive font-medium",
-              )}
-            >
-              Due{" "}
-              {new Date(goal.dueDate + "T00:00:00").toLocaleDateString(
-                "en-US",
-                {
+            {goal.dueDate && (
+              <span
+                className={cn(
+                  "text-[11px] text-muted-foreground",
+                  isOverdue && "font-medium text-destructive",
+                )}
+              >
+                Due{" "}
+                {new Date(goal.dueDate).toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
                   year: "numeric",
-                },
-              )}
-            </span>
-
-            {/* Key results count */}
-            {goal.keyResults.length > 0 && (
-              <span className="text-[11px] text-muted-foreground">
-                {completedKRs}/{goal.keyResults.length} key results
+                })}
               </span>
-            )}
-
-            {/* Linked projects */}
-            {projectNames.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {projectNames.map((name) => (
-                  <span
-                    key={name}
-                    className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
-                  >
-                    {name}
-                  </span>
-                ))}
-              </div>
             )}
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex shrink-0 items-center gap-1">
-          {/* Expand toggle */}
-          {goal.keyResults.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setExpanded((v) => !v)}
-              className="rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground"
-              aria-label={
-                expanded ? "Collapse key results" : "Expand key results"
-              }
-            >
-              {expanded ? (
-                <ChevronDown className="size-4" />
-              ) : (
-                <ChevronRight className="size-4" />
-              )}
-            </button>
-          )}
-
+        {canManage && (
+          <div className="flex shrink-0 items-center gap-1">
           {/* More actions */}
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -355,7 +282,7 @@ function GoalCard({
             <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuItem
                 className="gap-2 text-xs"
-                onClick={() => onEdit(goal.id)}
+                onClick={() => onEdit(goal)}
               >
                 <Pencil className="size-3.5" />
                 Edit goal
@@ -363,30 +290,178 @@ function GoalCard({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="gap-2 text-xs text-destructive focus:text-destructive"
-                onClick={() => onDelete(goal.id)}
+                onClick={() => onDelete(goal._id)}
               >
                 <Trash2 className="size-3.5" />
                 Delete goal
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-      </div>
-
-      {/* Key results (expandable) */}
-      {expanded && goal.keyResults.length > 0 && (
-        <div className="border-t border-border/60 px-5 pb-4 pt-1">
-          <p className="mb-0.5 mt-2.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-            Key Results
-          </p>
-          <div className="divide-y divide-border/40">
-            {goal.keyResults.map((kr) => (
-              <KeyResultRow key={kr.id} kr={kr} />
-            ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
+  );
+}
+
+const GOAL_STATUSES: GoalStatus[] = [
+  "PLANNING",
+  "IN_PROGRESS",
+  "ON_HOLD",
+  "COMPLETED",
+  "CANCELLED",
+];
+const GOAL_PRIORITIES: GoalPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
+const EMPTY_GOALS: GoalDoc[] = [];
+
+const toDateInputValue = (value: string | null) =>
+  value ? new Date(value).toISOString().slice(0, 10) : "";
+
+function GoalDialog({
+  goal,
+  workspaceId,
+  onClose,
+}: {
+  goal: GoalDoc | null;
+  workspaceId: string;
+  onClose: () => void;
+}) {
+  const goals = useGoals(workspaceId);
+  const [title, setTitle] = useState(goal?.title ?? "");
+  const [description, setDescription] = useState(goal?.description ?? "");
+  const [status, setStatus] = useState<GoalStatus>(goal?.status ?? "PLANNING");
+  const [priority, setPriority] = useState<GoalPriority>(
+    goal?.priority ?? "MEDIUM",
+  );
+  const [startDate, setStartDate] = useState(toDateInputValue(goal?.startDate ?? null));
+  const [dueDate, setDueDate] = useState(toDateInputValue(goal?.dueDate ?? null));
+  const [error, setError] = useState<string | null>(null);
+  const isEditing = Boolean(goal);
+  const isPending = goals.create.isPending || goals.update.isPending;
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+
+    try {
+      const data = {
+        title: title.trim(),
+        description: description.trim(),
+        status,
+        priority,
+        startDate: startDate || null,
+        dueDate: dueDate || null,
+      };
+
+      if (goal) {
+        await goals.update.mutateAsync({
+          workspaceId,
+          goalId: goal._id,
+          ...data,
+        });
+      } else {
+        await goals.create.mutateAsync({ workspaceId, ...data });
+      }
+
+      onClose();
+    } catch (requestError) {
+      setError(getErrorMessage(requestError));
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && !isPending && onClose()}>
+      <DialogContent className="max-w-lg p-0">
+        <form onSubmit={handleSubmit}>
+          <DialogHeader className="border-b border-border px-6 py-5 pr-14">
+            <DialogTitle>{isEditing ? "Edit goal" : "Create goal"}</DialogTitle>
+            <DialogDescription>
+              {isEditing
+                ? "Update the goal details and its current status."
+                : "Define an objective for this workspace."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 px-6 py-5">
+            <div className="space-y-2">
+              <Label htmlFor="goal-title">Title</Label>
+              <Input
+                id="goal-title"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                maxLength={500}
+                required
+                autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="goal-description">Description</Label>
+              <Textarea
+                id="goal-description"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                maxLength={10000}
+                rows={4}
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={status} onValueChange={(value) => setStatus(value as GoalStatus)}>
+                  <SelectTrigger className="w-full">
+                    <span>{STATUS_CONFIG[status].label}</span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GOAL_STATUSES.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {STATUS_CONFIG[item].label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Priority</Label>
+                <Select value={priority} onValueChange={(value) => setPriority(value as GoalPriority)}>
+                  <SelectTrigger className="w-full">
+                    <span>{priority[0] + priority.slice(1).toLowerCase()}</span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GOAL_PRIORITIES.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item[0] + item.slice(1).toLowerCase()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="goal-start-date">Start date</Label>
+                <Input id="goal-start-date" type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="goal-due-date">Due date</Label>
+                <Input id="goal-due-date" type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
+              </div>
+            </div>
+            {error && (
+              <p className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </p>
+            )}
+          </div>
+          <div className="flex justify-end gap-3 border-t border-border bg-muted/30 px-6 py-4">
+            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Saving…" : isEditing ? "Save changes" : "Create goal"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -396,11 +471,11 @@ type StatusFilter = GoalStatus | "all";
 
 const FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "All Goals" },
-  { value: "not_started", label: "Not Started" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "on_hold", label: "On Hold" },
-  { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
+  { value: "PLANNING", label: "Planning" },
+  { value: "IN_PROGRESS", label: "In Progress" },
+  { value: "ON_HOLD", label: "On Hold" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "CANCELLED", label: "Cancelled" },
 ];
 
 const STAT_CONFIG: {
@@ -409,48 +484,46 @@ const STAT_CONFIG: {
   bgClass: string;
 }[] = [
   {
-    status: "not_started",
+    status: "PLANNING",
     colorClass: "text-muted-foreground",
     bgClass: "bg-muted/60",
   },
   {
-    status: "in_progress",
+    status: "IN_PROGRESS",
     colorClass: "text-blue-600 dark:text-blue-400",
     bgClass: "bg-blue-500/10",
   },
   {
-    status: "on_hold",
+    status: "ON_HOLD",
     colorClass: "text-amber-600 dark:text-amber-400",
     bgClass: "bg-amber-500/10",
   },
   {
-    status: "completed",
+    status: "COMPLETED",
     colorClass: "text-violet-600 dark:text-violet-400",
     bgClass: "bg-violet-500/10",
   },
   {
-    status: "cancelled",
+    status: "CANCELLED",
     colorClass: "text-muted-foreground/70",
     bgClass: "bg-muted/40",
   },
 ];
 
-export function WorkspaceGoals({ workspace }: { workspace: Workspace }) {
+export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
+  const { workspace, isLoading: isWorkspaceLoading } = useWorkspaceBySlug(workspaceSlug);
+  const goalsQuery = useGoals(workspace?._id);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [goals, setGoals] = useState(() =>
-    mockGoals.filter((g) => g.workspaceId === workspace.id),
+  const [dialogGoal, setDialogGoal] = useState<GoalDoc | null | undefined>(
+    undefined,
   );
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const goals = goalsQuery.data?.goals ?? EMPTY_GOALS;
 
   const filtered = useMemo(() => {
     if (statusFilter === "all") return goals;
     return goals.filter((g) => g.status === statusFilter);
   }, [goals, statusFilter]);
-
-  const projectMap = useMemo(() => {
-    const map: Record<string, string> = {};
-    for (const p of mockProjects) map[p.id] = p.name;
-    return map;
-  }, []);
 
   const counts: Record<string, number> = useMemo(() => {
     const c: Record<string, number> = { all: goals.length };
@@ -468,19 +541,34 @@ export function WorkspaceGoals({ workspace }: { workspace: Workspace }) {
   }, [goals]);
 
   const overallStatus = useMemo((): GoalStatus => {
-    if (avgProgress >= 80) return "completed";
-    if (avgProgress > 0) return "in_progress";
-    return "not_started";
+    if (avgProgress >= 80) return "COMPLETED";
+    if (avgProgress > 0) return "IN_PROGRESS";
+    return "PLANNING";
   }, [avgProgress]);
 
-  const handleEdit = (id: string) => {
-    // TODO: open edit modal/sheet
-    console.log("Edit goal:", id);
+  const canManageGoals =
+    workspace?.membershipRole === "OWNER" || workspace?.membershipRole === "ADMIN";
+
+  const handleDelete = async (goalId: string) => {
+    if (!window.confirm("Delete this goal? This action cannot be undone.")) {
+      return;
+    }
+
+    setDeleteError(null);
+    try {
+      await goalsQuery.remove.mutateAsync({ workspaceId: workspace!._id, goalId });
+    } catch (error) {
+      setDeleteError(getErrorMessage(error));
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setGoals((prev) => prev.filter((g) => g.id !== id));
-  };
+  if (isWorkspaceLoading) {
+    return <div className="p-8 text-sm text-muted-foreground">Loading goals…</div>;
+  }
+
+  if (!workspace) {
+    return <div className="p-8 text-sm text-destructive">Workspace not found or you do not have access.</div>;
+  }
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -495,10 +583,12 @@ export function WorkspaceGoals({ workspace }: { workspace: Workspace }) {
             </span>
           </p>
         </div>
-        <Button size="sm" className="gap-1.5">
-          <Plus className="size-4" />
-          New Goal
-        </Button>
+        {canManageGoals && (
+          <Button size="sm" className="gap-1.5" onClick={() => setDialogGoal(null)}>
+            <Plus className="size-4" />
+            New Goal
+          </Button>
+        )}
       </div>
 
       {/* ── Overview banner ── */}
@@ -610,8 +700,22 @@ export function WorkspaceGoals({ workspace }: { workspace: Workspace }) {
         ))}
       </div>
 
+      {deleteError && (
+        <p className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {deleteError}
+        </p>
+      )}
+
       {/* ── Goal list ── */}
-      {filtered.length === 0 ? (
+      {goalsQuery.isLoading ? (
+        <div className="rounded-2xl border border-border bg-card py-20 text-center text-sm text-muted-foreground">
+          Loading goals…
+        </div>
+      ) : goalsQuery.isError ? (
+        <div className="rounded-2xl border border-destructive/20 bg-destructive/5 py-20 text-center text-sm text-destructive">
+          {getErrorMessage(goalsQuery.error)}
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-20 text-center">
           <div className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-muted">
             <Target className="size-6 text-muted-foreground/50" />
@@ -637,14 +741,22 @@ export function WorkspaceGoals({ workspace }: { workspace: Workspace }) {
         <div className="space-y-3">
           {filtered.map((goal) => (
             <GoalCard
-              key={goal.id}
+              key={goal._id}
               goal={goal}
-              projectNames={goal.projectIds.map((id) => projectMap[id] ?? id)}
-              onEdit={handleEdit}
+              canManage={canManageGoals}
+              onEdit={setDialogGoal}
               onDelete={handleDelete}
             />
           ))}
         </div>
+      )}
+      {dialogGoal !== undefined && (
+        <GoalDialog
+          key={dialogGoal?._id ?? "new"}
+          goal={dialogGoal}
+          workspaceId={workspace._id}
+          onClose={() => setDialogGoal(undefined)}
+        />
       )}
     </div>
   );

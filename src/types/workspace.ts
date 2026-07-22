@@ -99,7 +99,7 @@ export type Member = {
 };
 
 export type GoalStatus =
-  | "not_started"
+  | "planning"
   | "in_progress"
   | "on_hold"
   | "completed"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
@@ -18,29 +18,33 @@ const OTP_LENGTH = 6;
 
 export function VerifyEmailForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [resendCooldown, setResendCooldown] = useState(0);
-  const [email, setEmail] = useState<string | null>(null);
+  const [email] = useState(getPendingVerificationEmail);
 
   useEffect(() => {
-    const pendingEmail = getPendingVerificationEmail();
-
-    if (!pendingEmail) {
-      router.replace(authRoutes.register);
-      return;
+    if (!email) {
+      const callbackUrl = searchParams.get("callbackUrl");
+      router.replace(
+        callbackUrl && callbackUrl.startsWith("/")
+          ? `${authRoutes.register}?callbackUrl=${encodeURIComponent(callbackUrl)}`
+          : authRoutes.register,
+      );
     }
-
-    setEmail(pendingEmail);
-  }, [router]);
+  }, [email, router, searchParams]);
 
   const verifyMutation = useMutation({
     mutationFn: verifyEmail,
     onSuccess: (data) => {
       clearPendingVerificationEmail();
       queryClient.setQueryData(authQueryKeys.me, data.user);
-      router.replace(appRoutes.dashboard);
+      const callbackUrl = searchParams.get("callbackUrl");
+      router.replace(
+        callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : appRoutes.dashboard,
+      );
     },
   });
 
@@ -123,7 +127,12 @@ export function VerifyEmailForm() {
 
   const handleBackToRegistration = () => {
     clearPendingVerificationEmail();
-    router.replace(authRoutes.register);
+    const callbackUrl = searchParams.get("callbackUrl");
+    router.replace(
+      callbackUrl && callbackUrl.startsWith("/")
+        ? `${authRoutes.register}?callbackUrl=${encodeURIComponent(callbackUrl)}`
+        : authRoutes.register,
+    );
   };
 
   if (!email) {
