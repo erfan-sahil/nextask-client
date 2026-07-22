@@ -1,20 +1,26 @@
 "use client";
 
 import {
+  AlertTriangle,
   Ban,
+  CalendarDays,
   CheckCircle2,
   CircleDashed,
   CirclePause,
+  Eye,
   Loader2,
   MoreHorizontal,
   Pencil,
   Plus,
   Target,
   Trash2,
+  X,
 } from "lucide-react";
+import { format } from "date-fns";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +37,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -62,10 +73,11 @@ const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
   PLANNING: {
     label: "Planning",
     icon: CircleDashed,
-    badgeClass: "border-muted-foreground/25 bg-muted/60 text-muted-foreground",
-    ringClass: "stroke-muted-foreground/40",
-    borderAccent: "border-l-muted-foreground/30",
-    bgAccent: "bg-muted-foreground/30",
+    badgeClass:
+      "border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-400",
+    ringClass: "stroke-purple-500",
+    borderAccent: "border-l-purple-500",
+    bgAccent: "bg-purple-500",
   },
   IN_PROGRESS: {
     label: "In Progress",
@@ -89,19 +101,19 @@ const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
     label: "Completed",
     icon: CheckCircle2,
     badgeClass:
-      "border-violet-500/30 bg-violet-500/10 text-violet-600 dark:text-violet-400",
-    ringClass: "stroke-violet-500",
-    borderAccent: "border-l-violet-500",
-    bgAccent: "bg-violet-500",
+      "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    ringClass: "stroke-emerald-500",
+    borderAccent: "border-l-emerald-500",
+    bgAccent: "bg-emerald-500",
   },
   CANCELLED: {
     label: "Cancelled",
     icon: Ban,
     badgeClass:
-      "border-muted-foreground/20 bg-muted/40 text-muted-foreground/70",
-    ringClass: "stroke-muted-foreground/30",
-    borderAccent: "border-l-muted-foreground/20",
-    bgAccent: "bg-muted-foreground/20",
+      "border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400",
+    ringClass: "stroke-red-500",
+    borderAccent: "border-l-red-500",
+    bgAccent: "bg-red-500",
   },
 };
 
@@ -157,11 +169,13 @@ function goalProgress(goal: GoalDoc): number {
 function GoalCard({
   goal,
   canManage,
+  onViewDetails,
   onEdit,
   onDelete,
 }: {
   goal: GoalDoc;
   canManage: boolean;
+  onViewDetails: (goal: GoalDoc) => void;
   onEdit: (goal: GoalDoc) => void;
   onDelete: (id: string) => void;
 }) {
@@ -269,8 +283,7 @@ function GoalCard({
         </div>
 
         {/* Actions */}
-        {canManage && (
-          <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1">
           {/* More actions */}
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -280,25 +293,30 @@ function GoalCard({
               <MoreHorizontal className="size-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem
-                className="gap-2 text-xs"
-                onClick={() => onEdit(goal)}
-              >
-                <Pencil className="size-3.5" />
-                Edit goal
+              <DropdownMenuItem className="gap-2 text-xs" onClick={() => onViewDetails(goal)}>
+                <Eye className="size-3.5" />
+                View details
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="gap-2 text-xs text-destructive focus:text-destructive"
-                onClick={() => onDelete(goal._id)}
-              >
-                <Trash2 className="size-3.5" />
-                Delete goal
-              </DropdownMenuItem>
+              {canManage && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="gap-2 text-xs" onClick={() => onEdit(goal)}>
+                    <Pencil className="size-3.5" />
+                    Edit goal
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="gap-2 text-xs text-destructive focus:text-destructive"
+                    onClick={() => onDelete(goal._id)}
+                  >
+                    <Trash2 className="size-3.5" />
+                    Delete goal
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
@@ -316,6 +334,81 @@ const EMPTY_GOALS: GoalDoc[] = [];
 
 const toDateInputValue = (value: string | null) =>
   value ? new Date(value).toISOString().slice(0, 10) : "";
+
+function GoalDatePicker({
+  id,
+  label,
+  value,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const selectedDate = value ? new Date(`${value}T00:00:00`) : undefined;
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      <Popover>
+        <PopoverTrigger
+          id={id}
+          className={cn(
+            "flex h-10 w-full items-center justify-between rounded-lg border border-input bg-background px-3 text-left text-sm shadow-xs outline-none transition-colors hover:bg-accent/50 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+            !selectedDate && "text-muted-foreground",
+          )}
+        >
+          <span>{selectedDate ? format(selectedDate, "PPP") : "Select a date"}</span>
+          <CalendarDays className="size-4 text-muted-foreground" />
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-auto p-0">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(date) => onChange(date ? format(date, "yyyy-MM-dd") : "")}
+            captionLayout="dropdown"
+          />
+          {selectedDate && (
+            <div className="border-t border-border p-2">
+              <Button type="button" variant="ghost" size="sm" className="w-full" onClick={() => onChange("")}>
+                Clear date
+              </Button>
+            </div>
+          )}
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
+function ExpandableDescriptionField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="goal-description">Description</Label>
+      <Textarea
+        id="goal-description"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        onInput={(event) => {
+          const textarea = event.currentTarget;
+          textarea.style.height = "auto";
+          textarea.style.height = `${textarea.scrollHeight}px`;
+        }}
+        maxLength={10000}
+        rows={3}
+        placeholder="Describe the goal"
+        className="min-h-24 resize-none overflow-hidden"
+      />
+    </div>
+  );
+}
 
 function GoalDialog({
   goal,
@@ -381,6 +474,15 @@ function GoalDialog({
                 : "Define an objective for this workspace."}
             </DialogDescription>
           </DialogHeader>
+          <button
+            type="button"
+            aria-label="Close goal dialog"
+            disabled={isPending}
+            onClick={onClose}
+            className="absolute right-4 top-4 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed"
+          >
+            <X className="size-4" />
+          </button>
           <div className="space-y-4 px-6 py-5">
             <div className="space-y-2">
               <Label htmlFor="goal-title">Title</Label>
@@ -389,20 +491,12 @@ function GoalDialog({
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 maxLength={500}
+                placeholder="Goal title"
                 required
                 autoFocus
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="goal-description">Description</Label>
-              <Textarea
-                id="goal-description"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                maxLength={10000}
-                rows={4}
-              />
-            </div>
+            <ExpandableDescriptionField value={description} onChange={setDescription} />
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Status</Label>
@@ -436,14 +530,8 @@ function GoalDialog({
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="goal-start-date">Start date</Label>
-                <Input id="goal-start-date" type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="goal-due-date">Due date</Label>
-                <Input id="goal-due-date" type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
-              </div>
+              <GoalDatePicker id="goal-start-date" label="Start date" value={startDate} onChange={setStartDate} />
+              <GoalDatePicker id="goal-due-date" label="Due date" value={dueDate} onChange={setDueDate} />
             </div>
             {error && (
               <p className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -460,6 +548,161 @@ function GoalDialog({
             </Button>
           </div>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function GoalDetailsDialog({
+  goal,
+  onClose,
+}: {
+  goal: GoalDoc;
+  onClose: () => void;
+}) {
+  const statusConfig = STATUS_CONFIG[goal.status];
+  const StatusIcon = statusConfig.icon;
+  const creatorName =
+    `${goal.createdBy.firstName} ${goal.createdBy.lastName}`.trim() ||
+    goal.createdBy.username ||
+    goal.createdBy.email;
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-2xl overflow-hidden p-0">
+        <DialogHeader className="border-b border-border px-6 py-5 pr-14">
+          <DialogTitle>Goal details</DialogTitle>
+          <DialogDescription>Review the objective, timeline, and ownership.</DialogDescription>
+        </DialogHeader>
+        <button
+          type="button"
+          aria-label="Close goal details"
+          onClick={onClose}
+          className="absolute right-4 top-4 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <X className="size-4" />
+        </button>
+        <div className="space-y-6 px-6 py-5">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-xl font-semibold tracking-tight">{goal.title}</h2>
+              <Badge variant="outline" className={cn("flex items-center gap-1", statusConfig.badgeClass)}>
+                <StatusIcon className="size-3.5" />
+                {statusConfig.label}
+              </Badge>
+            </div>
+            <div className="mt-3 line-clamp-4 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+              {goal.description || "No description provided."}
+            </div>
+          </div>
+          <dl className="grid gap-4 rounded-xl border border-border bg-muted/20 p-4 sm:grid-cols-2">
+            <div>
+              <dt className="text-xs text-muted-foreground">Priority</dt>
+              <dd className="mt-1 text-sm font-medium">
+                {goal.priority[0] + goal.priority.slice(1).toLowerCase()}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Created by</dt>
+              <dd className="mt-1 text-sm font-medium">{creatorName}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Start date</dt>
+              <dd className="mt-1 text-sm font-medium">
+                {goal.startDate ? format(new Date(goal.startDate), "PPP") : "Not set"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Due date</dt>
+              <dd className="mt-1 text-sm font-medium">
+                {goal.dueDate ? format(new Date(goal.dueDate), "PPP") : "Not set"}
+              </dd>
+            </div>
+            {goal.completedAt && (
+              <div>
+                <dt className="text-xs text-muted-foreground">Completed</dt>
+                <dd className="mt-1 text-sm font-medium">
+                  {format(new Date(goal.completedAt), "PPP")}
+                </dd>
+              </div>
+            )}
+          </dl>
+        </div>
+        <div className="flex justify-end border-t border-border bg-muted/30 px-6 py-4">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Close
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function GoalDeleteDialog({
+  goal,
+  workspaceId,
+  onClose,
+}: {
+  goal: GoalDoc;
+  workspaceId: string;
+  onClose: () => void;
+}) {
+  const goals = useGoals(workspaceId);
+  const [error, setError] = useState<string | null>(null);
+  const isPending = goals.remove.isPending;
+
+  async function handleDelete() {
+    setError(null);
+    try {
+      await goals.remove.mutateAsync({ workspaceId, goalId: goal._id });
+      onClose();
+    } catch (requestError) {
+      setError(getErrorMessage(requestError));
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && !isPending && onClose()}>
+      <DialogContent className="max-w-md overflow-hidden p-0">
+        <DialogHeader className="border-b border-border px-6 py-5 pr-14">
+          <DialogTitle className="text-destructive">Delete goal</DialogTitle>
+          <DialogDescription>This action cannot be undone.</DialogDescription>
+        </DialogHeader>
+        <button
+          type="button"
+          aria-label="Close delete goal dialog"
+          disabled={isPending}
+          onClick={onClose}
+          className="absolute right-4 top-4 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed"
+        >
+          <X className="size-4" />
+        </button>
+        <div className="px-6 py-5">
+          <div className="flex gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+              <AlertTriangle className="size-4" />
+            </span>
+            <div>
+              <p className="text-sm font-medium">Delete “{goal.title}”?</p>
+              <p className="mt-1 text-sm leading-5 text-muted-foreground">
+                This will permanently remove the goal from the workspace.
+              </p>
+            </div>
+          </div>
+          {error && (
+            <p className="mt-4 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </p>
+          )}
+        </div>
+        <div className="flex justify-end gap-3 border-t border-border bg-muted/30 px-6 py-4">
+          <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
+            Cancel
+          </Button>
+          <Button type="button" variant="destructive" onClick={handleDelete} disabled={isPending}>
+            {isPending ? "Deleting…" : "Delete goal"}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -485,8 +728,8 @@ const STAT_CONFIG: {
 }[] = [
   {
     status: "PLANNING",
-    colorClass: "text-muted-foreground",
-    bgClass: "bg-muted/60",
+    colorClass: "text-purple-600 dark:text-purple-400",
+    bgClass: "bg-purple-500/10",
   },
   {
     status: "IN_PROGRESS",
@@ -500,13 +743,13 @@ const STAT_CONFIG: {
   },
   {
     status: "COMPLETED",
-    colorClass: "text-violet-600 dark:text-violet-400",
-    bgClass: "bg-violet-500/10",
+    colorClass: "text-emerald-600 dark:text-emerald-400",
+    bgClass: "bg-emerald-500/10",
   },
   {
     status: "CANCELLED",
-    colorClass: "text-muted-foreground/70",
-    bgClass: "bg-muted/40",
+    colorClass: "text-red-600 dark:text-red-400",
+    bgClass: "bg-red-500/10",
   },
 ];
 
@@ -517,7 +760,8 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
   const [dialogGoal, setDialogGoal] = useState<GoalDoc | null | undefined>(
     undefined,
   );
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [detailsGoal, setDetailsGoal] = useState<GoalDoc | null>(null);
+  const [deleteGoal, setDeleteGoal] = useState<GoalDoc | null>(null);
   const goals = goalsQuery.data?.goals ?? EMPTY_GOALS;
 
   const filtered = useMemo(() => {
@@ -548,19 +792,6 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
 
   const canManageGoals =
     workspace?.membershipRole === "OWNER" || workspace?.membershipRole === "ADMIN";
-
-  const handleDelete = async (goalId: string) => {
-    if (!window.confirm("Delete this goal? This action cannot be undone.")) {
-      return;
-    }
-
-    setDeleteError(null);
-    try {
-      await goalsQuery.remove.mutateAsync({ workspaceId: workspace!._id, goalId });
-    } catch (error) {
-      setDeleteError(getErrorMessage(error));
-    }
-  };
 
   if (isWorkspaceLoading) {
     return <div className="p-8 text-sm text-muted-foreground">Loading goals…</div>;
@@ -700,12 +931,6 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
         ))}
       </div>
 
-      {deleteError && (
-        <p className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {deleteError}
-        </p>
-      )}
-
       {/* ── Goal list ── */}
       {goalsQuery.isLoading ? (
         <div className="rounded-2xl border border-border bg-card py-20 text-center text-sm text-muted-foreground">
@@ -744,8 +969,11 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
               key={goal._id}
               goal={goal}
               canManage={canManageGoals}
+              onViewDetails={setDetailsGoal}
               onEdit={setDialogGoal}
-              onDelete={handleDelete}
+              onDelete={(goalId) =>
+                setDeleteGoal(goals.find((item) => item._id === goalId) ?? null)
+              }
             />
           ))}
         </div>
@@ -756,6 +984,21 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
           goal={dialogGoal}
           workspaceId={workspace._id}
           onClose={() => setDialogGoal(undefined)}
+        />
+      )}
+      {detailsGoal && (
+        <GoalDetailsDialog
+          key={detailsGoal._id}
+          goal={detailsGoal}
+          onClose={() => setDetailsGoal(null)}
+        />
+      )}
+      {deleteGoal && (
+        <GoalDeleteDialog
+          key={deleteGoal._id}
+          goal={deleteGoal}
+          workspaceId={workspace._id}
+          onClose={() => setDeleteGoal(null)}
         />
       )}
     </div>
