@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { format } from "date-fns";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/app/user-avatar";
 import { Calendar } from "@/components/ui/calendar";
@@ -57,6 +57,21 @@ import type { ColumnDoc, TaskDoc, TaskPriority } from "@/types/domain";
 
 function getColumnId(columnId: TaskDoc["columnId"]) {
   return typeof columnId === "string" ? columnId : columnId._id;
+}
+
+function renderCommentContent(content: string) {
+  return content.split(/(@[a-z0-9_-]+)/gi).map((part, index) =>
+    /^@[a-z0-9_-]+$/i.test(part) ? (
+      <span
+        key={`${part}-${index}`}
+        className="inline-block rounded-md bg-primary/10 px-1.5 py-0.5 font-semibold text-primary"
+      >
+        {part}
+      </span>
+    ) : (
+      part
+    ),
+  );
 }
 
 type TaskModalProps = {
@@ -108,7 +123,12 @@ export function TaskModal({
   );
   const [memberSearch, setMemberSearch] = useState("");
   const [comment, setComment] = useState("");
+  const [commentMention, setCommentMention] = useState<{
+    query: string;
+    start: number;
+  } | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const commentComposerRef = useRef<HTMLTextAreaElement>(null);
   const isDeleting = mode === "delete";
   const isDetails = mode === "details";
   const isPending =
@@ -135,6 +155,15 @@ export function TaskModal({
       `${member.firstName} ${member.lastName} ${member.email}`.toLowerCase().includes(search),
     );
   }, [memberSearch, members]);
+  const commentMentionSuggestions = useMemo(() => {
+    const query = commentMention?.query.toLowerCase() ?? "";
+    return members
+      .filter((member) => {
+        const name = `${member.firstName} ${member.lastName}`.toLowerCase();
+        return !query || member.username.includes(query) || name.includes(query);
+      })
+      .slice(0, 5);
+  }, [commentMention?.query, members]);
   const selectedAssignees = useMemo(() => {
     const membersById = new Map(members.map((member) => [member._id, member]));
     const taskAssigneesById = new Map(task?.assignees.map((member) => [member._id, member]));
@@ -150,6 +179,30 @@ export function TaskModal({
         ? currentAssigneeIds.filter((id) => id !== memberId)
         : [...currentAssigneeIds, memberId],
     );
+  }
+
+  function updateCommentMention(value: string, caretPosition: number) {
+    const textBeforeCaret = value.slice(0, caretPosition);
+    const match = textBeforeCaret.match(/@([a-z0-9_-]*)$/i);
+    setCommentMention(
+      match ? { query: match[1], start: caretPosition - match[0].length } : null,
+    );
+  }
+
+  function selectCommentMention(username: string) {
+    if (!commentMention) return;
+
+    const caretPosition = commentComposerRef.current?.selectionStart ?? comment.length;
+    const insertedMention = `@${username} `;
+    const nextComment = `${comment.slice(0, commentMention.start)}${insertedMention}${comment.slice(caretPosition)}`;
+    const nextCaretPosition = commentMention.start + insertedMention.length;
+
+    setComment(nextComment);
+    setCommentMention(null);
+    requestAnimationFrame(() => {
+      commentComposerRef.current?.focus();
+      commentComposerRef.current?.setSelectionRange(nextCaretPosition, nextCaretPosition);
+    });
   }
 
   if (!isOpen) return null;
@@ -214,6 +267,7 @@ export function TaskModal({
         content: comment.trim(),
       });
       setComment("");
+      setCommentMention(null);
     } catch (error) {
       setFormError(getErrorMessage(error));
     }
@@ -578,7 +632,9 @@ export function TaskModal({
                     />
                     <div className="min-w-0 flex-1">
                       <p className="font-medium">{authorName}</p>
-                      <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{item.content}</p>
+                      <p className="mt-1 whitespace-pre-wrap text-muted-foreground">
+                        {renderCommentContent(item.content)}
+                      </p>
                     </div>
                   </article>
                 );
@@ -586,7 +642,53 @@ export function TaskModal({
               {!comments.data?.comments.length && <p className="text-xs text-muted-foreground">No comments yet.</p>}
             </div>
             <div className="mt-3 flex gap-2">
-              <Textarea value={comment} onChange={(event) => setComment(event.target.value)} rows={2} placeholder="Write a comment…" />
+              <div className="relative min-w-0 flex-1">
+                <Textarea
+                  ref={commentComposerRef}
+                  value={comment}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setComment(value);
+                    updateCommentMention(value, event.target.selectionStart);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") setCommentMention(null);
+                  }}
+                  rows={2}
+                  placeholder="Write a comment… Use @username to mention someone."
+                />
+                {commentMention && (
+                  <div className="absolute right-0 bottom-[calc(100%+0.5rem)] left-0 z-10 overflow-hidden rounded-lg border border-border bg-popover p-1 shadow-lg">
+                    {commentMentionSuggestions.map((member) => {
+                      const name = `${member.firstName} ${member.lastName}`.trim();
+                      return (
+                        <button
+                          key={member._id}
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => selectCommentMention(member.username)}
+                          className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+                        >
+                          <UserAvatar name={name} avatar={member.avatar} size="sm" />
+                          <span className="min-w-0">
+                            <span className="block truncate font-medium">{name}</span>
+                            <span className="block truncate text-xs text-muted-foreground">
+                              @{member.username}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                    {!workspaceMembers.isLoading &&
+                      !projectMembers.isLoading &&
+                      !commentMentionSuggestions.length && (
+                        <p className="px-2 py-1.5 text-xs text-muted-foreground">
+                          No matching members
+                        </p>
+                      )}
+                  </div>
+                )}
+              </div>
               <Button type="button" size="sm" onClick={addComment} disabled={!comment.trim() || comments.create.isPending}>Post</Button>
             </div>
           </section>
