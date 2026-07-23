@@ -78,7 +78,7 @@ export type TaskDoc = {
       >;
   position: number;
   title: string;
-  description: string;
+  details: string;
   priority: TaskPriority;
   assignees: ApiUser[];
   reporterId: ApiUser;

@@ -369,7 +369,7 @@ export const workflowApi = {
   }: BoardRef & {
     title: string;
     columnId: string;
-    description?: string;
+    details?: string;
     priority?: TaskPriority;
     assignees?: string[];
     reporterId?: string;
@@ -397,7 +397,7 @@ export const workflowApi = {
           | "title"
           | "columnId"
           | "position"
-          | "description"
+          | "details"
           | "priority"
           | "reporterId"
           | "dueDate"

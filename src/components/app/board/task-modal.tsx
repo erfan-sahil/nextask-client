@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
+import { TaskDetailsEditor } from "./task-details-editor";
 import {
   useKanban,
   useProjectMembers,
@@ -91,7 +92,7 @@ export function TaskModal({
   const workspaceMembers = useWorkspaceMembers(workspaceId);
   const projectMembers = useProjectMembers(workspaceId, projectId);
   const [title, setTitle] = useState(task?.title ?? "");
-  const [description, setDescription] = useState(task?.description ?? "");
+  const [details, setDetails] = useState(task?.details ?? "");
   const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? "MEDIUM");
   const [dueDate, setDueDate] = useState(
     task?.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : "",
@@ -176,7 +177,7 @@ export function TaskModal({
           boardId,
           taskId: task._id,
           title: title.trim(),
-          description: description.trim(),
+          details,
           priority,
           columnId,
           assignees: assigneeIds,
@@ -188,7 +189,7 @@ export function TaskModal({
           projectId,
           boardId,
           title: title.trim(),
-          description: description.trim() || undefined,
+          details: details || undefined,
           priority,
           columnId,
           assignees: assigneeIds,
@@ -290,17 +291,18 @@ export function TaskModal({
             <div className="rounded-xl border border-border bg-muted/30 p-4">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <ListTodo className="size-3.5" />
-                Description
+                Task details
               </div>
-              {task.description ? (
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-foreground/80">
-                  {task.description}
-                </p>
+              {task.details ? (
+                <div
+                  className="mt-3 text-sm leading-6 text-foreground/80 [&_a]:text-primary [&_a]:underline [&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-primary/40 [&_blockquote]:pl-3 [&_h2]:mt-3 [&_h2]:mb-1 [&_h2]:text-base [&_h2]:font-semibold [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5"
+                  dangerouslySetInnerHTML={{ __html: task.details }}
+                />
               ) : (
                 <div className="mt-3 rounded-xl border border-dashed border-border bg-background/60 px-4 py-4 text-center">
-                  <p className="text-sm font-medium text-foreground/80">No description yet</p>
+                  <p className="text-sm font-medium text-foreground/80">No task details yet</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    This task does not have any additional context.
+                    Add context, requirements, or a checklist to guide the work.
                   </p>
                 </div>
               )}
@@ -384,8 +386,8 @@ export function TaskModal({
               <Input id="task-title" autoFocus required value={title} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Prepare launch brief" />
             </div>
             <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="task-description">Description</Label>
-              <Textarea id="task-description" value={description} onChange={(event) => setDescription(event.target.value)} rows={3} placeholder="Add more context…" />
+              <Label>Task details</Label>
+              <TaskDetailsEditor value={details} onChange={setDetails} disabled={isPending} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="task-column">Column</Label>
