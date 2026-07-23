@@ -21,7 +21,7 @@ import { WorkspaceSwitcher } from "@/components/app/workspace-switcher";
 import { SiteLogo } from "@/components/layout/site-logo";
 import { Separator } from "@/components/ui/separator";
 import { appRoutes, reservedAppSegments } from "@/config/navigation";
-import { useProjects, useWorkspaces } from "@/hooks/use-workflow";
+import { useNotifications, useProjects, useWorkspaces } from "@/hooks/use-workflow";
 import { cn } from "@/lib/utils";
 import { canManageWorkspaceContent } from "@/lib/workspace-permissions";
 
@@ -44,12 +44,14 @@ function NavLink({
   icon: Icon,
   label,
   active,
+  badge,
   onClick,
 }: {
   href: string;
   icon: React.ElementType;
   label: string;
   active?: boolean;
+  badge?: number;
   onClick?: () => void;
 }) {
   return (
@@ -65,6 +67,11 @@ function NavLink({
     >
       <Icon className="size-4 shrink-0" aria-hidden />
       <span className="truncate">{label}</span>
+      {badge && badge > 0 ? (
+        <span className="ml-auto flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground shadow-sm">
+          {badge > 99 ? "99+" : badge}
+        </span>
+      ) : null}
     </Link>
   );
 }
@@ -120,6 +127,8 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
   const pathname = usePathname();
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
   const workspaces = useWorkspaces();
+  const notifications = useNotifications();
+  const unreadNotificationCount = notifications.data?.unreadCount ?? 0;
 
   // Derive active workspace from the URL, falling back to the first available workspace.
   const pathSegments = pathname.split("/").filter(Boolean);
@@ -299,6 +308,7 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
             icon={Inbox}
             label="Inbox"
             active={pathname === appRoutes.inbox}
+            badge={unreadNotificationCount}
             onClick={onNavigate}
           />
           <ChatNavButton

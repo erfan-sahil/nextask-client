@@ -115,6 +115,9 @@ export const workflowApi = {
   async markAllNotificationsRead() {
     await apiClient.patch("/notifications/read-all");
   },
+  async markNotificationRead(notificationId: string) {
+    await apiClient.patch(`/notifications/${notificationId}/read`);
+  },
   async listChatMessages(workspaceId: string) {
     return unwrap(
       await apiClient.get<ApiSuccessResponse<ListResult<WorkspaceChatMessageDoc, "messages">>>(

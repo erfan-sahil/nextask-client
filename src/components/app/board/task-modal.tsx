@@ -51,6 +51,7 @@ import {
   useProjectMembers,
   useTaskComments,
   useWorkspaceMembers,
+  useWorkspaces,
 } from "@/hooks/use-workflow";
 import { getErrorMessage } from "@/lib/api/get-error-message";
 import type { ColumnDoc, TaskDoc, TaskPriority } from "@/types/domain";
@@ -104,8 +105,14 @@ export function TaskModal({
     boardId,
     mode === "details" ? task?._id : undefined,
   );
-  const workspaceMembers = useWorkspaceMembers(workspaceId);
-  const projectMembers = useProjectMembers(workspaceId, projectId);
+  const workspaces = useWorkspaces();
+  const workspace = workspaces.data?.workspaces.find((item) => item._id === workspaceId);
+  const shouldLoadMembers = isOpen && Boolean(workspaces.data);
+  const workspaceMembers = useWorkspaceMembers(
+    workspaceId,
+    shouldLoadMembers && Boolean(workspace?.membershipRole),
+  );
+  const projectMembers = useProjectMembers(workspaceId, projectId, shouldLoadMembers);
   const [title, setTitle] = useState(task?.title ?? "");
   const [details, setDetails] = useState(task?.details ?? "");
   const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? "MEDIUM");

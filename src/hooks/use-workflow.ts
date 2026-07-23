@@ -353,7 +353,7 @@ export function useKanban(
   };
 }
 
-export function useWorkspaceMembers(workspaceId?: string) {
+export function useWorkspaceMembers(workspaceId?: string, enabled = true) {
   const queryClient = useQueryClient();
   const key = workflowQueryKeys.workspaceMembers(workspaceId ?? "");
   const query = useQuery({
@@ -363,7 +363,7 @@ export function useWorkspaceMembers(workspaceId?: string) {
         workspaceId: workspaceId!,
         limit: 100,
       }),
-    enabled: Boolean(workspaceId),
+    enabled: Boolean(workspaceId) && enabled,
   });
   const invalidate = () => queryClient.invalidateQueries({ queryKey: key });
   return {
@@ -383,7 +383,11 @@ export function useWorkspaceMembers(workspaceId?: string) {
   };
 }
 
-export function useProjectMembers(workspaceId?: string, projectId?: string) {
+export function useProjectMembers(
+  workspaceId?: string,
+  projectId?: string,
+  enabled = true,
+) {
   const queryClient = useQueryClient();
   const key = workflowQueryKeys.projectMembers(
     workspaceId ?? "",
@@ -397,7 +401,7 @@ export function useProjectMembers(workspaceId?: string, projectId?: string) {
         projectId: projectId!,
         limit: 100,
       }),
-    enabled: Boolean(workspaceId && projectId),
+    enabled: Boolean(workspaceId && projectId) && enabled,
   });
   const invalidate = () => queryClient.invalidateQueries({ queryKey: key });
   return {
@@ -476,18 +480,23 @@ export function useNotifications() {
   useEffect(() => {
     if (!socket.connected) socket.connect();
     const onNotification = (notification: NotificationDoc) => {
-      queryClient.setQueryData<{
+      const current = queryClient.getQueryData<{
         notifications: NotificationDoc[];
         unreadCount: number;
-      } & ListResult<NotificationDoc, "notifications">>(key, (current) =>
-        current
-          ? {
-              ...current,
-              notifications: [notification, ...current.notifications],
-              unreadCount: current.unreadCount + 1,
-            }
-          : current,
-      );
+      } & ListResult<NotificationDoc, "notifications">>(key);
+
+      if (!current) {
+        void queryClient.invalidateQueries({ queryKey: key });
+        return;
+      }
+
+      if (current.notifications.some(({ _id }) => _id === notification._id)) return;
+
+      queryClient.setQueryData(key, {
+        ...current,
+        notifications: [notification, ...current.notifications],
+        unreadCount: current.unreadCount + 1,
+      });
     };
     socket.on("notification:created", onNotification);
     return () => {
@@ -499,6 +508,10 @@ export function useNotifications() {
     ...query,
     markAllRead: useMutation({
       mutationFn: workflowApi.markAllNotificationsRead,
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: key }),
+    }),
+    markRead: useMutation({
+      mutationFn: workflowApi.markNotificationRead,
       onSuccess: () => queryClient.invalidateQueries({ queryKey: key }),
     }),
   };
