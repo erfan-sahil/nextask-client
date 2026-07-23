@@ -90,6 +90,7 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
   const canManageProjects = canManageWorkspaceContent(
     activeWorkspace?.membershipRole,
   );
+  const isProjectScoped = activeWorkspace?.membershipRole === null;
 
   const isAllProjectsActive =
     pathname === allProjectsHref ||
@@ -118,26 +119,27 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
           />
         </div>
 
-        {/* Main Nav */}
-        <nav className="space-y-0.5" aria-label="Main navigation">
-          <NavLink
-            href={appRoutes.dashboard}
-            icon={LayoutDashboard}
-            label="Dashboard"
-            active={pathname === appRoutes.dashboard}
-            onClick={onNavigate}
-          />
-          <NavLink
-            href={allProjectsHref}
-            icon={FolderKanban}
-            label="All Projects"
-            active={isAllProjectsActive}
-            onClick={onNavigate}
-          />
-        </nav>
+        {!isProjectScoped && (
+          <nav className="space-y-0.5" aria-label="Main navigation">
+            <NavLink
+              href={appRoutes.dashboard}
+              icon={LayoutDashboard}
+              label="Dashboard"
+              active={pathname === appRoutes.dashboard}
+              onClick={onNavigate}
+            />
+            <NavLink
+              href={allProjectsHref}
+              icon={FolderKanban}
+              label="All Projects"
+              active={isAllProjectsActive}
+              onClick={onNavigate}
+            />
+          </nav>
+        )}
 
         {/* Workspace Nav */}
-        {activeWorkspace && (
+        {activeWorkspace && !isProjectScoped && (
           <div className="mt-3">
             <Separator className="mb-3" />
             <div className="mb-1.5 px-3">
@@ -184,7 +186,7 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
             <Separator className="mb-3" />
             <div className="mb-1.5 flex items-center justify-between px-3">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Projects
+                {isProjectScoped ? "Your projects" : "Projects"}
               </p>
               {canManageProjects && (
                 <button

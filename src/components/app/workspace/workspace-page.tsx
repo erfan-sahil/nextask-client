@@ -72,6 +72,7 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
   }
 
   const canManageProjects = canManageWorkspaceContent(workspace.membershipRole);
+  const isProjectScoped = workspace.membershipRole === null;
 
   return (
     <div className="max-w-6xl px-4 py-6 sm:px-8">
@@ -87,7 +88,9 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
                 {workspace.name}
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                {workspace.description}
+                {isProjectScoped
+                  ? "Projects you have been invited to in this workspace."
+                  : workspace.description}
               </p>
             </div>
             {canManageProjects && (
@@ -101,43 +104,50 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
               </button>
             )}
           </div>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <LayoutGrid className="size-4" />
-              </span>
-              <div>
-                <p className="text-[11px] text-muted-foreground">Projects</p>
-                <p className="text-sm font-semibold text-foreground">{workspace.projectCount}</p>
+          {!isProjectScoped && (
+            <div className="mt-5 flex flex-wrap gap-3">
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
+                <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <LayoutGrid className="size-4" />
+                </span>
+                <div>
+                  <p className="text-[11px] text-muted-foreground">Projects</p>
+                  <p className="text-sm font-semibold text-foreground">{workspace.projectCount}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
+                <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                  <Users className="size-4" />
+                </span>
+                <div>
+                  <p className="text-[11px] text-muted-foreground">Members</p>
+                  <p className="text-sm font-semibold text-foreground">{workspace.memberCount}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
+                <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                  <CheckCircle2 className="size-4" />
+                </span>
+                <div>
+                  <p className="text-[11px] text-muted-foreground">Tasks</p>
+                  <p className="text-sm font-semibold text-foreground">{workspace.taskCount}</p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                <Users className="size-4" />
-              </span>
-              <div>
-                <p className="text-[11px] text-muted-foreground">Members</p>
-                <p className="text-sm font-semibold text-foreground">{workspace.memberCount}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                <CheckCircle2 className="size-4" />
-              </span>
-              <div>
-                <p className="text-[11px] text-muted-foreground">Tasks</p>
-                <p className="text-sm font-semibold text-foreground">{workspace.taskCount}</p>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </section>
 
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold">Projects</h2>
+          <h2 className="text-base font-semibold">
+            {isProjectScoped ? "Your projects" : "Projects"}
+          </h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {projects.data?.pagination.total ?? 0} projects in this workspace
+            {projects.data?.pagination.total ?? 0}{" "}
+            {isProjectScoped
+              ? "projects you can access"
+              : "projects in this workspace"}
           </p>
         </div>
         {canManageProjects && (

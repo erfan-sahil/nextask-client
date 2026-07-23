@@ -12,18 +12,26 @@ import {
   Plus,
   Trash2,
   TrendingUp,
+  UserPlus,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BoardModal } from "@/components/app/board/board-modal";
+import { ProjectMemberInviteModal } from "@/components/app/project/project-member-invite-modal";
 import { appRoutes } from "@/config/navigation";
+import { useAuth } from "@/hooks/use-auth";
 import { mockBoards } from "@/lib/mock/dashboard-data";
 import { cn } from "@/lib/utils";
 import { canManageWorkspaceContent } from "@/lib/workspace-permissions";
 import type { BoardDoc } from "@/types/domain";
 import type { BoardMeta, Project, Workspace } from "@/types/workspace";
-import { useBoards, useProject, useWorkspaceBySlug } from "@/hooks/use-workflow";
+import {
+  useBoards,
+  useProject,
+  useProjectMembers,
+  useWorkspaceBySlug,
+} from "@/hooks/use-workflow";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -214,11 +222,14 @@ function ConnectedProjectPage({
     | { mode: "edit" | "delete"; board: BoardDoc }
     | null
   >(null);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const router = useRouter();
+  const { user } = useAuth();
   const { workspace, isLoading: isWorkspaceLoading } =
     useWorkspaceBySlug(workspaceSlug);
   const project = useProject(workspace?._id, projectId);
   const boards = useBoards(workspace?._id, projectId);
+  const projectMembers = useProjectMembers(workspace?._id, projectId);
 
   if (isWorkspaceLoading || project.isLoading) {
     return <div className="p-8 text-sm text-muted-foreground">Loading project…</div>;
@@ -228,6 +239,14 @@ function ConnectedProjectPage({
   }
 
   const canManageBoards = canManageWorkspaceContent(workspace.membershipRole);
+  const currentProjectMembership = projectMembers.data?.members.find(
+    (member) => member.userId._id === user?._id,
+  );
+  const canInviteProjectMembers =
+    workspace.membershipRole === "OWNER" ||
+    workspace.membershipRole === "ADMIN" ||
+    currentProjectMembership?.role === "OWNER" ||
+    currentProjectMembership?.role === "ADMIN";
 
   return (
     <div className="max-w-6xl px-4 py-6 sm:px-8">
@@ -249,16 +268,28 @@ function ConnectedProjectPage({
                 {project.data.description}
               </p>
             </div>
-            {canManageBoards && (
-              <button
-                type="button"
-                onClick={() => setBoardModal({ mode: "create" })}
-                className="inline-flex cursor-pointer items-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-              >
-                <Plus className="mr-2 inline size-4" />
-                New board
-              </button>
-            )}
+            <div className="flex flex-wrap justify-end gap-2">
+              {canInviteProjectMembers && (
+                <button
+                  type="button"
+                  onClick={() => setIsInviteModalOpen(true)}
+                  className="inline-flex cursor-pointer items-center rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                >
+                  <UserPlus className="mr-2 inline size-4" />
+                  Invite member
+                </button>
+              )}
+              {canManageBoards && (
+                <button
+                  type="button"
+                  onClick={() => setBoardModal({ mode: "create" })}
+                  className="inline-flex cursor-pointer items-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                >
+                  <Plus className="mr-2 inline size-4" />
+                  New board
+                </button>
+              )}
+            </div>
           </div>
           <div className="mt-5 flex flex-wrap gap-3">
             <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
@@ -401,6 +432,15 @@ function ConnectedProjectPage({
           projectName={project.data.name}
           mode={boardModal.mode}
           board={boardModal.mode === "create" ? undefined : boardModal.board}
+        />
+      )}
+      {canInviteProjectMembers && (
+        <ProjectMemberInviteModal
+          isOpen={isInviteModalOpen}
+          onOpenChange={setIsInviteModalOpen}
+          workspaceId={workspace._id}
+          projectId={projectId}
+          projectName={project.data.name}
         />
       )}
     </div>

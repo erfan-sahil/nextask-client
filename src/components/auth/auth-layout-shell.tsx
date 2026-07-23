@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { authRoutes, appRoutes } from "@/config/navigation";
@@ -11,9 +11,15 @@ import { authQueryKeys } from "@/lib/api/query-keys";
 function AuthLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const isGuestOnlyRoute =
     pathname === authRoutes.login || pathname === authRoutes.register;
+  const callbackUrl = searchParams.get("callbackUrl");
+  const safeCallbackUrl =
+    callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
+      ? callbackUrl
+      : null;
 
   const meQuery = useQuery({
     queryKey: authQueryKeys.me,
@@ -28,12 +34,16 @@ function AuthLayoutContent({ children }: { children: React.ReactNode }) {
     }
 
     if (meQuery.data.isEmailVerified) {
-      router.replace(appRoutes.dashboard);
+      router.replace(safeCallbackUrl ?? appRoutes.dashboard);
       return;
     }
 
-    router.replace(authRoutes.verifyEmail);
-  }, [isGuestOnlyRoute, meQuery.data, router]);
+    router.replace(
+      safeCallbackUrl
+        ? `${authRoutes.verifyEmail}?callbackUrl=${encodeURIComponent(safeCallbackUrl)}`
+        : authRoutes.verifyEmail,
+    );
+  }, [isGuestOnlyRoute, meQuery.data, router, safeCallbackUrl]);
 
   const isRedirecting = isGuestOnlyRoute && meQuery.isSuccess;
 
