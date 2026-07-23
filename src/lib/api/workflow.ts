@@ -120,7 +120,7 @@ export const workflowApi = {
     ...input
   }: WorkspaceRef & {
     title: string;
-    description?: string;
+    details?: string;
     status?: GoalStatus;
     startDate?: string | null;
     dueDate?: string | null;
@@ -143,7 +143,7 @@ export const workflowApi = {
       Pick<
         GoalDoc,
         | "title"
-        | "description"
+        | "details"
         | "status"
         | "startDate"
         | "dueDate"

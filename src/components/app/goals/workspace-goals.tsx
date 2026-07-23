@@ -48,7 +48,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/app/rich-text-editor";
 import { useGoals, useWorkspaceBySlug } from "@/hooks/use-workflow";
 import { getErrorMessage } from "@/lib/api/get-error-message";
 import { cn } from "@/lib/utils";
@@ -172,6 +172,10 @@ function goalProgress(goal: GoalDoc): number {
   return goal.status === "COMPLETED" ? 100 : 0;
 }
 
+function getPlainText(value: string) {
+  return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
 function GoalCard({
   goal,
   canManage,
@@ -267,7 +271,7 @@ function GoalCard({
           </div>
 
           <p className="mt-1.5 text-xs leading-5 text-muted-foreground line-clamp-2">
-            {goal.description}
+            {getPlainText(goal.details)}
           </p>
 
           {/* Meta row */}
@@ -402,29 +406,24 @@ function GoalDatePicker({
   );
 }
 
-function ExpandableDescriptionField({
+function GoalDetailsEditor({
   value,
   onChange,
+  disabled,
 }: {
   value: string;
   onChange: (value: string) => void;
+  disabled: boolean;
 }) {
   return (
     <div className="space-y-2">
-      <Label htmlFor="goal-description">Description</Label>
-      <Textarea
-        id="goal-description"
+      <Label>Goal details</Label>
+      <RichTextEditor
         value={value}
-        onChange={(event) => onChange(event.target.value)}
-        onInput={(event) => {
-          const textarea = event.currentTarget;
-          textarea.style.height = "auto";
-          textarea.style.height = `${textarea.scrollHeight}px`;
-        }}
-        maxLength={10000}
-        rows={3}
-        placeholder="Describe the goal"
-        className="min-h-24 resize-none overflow-hidden"
+        onChange={onChange}
+        disabled={disabled}
+        ariaLabel="Goal details"
+        placeholder="Add context, milestones, or a checklist…"
       />
     </div>
   );
@@ -441,7 +440,7 @@ function GoalDialog({
 }) {
   const goals = useGoals(workspaceId);
   const [title, setTitle] = useState(goal?.title ?? "");
-  const [description, setDescription] = useState(goal?.description ?? "");
+  const [details, setDetails] = useState(goal?.details ?? "");
   const [status, setStatus] = useState<GoalStatus>(goal?.status ?? "PLANNING");
   const [priority, setPriority] = useState<GoalPriority>(
     goal?.priority ?? "MEDIUM",
@@ -459,7 +458,7 @@ function GoalDialog({
     try {
       const data = {
         title: title.trim(),
-        description: description.trim(),
+        details,
         status,
         priority,
         startDate: startDate || null,
@@ -516,7 +515,7 @@ function GoalDialog({
                 autoFocus
               />
             </div>
-            <ExpandableDescriptionField value={description} onChange={setDescription} />
+            <GoalDetailsEditor value={details} onChange={setDetails} disabled={isPending} />
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Status</Label>
@@ -645,12 +644,7 @@ function GoalDetailsDialog({
             value={creatorName}
             tone="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
           />
-          <GoalDetailRow
-            icon={Pencil}
-            label="Description"
-            value={goal.description || "No description provided."}
-            tone="bg-amber-500/10 text-amber-700 dark:text-amber-300"
-          />
+          <GoalRichTextRow details={goal.details} />
           {(goal.completedAt || isCompleted) && (
             <div className="flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-emerald-700 dark:text-emerald-400">
               <CheckCircle2 className="size-5 shrink-0" />
@@ -689,6 +683,29 @@ function GoalDetailRow({
       <div className="min-w-0">
         <dt className="pt-0.5 text-xs font-medium text-muted-foreground">{label}</dt>
         <dd className="mt-1 whitespace-pre-wrap text-sm font-medium text-foreground">{value}</dd>
+      </div>
+    </div>
+  );
+}
+
+function GoalRichTextRow({ details }: { details: string }) {
+  return (
+    <div className="flex gap-3 rounded-xl border border-border bg-card p-3.5">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-300">
+        <Pencil className="size-4" />
+      </span>
+      <div className="min-w-0">
+        <dt className="pt-0.5 text-xs font-medium text-muted-foreground">Goal details</dt>
+        {details ? (
+          <dd
+            className="mt-1 text-sm font-medium text-foreground [&_a]:text-primary [&_a]:underline [&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-primary/40 [&_blockquote]:pl-3 [&_h2]:mt-3 [&_h2]:mb-1 [&_h2]:text-base [&_h2]:font-semibold [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5"
+            dangerouslySetInnerHTML={{ __html: details }}
+          />
+        ) : (
+          <dd className="mt-1 text-sm font-medium text-muted-foreground">
+            No goal details provided.
+          </dd>
+        )}
       </div>
     </div>
   );

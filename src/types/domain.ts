@@ -114,7 +114,7 @@ export type GoalDoc = {
   _id: Id;
   workspaceId: Id | Pick<WorkspaceDoc, "_id" | "name" | "slug">;
   title: string;
-  description: string;
+  details: string;
   status: GoalStatus;
   startDate: string | null;
   dueDate: string | null;

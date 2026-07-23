@@ -45,7 +45,7 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import { TaskDetailsEditor } from "./task-details-editor";
+import { RichTextEditor } from "@/components/app/rich-text-editor";
 import {
   useKanban,
   useProjectMembers,
@@ -387,7 +387,13 @@ export function TaskModal({
             </div>
             <div className="space-y-1.5 sm:col-span-2">
               <Label>Task details</Label>
-              <TaskDetailsEditor value={details} onChange={setDetails} disabled={isPending} />
+              <RichTextEditor
+                value={details}
+                onChange={setDetails}
+                disabled={isPending}
+                ariaLabel="Task details"
+                placeholder="Add context, requirements, links, or a checklist…"
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="task-column">Column</Label>
