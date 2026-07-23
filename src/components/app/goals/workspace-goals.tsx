@@ -67,6 +67,7 @@ type StatusConfig = {
   ringClass: string;
   borderAccent: string;
   bgAccent: string;
+  detailsAccent: string;
 };
 
 const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
@@ -78,6 +79,7 @@ const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
     ringClass: "stroke-purple-500",
     borderAccent: "border-l-purple-500",
     bgAccent: "bg-purple-500",
+    detailsAccent: "bg-purple-500/10 text-purple-800 dark:text-purple-200",
   },
   IN_PROGRESS: {
     label: "In Progress",
@@ -87,6 +89,7 @@ const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
     ringClass: "stroke-blue-500",
     borderAccent: "border-l-blue-500",
     bgAccent: "bg-blue-500",
+    detailsAccent: "bg-blue-500/10 text-blue-800 dark:text-blue-200",
   },
   ON_HOLD: {
     label: "On Hold",
@@ -96,6 +99,7 @@ const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
     ringClass: "stroke-amber-500",
     borderAccent: "border-l-amber-500",
     bgAccent: "bg-amber-500",
+    detailsAccent: "bg-amber-500/10 text-amber-800 dark:text-amber-200",
   },
   COMPLETED: {
     label: "Completed",
@@ -105,6 +109,7 @@ const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
     ringClass: "stroke-emerald-500",
     borderAccent: "border-l-emerald-500",
     bgAccent: "bg-emerald-500",
+    detailsAccent: "bg-emerald-500/10 text-emerald-800 dark:text-emerald-200",
   },
   CANCELLED: {
     label: "Cancelled",
@@ -114,6 +119,7 @@ const STATUS_CONFIG: Record<GoalStatus, StatusConfig> = {
     ringClass: "stroke-red-500",
     borderAccent: "border-l-red-500",
     bgAccent: "bg-red-500",
+    detailsAccent: "bg-red-500/10 text-red-800 dark:text-red-200",
   },
 };
 
@@ -197,16 +203,31 @@ function GoalCard({
     .join("")
     .slice(0, 2)
     .toUpperCase();
+  const showDetails = () => onViewDetails(goal);
+
+  function handleCardKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      showDetails();
+    }
+  }
 
   return (
     <div
       className={cn(
-        "group rounded-2xl border border-border border-l-[3px] bg-card transition-all duration-200 hover:shadow-md hover:shadow-black/5",
+        "group relative rounded-2xl border border-border border-l-[3px] bg-card transition-all duration-200 hover:shadow-md hover:shadow-black/5",
         cfg.borderAccent,
       )}
     >
       {/* Card body */}
-      <div className="flex items-start gap-4 p-5">
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label={`View details for ${goal.title}`}
+        onClick={showDetails}
+        onKeyDown={handleCardKeyDown}
+        className="flex cursor-pointer items-start gap-4 p-5 pr-12 outline-none transition-colors hover:bg-emerald-500/5 focus-visible:bg-emerald-500/5 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      >
         {/* Progress ring */}
         <div className="relative shrink-0">
           <ProgressRing
@@ -281,42 +302,41 @@ function GoalCard({
             )}
           </div>
         </div>
+      </div>
 
-        {/* Actions */}
-        <div className="flex shrink-0 items-center gap-1">
-          {/* More actions */}
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              className="rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground"
-              aria-label="More options"
-            >
-              <MoreHorizontal className="size-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem className="gap-2 text-xs" onClick={() => onViewDetails(goal)}>
-                <Eye className="size-3.5" />
-                View details
-              </DropdownMenuItem>
-              {canManage && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="gap-2 text-xs" onClick={() => onEdit(goal)}>
-                    <Pencil className="size-3.5" />
-                    Edit goal
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="gap-2 text-xs text-destructive focus:text-destructive"
-                    onClick={() => onDelete(goal._id)}
-                  >
-                    <Trash2 className="size-3.5" />
-                    Delete goal
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+      {/* Actions */}
+      <div className="absolute right-5 top-5 flex shrink-0 items-center gap-1">
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className="cursor-pointer rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground"
+            aria-label="More options"
+          >
+            <MoreHorizontal className="size-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuItem className="cursor-pointer gap-2 text-xs" onClick={showDetails}>
+              <Eye className="size-3.5" />
+              View details
+            </DropdownMenuItem>
+            {canManage && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-pointer gap-2 text-xs" onClick={() => onEdit(goal)}>
+                  <Pencil className="size-3.5" />
+                  Edit goal
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer gap-2 text-xs text-destructive focus:text-destructive"
+                  onClick={() => onDelete(goal._id)}
+                >
+                  <Trash2 className="size-3.5" />
+                  Delete goal
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
@@ -355,7 +375,7 @@ function GoalDatePicker({
         <PopoverTrigger
           id={id}
           className={cn(
-            "flex h-10 w-full items-center justify-between rounded-lg border border-input bg-background px-3 text-left text-sm shadow-xs outline-none transition-colors hover:bg-accent/50 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+            "flex h-10 w-full cursor-pointer items-center justify-between rounded-lg border border-input bg-background px-3 text-left text-sm shadow-xs outline-none transition-colors hover:bg-accent/50 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
             !selectedDate && "text-muted-foreground",
           )}
         >
@@ -479,7 +499,7 @@ function GoalDialog({
             aria-label="Close goal dialog"
             disabled={isPending}
             onClick={onClose}
-            className="absolute right-4 top-4 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed"
+          className="absolute right-4 top-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed"
           >
             <X className="size-4" />
           </button>
@@ -566,75 +586,111 @@ function GoalDetailsDialog({
     `${goal.createdBy.firstName} ${goal.createdBy.lastName}`.trim() ||
     goal.createdBy.username ||
     goal.createdBy.email;
+  const priorityLabel = goal.priority[0] + goal.priority.slice(1).toLowerCase();
+  const isCompleted = goal.status === "COMPLETED";
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl overflow-hidden p-0">
-        <DialogHeader className="border-b border-border px-6 py-5 pr-14">
-          <DialogTitle>Goal details</DialogTitle>
-          <DialogDescription>Review the objective, timeline, and ownership.</DialogDescription>
-        </DialogHeader>
-        <button
-          type="button"
-          aria-label="Close goal details"
-          onClick={onClose}
-          className="absolute right-4 top-4 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        >
-          <X className="size-4" />
-        </button>
-        <div className="space-y-6 px-6 py-5">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-xl font-semibold tracking-tight">{goal.title}</h2>
-              <Badge variant="outline" className={cn("flex items-center gap-1", statusConfig.badgeClass)}>
-                <StatusIcon className="size-3.5" />
-                {statusConfig.label}
-              </Badge>
-            </div>
-            <div className="mt-3 line-clamp-4 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
-              {goal.description || "No description provided."}
+      <DialogContent className="max-w-lg overflow-hidden p-0">
+        <DialogHeader className={cn("relative gap-4 p-6 pb-5", statusConfig.detailsAccent)}>
+          <button
+            type="button"
+            aria-label="Close goal details"
+            onClick={onClose}
+            className="absolute right-3 top-3 flex size-8 cursor-pointer items-center justify-center rounded-lg text-current/70 transition-colors hover:bg-black/10 hover:text-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current/40"
+          >
+            <X className="size-4" />
+          </button>
+          <div className="flex items-start gap-3">
+            <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl text-white shadow-sm", statusConfig.bgAccent)}>
+              <StatusIcon className="size-5" />
+            </span>
+            <div className="min-w-0 pr-8">
+              <DialogDescription className="font-medium text-current/75">
+                {statusConfig.label} goal
+              </DialogDescription>
+              <DialogTitle className="mt-1 text-xl leading-tight">{goal.title}</DialogTitle>
             </div>
           </div>
-          <dl className="grid gap-4 rounded-xl border border-border bg-muted/20 p-4 sm:grid-cols-2">
-            <div>
-              <dt className="text-xs text-muted-foreground">Priority</dt>
-              <dd className="mt-1 text-sm font-medium">
-                {goal.priority[0] + goal.priority.slice(1).toLowerCase()}
-              </dd>
+          <div className="flex items-center gap-3 rounded-xl border border-current/10 bg-background/35 p-3">
+            <div className="relative shrink-0">
+              <ProgressRing value={goalProgress(goal)} size={42} strokeWidth={4} status={goal.status} />
+              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold tabular-nums">
+                {goalProgress(goal)}%
+              </span>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">Created by</dt>
-              <dd className="mt-1 text-sm font-medium">{creatorName}</dd>
+              <p className="text-xs font-medium text-current/70">Goal progress</p>
+              <p className="text-sm font-semibold">{isCompleted ? "Completed" : "In progress"}</p>
             </div>
-            <div>
-              <dt className="text-xs text-muted-foreground">Start date</dt>
-              <dd className="mt-1 text-sm font-medium">
-                {goal.startDate ? format(new Date(goal.startDate), "PPP") : "Not set"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted-foreground">Due date</dt>
-              <dd className="mt-1 text-sm font-medium">
-                {goal.dueDate ? format(new Date(goal.dueDate), "PPP") : "Not set"}
-              </dd>
-            </div>
-            {goal.completedAt && (
+          </div>
+        </DialogHeader>
+
+        <dl className="space-y-3 p-6 text-sm">
+          <GoalDetailRow
+            icon={Target}
+            label="Priority"
+            value={priorityLabel}
+            tone="bg-violet-500/10 text-violet-700 dark:text-violet-300"
+          />
+          <GoalDetailRow
+            icon={CalendarDays}
+            label="Timeline"
+            value={`${goal.startDate ? format(new Date(goal.startDate), "PPP") : "No start date"} — ${goal.dueDate ? format(new Date(goal.dueDate), "PPP") : "No due date"}`}
+            tone="bg-blue-500/10 text-blue-700 dark:text-blue-300"
+          />
+          <GoalDetailRow
+            icon={CheckCircle2}
+            label="Owner"
+            value={creatorName}
+            tone="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+          />
+          <GoalDetailRow
+            icon={Pencil}
+            label="Description"
+            value={goal.description || "No description provided."}
+            tone="bg-amber-500/10 text-amber-700 dark:text-amber-300"
+          />
+          {(goal.completedAt || isCompleted) && (
+            <div className="flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-emerald-700 dark:text-emerald-400">
+              <CheckCircle2 className="size-5 shrink-0" />
               <div>
-                <dt className="text-xs text-muted-foreground">Completed</dt>
-                <dd className="mt-1 text-sm font-medium">
-                  {format(new Date(goal.completedAt), "PPP")}
-                </dd>
+                <p className="text-sm font-semibold">Goal completed</p>
+                <p className="mt-0.5 text-xs text-emerald-700/80 dark:text-emerald-400/80">
+                  {goal.completedAt
+                    ? `Completed on ${format(new Date(goal.completedAt), "PPP")}`
+                    : "This goal is marked as completed."}
+                </p>
               </div>
-            )}
-          </dl>
-        </div>
-        <div className="flex justify-end border-t border-border bg-muted/30 px-6 py-4">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Close
-          </Button>
-        </div>
+            </div>
+          )}
+        </dl>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function GoalDetailRow({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  tone: string;
+}) {
+  return (
+    <div className="flex gap-3 rounded-xl border border-border bg-card p-3.5">
+      <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", tone)}>
+        <Icon className="size-4" />
+      </span>
+      <div className="min-w-0">
+        <dt className="pt-0.5 text-xs font-medium text-muted-foreground">{label}</dt>
+        <dd className="mt-1 whitespace-pre-wrap text-sm font-medium text-foreground">{value}</dd>
+      </div>
+    </div>
   );
 }
 
@@ -673,7 +729,7 @@ function GoalDeleteDialog({
           aria-label="Close delete goal dialog"
           disabled={isPending}
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed"
+          className="absolute right-4 top-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed"
         >
           <X className="size-4" />
         </button>
@@ -785,10 +841,25 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
   }, [goals]);
 
   const overallStatus = useMemo((): GoalStatus => {
-    if (avgProgress >= 80) return "COMPLETED";
-    if (avgProgress > 0) return "IN_PROGRESS";
+    if (goals.length === 0) return "PLANNING";
+    if (goals.every((goal) => goal.status === "COMPLETED")) return "COMPLETED";
+    if (
+      goals.some(
+        (goal) =>
+          goal.status === "IN_PROGRESS" || goal.status === "COMPLETED",
+      )
+    ) {
+      return "IN_PROGRESS";
+    }
+    if (goals.some((goal) => goal.status === "ON_HOLD")) return "ON_HOLD";
+    if (goals.every((goal) => goal.status === "CANCELLED")) return "CANCELLED";
     return "PLANNING";
-  }, [avgProgress]);
+  }, [goals]);
+
+  const completedGoalCount = useMemo(
+    () => goals.filter((goal) => goal.status === "COMPLETED").length,
+    [goals],
+  );
 
   const canManageGoals =
     workspace?.membershipRole === "OWNER" || workspace?.membershipRole === "ADMIN";
@@ -843,7 +914,9 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
                 {goals.length} goal{goals.length !== 1 ? "s" : ""}
               </p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Overall workspace progress
+                {goals.length === 0
+                  ? "Create a goal to get started"
+                  : `${completedGoalCount} of ${goals.length} completed`}
               </p>
               <Badge
                 variant="outline"
@@ -876,8 +949,8 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
                   type="button"
                   onClick={() => setStatusFilter(status)}
                   className={cn(
-                    "flex flex-col items-center gap-1 rounded-xl px-4 py-2.5 transition-colors hover:bg-muted",
-                    statusFilter === status && "bg-muted",
+                    "flex cursor-pointer flex-col items-center gap-1 rounded-xl px-4 py-2.5 transition-colors hover:bg-emerald-500/10 dark:hover:bg-emerald-400/10",
+                    statusFilter === status && "bg-emerald-500/10 dark:bg-emerald-400/10",
                   )}
                 >
                   <div
@@ -908,7 +981,7 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
             type="button"
             onClick={() => setStatusFilter(opt.value)}
             className={cn(
-              "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap",
+              "cursor-pointer rounded-lg px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap",
               statusFilter === opt.value
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
