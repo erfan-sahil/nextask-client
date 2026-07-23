@@ -7,6 +7,7 @@ import {
   FolderKanban,
   Inbox,
   LayoutDashboard,
+  MessageCircle,
   Plus,
   Settings,
   Target,
@@ -14,7 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CreateProjectModal } from "@/components/app/project/create-project-modal";
 import { WorkspaceSwitcher } from "@/components/app/workspace-switcher";
 import { SiteLogo } from "@/components/layout/site-logo";
@@ -65,6 +66,53 @@ function NavLink({
       <Icon className="size-4 shrink-0" aria-hidden />
       <span className="truncate">{label}</span>
     </Link>
+  );
+}
+
+function ChatNavButton({
+  workspaceId,
+  onNavigate,
+}: {
+  workspaceId?: string;
+  onNavigate?: () => void;
+}) {
+  const [unreadChatCount, setUnreadChatCount] = useState(() => {
+    if (!workspaceId || typeof window === "undefined") return 0;
+    return Number(localStorage.getItem(`nextask-chat-unread:${workspaceId}`)) || 0;
+  });
+
+  useEffect(() => {
+    const updateUnreadChatCount = (event: Event) => {
+      const count = (event as CustomEvent<number>).detail;
+      setUnreadChatCount(count);
+      if (workspaceId) {
+        const key = `nextask-chat-unread:${workspaceId}`;
+        if (count > 0) localStorage.setItem(key, String(count));
+        else localStorage.removeItem(key);
+      }
+    };
+    window.addEventListener("workspace-chat:unread", updateUnreadChatCount);
+    return () => window.removeEventListener("workspace-chat:unread", updateUnreadChatCount);
+  }, [workspaceId]);
+
+  return (
+    <button
+      type="button"
+      disabled={!workspaceId}
+      onClick={() => {
+        window.dispatchEvent(new Event("workspace-chat:open"));
+        onNavigate?.();
+      }}
+      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent/60 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <MessageCircle className="size-4 shrink-0" aria-hidden />
+      <span className="truncate">Chat</span>
+      {unreadChatCount > 0 && (
+        <span className="ml-auto flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground shadow-sm">
+          {unreadChatCount > 99 ? "99+" : unreadChatCount}
+        </span>
+      )}
+    </button>
   );
 }
 
@@ -252,6 +300,11 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
             label="Inbox"
             active={pathname === appRoutes.inbox}
             onClick={onNavigate}
+          />
+          <ChatNavButton
+            key={activeWorkspace?._id ?? "no-workspace"}
+            workspaceId={activeWorkspace?._id}
+            onNavigate={onNavigate}
           />
           <NavLink
             href={appRoutes.settings}

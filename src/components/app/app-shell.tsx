@@ -1,9 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppHeader } from "@/components/app/app-header";
 import { AppSidebar } from "@/components/app/app-sidebar";
+import { WorkspaceChat } from "@/components/app/workspace-chat";
 import {
   Sheet,
   SheetContent,
@@ -11,16 +12,25 @@ import {
 } from "@/components/ui/sheet";
 import { authRoutes } from "@/config/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { useWorkspaces } from "@/hooks/use-workflow";
 import { cn } from "@/lib/utils";
+import { reservedAppSegments } from "@/config/navigation";
 
 const SIDEBAR_STORAGE_KEY = "nextask-sidebar-open";
 
 function AppShellContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { user, isLoading, isError } = useAuth();
+  const workspaces = useWorkspaces();
   const needsEmailVerification = Boolean(user && !user.isEmailVerified);
+  const firstSegment = pathname.split("/").filter(Boolean)[0] ?? "";
+  const workspaceSlug = reservedAppSegments.has(firstSegment) ? undefined : firstSegment;
+  const activeWorkspace =
+    workspaces.data?.workspaces.find((workspace) => workspace.slug === workspaceSlug) ??
+    workspaces.data?.workspaces[0];
 
   // Restore persisted sidebar preference after mount
   useEffect(() => {
@@ -89,6 +99,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
         />
         <main className="flex-1 overflow-y-auto overflow-x-hidden">{children}</main>
       </div>
+      <WorkspaceChat workspace={activeWorkspace} />
     </div>
   );
 }

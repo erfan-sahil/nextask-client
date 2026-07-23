@@ -1,5 +1,6 @@
 import type { ApiSuccessResponse } from "@/types/api";
 import type {
+  ApiUser,
   BoardDoc,
   CalendarEventDoc,
   ColumnDoc,
@@ -16,6 +17,8 @@ import type {
   TaskDoc,
   TaskPriority,
   WorkspaceDoc,
+  NotificationDoc,
+  WorkspaceChatMessageDoc,
 } from "@/types/domain";
 import { apiClient } from "./client";
 
@@ -101,6 +104,39 @@ export const workflowApi = {
   },
   async deleteWorkspace(workspaceId: string) {
     await apiClient.delete(`/workspaces/${workspaceId}`);
+  },
+  async listNotifications() {
+    return unwrap(
+      await apiClient.get<ApiSuccessResponse<ListResult<NotificationDoc, "notifications"> & { unreadCount: number }>>(
+        "/notifications",
+      ),
+    );
+  },
+  async markAllNotificationsRead() {
+    await apiClient.patch("/notifications/read-all");
+  },
+  async listChatMessages(workspaceId: string) {
+    return unwrap(
+      await apiClient.get<ApiSuccessResponse<ListResult<WorkspaceChatMessageDoc, "messages">>>(
+        `/workspaces/${workspaceId}/chat`,
+        { params: { limit: 100 } },
+      ),
+    );
+  },
+  async listChatParticipants(workspaceId: string) {
+    return unwrap(
+      await apiClient.get<ApiSuccessResponse<{ participants: ApiUser[] }>>(
+        `/workspaces/${workspaceId}/chat/members`,
+      ),
+    ).participants;
+  },
+  async createChatMessage({ workspaceId, content }: { workspaceId: string; content: string }) {
+    return unwrap(
+      await apiClient.post<ApiSuccessResponse<{ message: WorkspaceChatMessageDoc }>>(
+        `/workspaces/${workspaceId}/chat`,
+        { content },
+      ),
+    ).message;
   },
 
   async listGoals({

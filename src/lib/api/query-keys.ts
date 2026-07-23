@@ -64,4 +64,8 @@ export const workflowQueryKeys = {
       taskId,
       "comments",
     ] as const,
+  notifications: ["notifications"] as const,
+  chat: (workspaceId: string) => ["workspaces", workspaceId, "chat"] as const,
+  chatMembers: (workspaceId: string) =>
+    ["workspaces", workspaceId, "chat", "members"] as const,
 };

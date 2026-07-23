@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
+import { useNotifications } from "@/hooks/use-workflow";
 import type { User as AuthUser } from "@/types/auth";
 import { cn } from "@/lib/utils";
 
@@ -116,6 +117,9 @@ export function AppHeader({
   onSidebarToggle,
   sidebarOpen = true,
 }: AppHeaderProps) {
+  const notifications = useNotifications();
+  const unreadCount = notifications.data?.unreadCount ?? 0;
+
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-4 border-b border-border bg-background/90 px-4 backdrop-blur-md sm:px-6">
       {/* Mobile: opens Sheet */}
@@ -165,16 +169,14 @@ export function AppHeader({
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="relative"
+        <Link
+          href="/inbox"
           aria-label="Notifications"
+          className="relative inline-flex size-9 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground"
         >
           <NotificationIcon className="size-4" />
-          <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />
-        </Button>
+          {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />}
+        </Link>
         <ThemeToggle />
         <UserMenu user={user} />
       </div>

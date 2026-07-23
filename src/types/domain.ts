@@ -166,3 +166,25 @@ export type PaginationMeta = {
 export type ListResult<T, K extends string> = {
   [P in K]: T[];
 } & { pagination: PaginationMeta };
+
+export type NotificationDoc = {
+  _id: Id;
+  workspaceId: Id;
+  actorId: ApiUser;
+  type: "TASK_ASSIGNED" | "TASK_UPDATED" | "TASK_COMMENT" | "MENTION" | "CHAT_MENTION";
+  message: string;
+  taskId: Id | null;
+  commentId: Id | null;
+  chatMessageId: Id | null;
+  readAt: string | null;
+  createdAt: string;
+};
+
+export type WorkspaceChatMessageDoc = {
+  _id: Id;
+  workspaceId: Id;
+  content: string;
+  createdBy: ApiUser;
+  createdAt: string;
+  updatedAt: string;
+};

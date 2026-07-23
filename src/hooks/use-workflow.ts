@@ -1,9 +1,17 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { workflowApi } from "@/lib/api/workflow";
 import { workflowQueryKeys } from "@/lib/api/query-keys";
-import type { CalendarEventDoc, ListResult, TaskDoc } from "@/types/domain";
+import type {
+  CalendarEventDoc,
+  ListResult,
+  NotificationDoc,
+  TaskDoc,
+  WorkspaceChatMessageDoc,
+} from "@/types/domain";
+import { socket } from "@/lib/socket";
 
 export function useWorkspaces() {
   const queryClient = useQueryClient();
@@ -458,4 +466,89 @@ export function useTaskComments(
       onSuccess: invalidate,
     }),
   };
+}
+
+export function useNotifications() {
+  const queryClient = useQueryClient();
+  const key = workflowQueryKeys.notifications;
+  const query = useQuery({ queryKey: key, queryFn: workflowApi.listNotifications });
+
+  useEffect(() => {
+    if (!socket.connected) socket.connect();
+    const onNotification = (notification: NotificationDoc) => {
+      queryClient.setQueryData<{
+        notifications: NotificationDoc[];
+        unreadCount: number;
+      } & ListResult<NotificationDoc, "notifications">>(key, (current) =>
+        current
+          ? {
+              ...current,
+              notifications: [notification, ...current.notifications],
+              unreadCount: current.unreadCount + 1,
+            }
+          : current,
+      );
+    };
+    socket.on("notification:created", onNotification);
+    return () => {
+      socket.off("notification:created", onNotification);
+    };
+  }, [key, queryClient]);
+
+  return {
+    ...query,
+    markAllRead: useMutation({
+      mutationFn: workflowApi.markAllNotificationsRead,
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: key }),
+    }),
+  };
+}
+
+export function useWorkspaceChat(workspaceId?: string) {
+  const queryClient = useQueryClient();
+  const key = workflowQueryKeys.chat(workspaceId ?? "");
+  const query = useQuery({
+    queryKey: key,
+    queryFn: () => workflowApi.listChatMessages(workspaceId!),
+    enabled: Boolean(workspaceId),
+  });
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    if (!socket.connected) socket.connect();
+    socket.emit("workspace:join", workspaceId);
+    const onMessage = (message: WorkspaceChatMessageDoc) => {
+      queryClient.setQueryData<ListResult<WorkspaceChatMessageDoc, "messages">>(
+        key,
+        (current) => {
+          if (!current || current.messages.some(({ _id }) => _id === message._id)) {
+            return current;
+          }
+
+          return { ...current, messages: [...current.messages, message] };
+        },
+      );
+    };
+    socket.on("chat:message", onMessage);
+    return () => {
+      socket.emit("workspace:leave", workspaceId);
+      socket.off("chat:message", onMessage);
+    };
+  }, [key, queryClient, workspaceId]);
+
+  return {
+    ...query,
+    create: useMutation({
+      mutationFn: workflowApi.createChatMessage,
+    }),
+  };
+}
+
+export function useWorkspaceChatParticipants(workspaceId?: string) {
+  return useQuery({
+    queryKey: workflowQueryKeys.chatMembers(workspaceId ?? ""),
+    queryFn: () => workflowApi.listChatParticipants(workspaceId!),
+    enabled: Boolean(workspaceId),
+    staleTime: 5 * 60 * 1000,
+  });
 }
