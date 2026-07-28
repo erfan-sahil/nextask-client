@@ -11,7 +11,7 @@ import {
   type LoginInput,
   type RegisterInput,
 } from "@/lib/api/auth";
-import { authQueryKeys } from "@/lib/api/query-keys";
+import { authQueryKeys, workflowQueryKeys } from "@/lib/api/query-keys";
 import type { User } from "@/types/auth";
 
 type UseAuthOptions = {
@@ -36,6 +36,7 @@ export function useAuth(options: UseAuthOptions = {}) {
 
   const clearUser = () => {
     queryClient.removeQueries({ queryKey: authQueryKeys.me });
+    queryClient.removeQueries({ queryKey: workflowQueryKeys.dashboardRoot });
   };
 
   const loginMutation = useMutation({

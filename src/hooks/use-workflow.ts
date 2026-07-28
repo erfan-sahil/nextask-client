@@ -255,6 +255,9 @@ export function useKanban(
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: columnsKey });
     queryClient.invalidateQueries({ queryKey: tasksKey });
+    queryClient.invalidateQueries({
+      queryKey: workflowQueryKeys.reports(workspaceId ?? ""),
+    });
   };
   const taskColumnId = (task: TaskDoc) =>
     typeof task.columnId === "string" ? task.columnId : task.columnId._id;

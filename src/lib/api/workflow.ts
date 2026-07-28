@@ -34,17 +34,65 @@ type ProjectRef = WorkspaceRef & { projectId: string };
 type BoardRef = ProjectRef & { boardId: string };
 type TaskRef = BoardRef & { taskId: string };
 type GoalRef = WorkspaceRef & { goalId: string };
-type DashboardProject = ProjectDoc & {
-  completedTaskCount: number;
-  workspace: Pick<WorkspaceDoc, "_id" | "name" | "slug">;
-};
 type DashboardOverview = {
   stats: DashboardStats;
-  projects: DashboardProject[];
   myTasks: DashboardTask[];
   upcomingTasks: DashboardTask[];
   upcomingMeetings: DashboardMeeting[];
   recentActivity: DashboardActivity[];
+};
+
+export type ReportPeriod =
+  | "last_week"
+  | "last_month"
+  | "last_three_months"
+  | "last_six_months"
+  | "last_year"
+  | "custom";
+
+export type WorkspaceReport = {
+  filters: {
+    projectIds: string[];
+    period: ReportPeriod;
+    from: string;
+    to: string;
+  };
+  overview: {
+    totalTasks: number;
+    completedTasks: number;
+    completionRate: number;
+    openTasks: number;
+    overdueTasks: number;
+    createdInPeriod: number;
+    completedInPeriod: number;
+    completedOnTimeInPeriod: number;
+    onTimeCompletionRate: number;
+  };
+  projectStatus: { status: ProjectStatus; count: number }[];
+  projectProgress: {
+    project: Pick<ProjectDoc, "_id" | "name" | "status" | "startDate" | "endDate">;
+    totalTasks: number;
+    completedTasks: number;
+    openTasks: number;
+    completedInPeriod: number;
+    completionRate: number;
+  }[];
+  taskTimeline: { date: string; created: number; completed: number }[];
+  memberActivity: {
+    member: Pick<ApiUser, "_id" | "firstName" | "lastName" | "username" | "avatar">;
+    assignedTasks: number;
+    openTasks: number;
+    completedInPeriod: number;
+    completedOnTimeInPeriod: number;
+    onTimeCompletionRate: number;
+  }[];
+};
+
+export type WorkspaceReportParams = {
+  period?: ReportPeriod;
+  from?: string;
+  to?: string;
+  projectIds?: string[];
 };
 
 const unwrap = <T>(response: { data: ApiSuccessResponse<T> }) =>
@@ -54,6 +102,24 @@ export const workflowApi = {
   async getDashboard() {
     return unwrap(
       await apiClient.get<ApiSuccessResponse<DashboardOverview>>("/dashboard"),
+    );
+  },
+  async getWorkspaceReport(
+    workspaceId: string,
+    params: WorkspaceReportParams = {},
+  ) {
+    const { projectIds, ...reportParams } = params;
+
+    return unwrap(
+      await apiClient.get<ApiSuccessResponse<WorkspaceReport>>(
+        `/workspaces/${workspaceId}/reports`,
+        {
+          params: {
+            ...reportParams,
+            ...(projectIds?.length ? { projectIds: projectIds.join(",") } : {}),
+          },
+        },
+      ),
     );
   },
   async previewWorkspaceInvitation(token: string) {

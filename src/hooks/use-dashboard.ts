@@ -12,15 +12,15 @@ const EMPTY_STATS: DashboardStats = {
   teamMembers: 0,
 };
 
-export function useDashboard() {
+export function useDashboard(userId?: string) {
   const dashboard = useQuery({
-    queryKey: workflowQueryKeys.dashboard,
+    queryKey: workflowQueryKeys.dashboard(userId ?? ""),
     queryFn: () => workflowApi.getDashboard(),
+    enabled: Boolean(userId),
   });
 
   return {
     stats: dashboard.data?.stats ?? EMPTY_STATS,
-    projects: dashboard.data?.projects ?? [],
     myTasks: dashboard.data?.myTasks ?? [],
     upcomingTasks: dashboard.data?.upcomingTasks ?? [],
     upcomingMeetings: dashboard.data?.upcomingMeetings ?? [],
