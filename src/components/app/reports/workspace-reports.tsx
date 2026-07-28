@@ -1,20 +1,35 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   BarChart3,
+  CalendarDays,
   CheckCircle2,
   Clock,
   FolderKanban,
+  RefreshCw,
   Target,
   Users,
   Zap,
 } from "lucide-react";
+import { format } from "date-fns";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   type ReportPeriod,
   type WorkspaceReportParams,
@@ -89,6 +104,48 @@ function StatCard({
   );
 }
 
+function ReportDateRangePicker({
+  from,
+  to,
+  onChange,
+}: {
+  from: string;
+  to: string;
+  onChange: (range: { from: string; to: string }) => void;
+}) {
+  const selectedRange = {
+    from: from ? new Date(`${from}T00:00:00`) : undefined,
+    to: to ? new Date(`${to}T00:00:00`) : undefined,
+  };
+  const label =
+    selectedRange.from && selectedRange.to
+      ? `${format(selectedRange.from, "MMM d, yyyy")} – ${format(selectedRange.to, "MMM d, yyyy")}`
+      : "Select date range";
+
+  return (
+    <Popover>
+      <PopoverTrigger className="flex h-9 w-full cursor-pointer items-center justify-between rounded-lg border border-input bg-background px-2.5 text-left text-sm text-foreground outline-none transition-colors hover:bg-accent/50 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
+        <span className={cn(!selectedRange.from && "text-muted-foreground")}>{label}</span>
+        <CalendarDays className="size-4 shrink-0 text-muted-foreground" />
+      </PopoverTrigger>
+      <PopoverContent align="start" side="bottom" className="w-auto p-0">
+        <Calendar
+          mode="range"
+          selected={selectedRange}
+          onSelect={(range) =>
+            onChange({
+              from: range?.from ? format(range.from, "yyyy-MM-dd") : "",
+              to: range?.to ? format(range.to, "yyyy-MM-dd") : "",
+            })
+          }
+          numberOfMonths={2}
+          captionLayout="dropdown"
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function LoadingState() {
   return (
     <div className="space-y-6 px-4 py-6 sm:px-8">
@@ -103,10 +160,11 @@ function LoadingState() {
 }
 
 export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
+  const queryClient = useQueryClient();
   const [period, setPeriod] = useState<ReportPeriod>("last_month");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState("all");
 
   const workspacesQuery = useQuery({
     queryKey: ["workspaces", "reports"],
@@ -127,15 +185,15 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
         period,
         ...(from ? { from } : {}),
         ...(to ? { to } : {}),
-        ...(selectedProjectIds.length ? { projectIds: selectedProjectIds } : {}),
+        ...(selectedProjectId !== "all" ? { projectIds: [selectedProjectId] } : {}),
       };
     }
 
     return {
       period,
-      ...(selectedProjectIds.length ? { projectIds: selectedProjectIds } : {}),
+      ...(selectedProjectId !== "all" ? { projectIds: [selectedProjectId] } : {}),
     };
-  }, [from, period, selectedProjectIds, to]);
+  }, [from, period, selectedProjectId, to]);
 
   const reportQuery = useQuery({
     queryKey: [
@@ -156,14 +214,13 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
     (project) =>
       project.totalTasks > 0 && project.completedTasks === project.totalTasks,
   ).length;
-
-  const toggleProject = (projectId: string) => {
-    setSelectedProjectIds((current) =>
-      current.includes(projectId)
-        ? current.filter((id) => id !== projectId)
-        : [...current, projectId],
-    );
-  };
+  const selectedPeriodLabel =
+    PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Last month";
+  const selectedProjectLabel =
+    selectedProjectId === "all"
+      ? "All"
+      : filterProjects.find((project) => project._id === selectedProjectId)?.name ??
+        "All";
 
   if (workspacesQuery.isPending) {
     return <LoadingState />;
@@ -201,77 +258,74 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
               </div>
             </div>
             <Button
-              size="sm"
+              aria-label="Refresh report"
+              size="icon-sm"
               variant="outline"
-              onClick={() => reportQuery.refetch()}
+              onClick={() => {
+                setPeriod("last_month");
+                setFrom("");
+                setTo("");
+                setSelectedProjectId("all");
+                queryClient.invalidateQueries({
+                  queryKey: workflowQueryKeys.reports(workspace?._id ?? ""),
+                });
+              }}
               disabled={reportQuery.isFetching}
             >
-              Refresh
+              <RefreshCw className={cn(reportQuery.isFetching && "animate-spin")} />
             </Button>
           </div>
 
-          <div className="mt-6 grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <label className="grid gap-1.5 text-xs font-medium text-muted-foreground">
+          <div className="mt-6 flex flex-wrap items-end gap-3">
+            <label className="grid w-48 gap-1.5 text-xs font-medium text-muted-foreground">
               Time period
-              <select
-                className="h-9 rounded-lg border border-input bg-background px-2.5 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              <Select
                 value={period}
-                onChange={(event) => setPeriod(event.target.value as ReportPeriod)}
+                onValueChange={(value) => setPeriod(value as ReportPeriod)}
               >
-                {PERIOD_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-9 w-full">
+                  <SelectValue className="truncate">{selectedPeriodLabel}</SelectValue>
+                </SelectTrigger>
+                <SelectContent align="start" side="bottom">
+                  {PERIOD_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              <label className="grid gap-1.5 text-xs font-medium text-muted-foreground">
-                From
-                <Input
-                  type="date"
-                  value={from}
-                  onChange={(event) => setFrom(event.target.value)}
-                  disabled={period !== "custom"}
-                />
-              </label>
-              <label className="grid gap-1.5 text-xs font-medium text-muted-foreground">
-                To
-                <Input
-                  type="date"
-                  value={to}
-                  min={from}
-                  onChange={(event) => setTo(event.target.value)}
-                  disabled={period !== "custom"}
-                />
-              </label>
-            </div>
-          </div>
 
-          <div className="mt-4">
-            <p className="text-xs font-medium text-muted-foreground">Projects</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant={selectedProjectIds.length ? "outline" : "secondary"}
-                onClick={() => setSelectedProjectIds([])}
-              >
-                All projects
-              </Button>
-              {filterProjects.map((project) => {
-                const selected = selectedProjectIds.includes(project._id);
-                return (
-                  <Button
-                    key={project._id}
-                    size="sm"
-                    variant={selected ? "secondary" : "outline"}
-                    onClick={() => toggleProject(project._id)}
-                  >
-                    {project.name}
-                  </Button>
-                );
-              })}
-            </div>
+            <label className="grid w-52 min-w-0 gap-1.5 text-xs font-medium text-muted-foreground">
+              Projects
+              <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                <SelectTrigger className="h-9 w-full">
+                  <SelectValue className="truncate">{selectedProjectLabel}</SelectValue>
+                </SelectTrigger>
+                <SelectContent align="start" side="bottom">
+                  <SelectItem value="all">All projects</SelectItem>
+                  {filterProjects.map((project) => (
+                    <SelectItem key={project._id} value={project._id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </label>
+
+            {period === "custom" && (
+              <div className="grid w-80 max-w-full basis-full gap-1.5 text-xs font-medium text-muted-foreground xl:basis-auto">
+                Date range
+                <ReportDateRangePicker
+                  from={from}
+                  to={to}
+                  onChange={({ from: nextFrom, to: nextTo }) => {
+                    setFrom(nextFrom);
+                    setTo(nextTo);
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -348,7 +402,7 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
                 <h2 className="text-sm font-semibold">Project progress</h2>
                 <span className="ml-auto text-xs text-muted-foreground">{projects.length}</span>
               </header>
-              <div className="space-y-5 p-5">
+              <div className="max-h-105 space-y-5 overflow-y-auto p-5 pr-3">
                 {projects.length ? (
                   projects.map((item, index) => {
                     const overdue =
@@ -400,7 +454,7 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
                 <h2 className="text-sm font-semibold">Member activity</h2>
                 <span className="ml-auto text-xs text-muted-foreground">{members.length}</span>
               </header>
-              <div className="space-y-3 p-5">
+              <div className="max-h-105 space-y-3 overflow-y-auto p-5 pr-3">
                 {members.length ? (
                   members.map((item) => {
                     const name = `${item.member.firstName} ${item.member.lastName}`.trim();
