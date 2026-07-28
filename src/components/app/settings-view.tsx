@@ -1,38 +1,46 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import {
   AtSign,
-  Bell,
-  Camera,
   CheckCircle2,
   Eye,
   EyeOff,
+  KeyRound,
   Lock,
-  Monitor,
   Moon,
   Palette,
+  ShieldAlert,
   Sun,
+  Trash2,
   User,
 } from "lucide-react";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  changePassword,
+  deleteAccount,
+  updateProfile,
+} from "@/lib/api/auth";
+import { authRoutes } from "@/config/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme, type Theme } from "@/components/theme/theme-provider";
 import { UserAvatar } from "@/components/app/user-avatar";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { User as UserType } from "@/types/auth";
 
-type SettingsTab = "profile" | "security" | "notifications" | "appearance";
+type SettingsTab = "profile" | "security" | "appearance";
 
 const navItems: {
   id: SettingsTab;
@@ -41,9 +49,16 @@ const navItems: {
 }[] = [
   { id: "profile", label: "Profile", icon: User },
   { id: "security", label: "Security", icon: Lock },
-  { id: "notifications", label: "Notifications", icon: Bell },
   { id: "appearance", label: "Appearance", icon: Palette },
 ];
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (isAxiosError<{ message?: string }>(error)) {
+    return error.response?.data?.message ?? fallback;
+  }
+
+  return fallback;
+};
 
 export function SettingsView() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
@@ -62,7 +77,6 @@ export function SettingsView() {
       </div>
 
       <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-        {/* Sidebar navigation */}
         <aside className="shrink-0 lg:w-48">
           <nav className="flex gap-1 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">
             {navItems.map(({ id, label, icon: Icon }) => (
@@ -71,7 +85,7 @@ export function SettingsView() {
                 type="button"
                 onClick={() => setActiveTab(id)}
                 className={cn(
-                  "flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  "flex cursor-pointer items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   activeTab === id
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -84,11 +98,11 @@ export function SettingsView() {
           </nav>
         </aside>
 
-        {/* Content panel */}
         <main className="min-w-0 flex-1">
-          {activeTab === "profile" && <ProfileSection user={user} />}
+          {activeTab === "profile" && (
+            <ProfileSection key={user?._id ?? "loading"} user={user} />
+          )}
           {activeTab === "security" && <SecuritySection />}
-          {activeTab === "notifications" && <NotificationsSection />}
           {activeTab === "appearance" && (
             <AppearanceSection theme={theme} setTheme={setTheme} />
           )}
@@ -98,11 +112,31 @@ export function SettingsView() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// Profile Section
-// ─────────────────────────────────────────────────────────────
-
 function ProfileSection({ user }: { user: UserType | undefined }) {
+  const { setUser } = useAuth({ fetchUser: false });
+  const [form, setForm] = useState(() => ({
+    firstName: user?.firstName ?? "",
+    lastName: user?.lastName ?? "",
+    username: user?.username ?? "",
+  }));
+  const [isEditing, setIsEditing] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const updateProfileMutation = useMutation({
+    mutationFn: updateProfile,
+    onSuccess: (updatedUser) => {
+      setUser(updatedUser);
+      setSuccessMessage("Profile updated successfully.");
+      setErrorMessage("");
+      setIsEditing(false);
+    },
+    onError: (error) => {
+      setErrorMessage(getErrorMessage(error, "Unable to update your profile."));
+      setSuccessMessage("");
+    },
+  });
+
   const fullName = user ? `${user.firstName} ${user.lastName}`.trim() : "";
   const memberSince = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString("en-US", {
@@ -111,26 +145,41 @@ function ProfileSection({ user }: { user: UserType | undefined }) {
       })
     : null;
 
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    updateProfileMutation.mutate({
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      username: form.username.trim().toLowerCase(),
+    });
+  };
+
+  const startEditing = () => {
+    setSuccessMessage("");
+    setErrorMessage("");
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setForm({
+      firstName: user?.firstName ?? "",
+      lastName: user?.lastName ?? "",
+      username: user?.username ?? "",
+    });
+    setErrorMessage("");
+    setIsEditing(false);
+  };
+
   return (
     <div className="space-y-4">
-      {/* Avatar card */}
       <div className="rounded-2xl border border-border bg-card">
         <div className="flex items-center gap-4 px-6 py-5">
-          <div className="relative">
-            <UserAvatar
-              name={fullName || "User"}
-              avatar={user?.avatar}
-              size="lg"
-              className="size-14 text-base ring-2 ring-background"
-            />
-            <button
-              type="button"
-              aria-label="Change avatar"
-              className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full border-2 border-card bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
-            >
-              <Camera className="size-3" aria-hidden />
-            </button>
-          </div>
+          <UserAvatar
+            name={fullName || "User"}
+            avatar={user?.avatar}
+            size="lg"
+            className="size-14 text-base ring-2 ring-background"
+          />
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-foreground">
               {fullName || "—"}
@@ -149,15 +198,24 @@ function ProfileSection({ user }: { user: UserType | undefined }) {
         </div>
       </div>
 
-      {/* Profile form */}
-      <div className="rounded-2xl border border-border bg-card">
-        <div className="px-6 py-5">
-          <h2 className="text-sm font-semibold text-foreground">
-            Personal information
-          </h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Update your name, username, and email address.
-          </p>
+      <form
+        onSubmit={handleSubmit}
+        className="rounded-2xl border border-border bg-card"
+      >
+        <div className="flex items-start justify-between gap-4 px-6 py-5">
+          <div>
+            <h2 className="text-sm font-semibold text-foreground">
+              Personal information
+            </h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Update the name and username shown across NexTask.
+            </p>
+          </div>
+          {!isEditing && (
+            <Button type="button" size="sm" onClick={startEditing} disabled={!user}>
+              Edit
+            </Button>
+          )}
         </div>
 
         <Separator />
@@ -167,8 +225,17 @@ function ProfileSection({ user }: { user: UserType | undefined }) {
             <Label htmlFor="firstName">First name</Label>
             <Input
               id="firstName"
-              defaultValue={user?.firstName}
+              value={form.firstName}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  firstName: event.target.value,
+                }))
+              }
               placeholder="First name"
+              required
+              maxLength={50}
+              disabled={!isEditing}
             />
           </div>
 
@@ -176,77 +243,98 @@ function ProfileSection({ user }: { user: UserType | undefined }) {
             <Label htmlFor="lastName">Last name</Label>
             <Input
               id="lastName"
-              defaultValue={user?.lastName}
+              value={form.lastName}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  lastName: event.target.value,
+                }))
+              }
               placeholder="Last name"
+              required
+              maxLength={50}
+              disabled={!isEditing}
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
             <Label htmlFor="username">Username</Label>
-            <div className="relative">
+            <div className="relative max-w-md">
               <AtSign className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="username"
-                defaultValue={user?.username}
+                value={form.username}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    username: event.target.value.toLowerCase(),
+                  }))
+                }
                 placeholder="username"
                 className="pl-7"
+                required
+                minLength={3}
+                maxLength={30}
+                pattern="[a-z0-9_]+"
+              disabled={!isEditing}
               />
             </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="email">Email address</Label>
-            <div className="relative">
-              <Input
-                id="email"
-                type="email"
-                defaultValue={user?.email}
-                placeholder="your@email.com"
-                className={cn(user?.isEmailVerified && "pr-8")}
-              />
-              {user?.isEmailVerified && (
-                <CheckCircle2 className="absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-chart-3" />
-              )}
-            </div>
-            {user?.isEmailVerified ? (
-              <p className="flex items-center gap-1 text-xs text-chart-3">
-                <CheckCircle2 className="size-3" />
-                Verified
-              </p>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                Email not verified.{" "}
-                <button type="button" className="text-primary hover:underline">
-                  Resend verification
-                </button>
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground">
+              Use 3–30 lowercase letters, numbers, or underscores.
+            </p>
           </div>
         </div>
+
+        {(successMessage || errorMessage) && (
+          <div
+            role="status"
+            className={cn(
+              "mx-6 mb-5 rounded-lg px-3 py-2 text-sm",
+              successMessage
+                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                : "bg-destructive/10 text-destructive",
+            )}
+          >
+            {successMessage || errorMessage}
+          </div>
+        )}
 
         <Separator />
 
-        <div className="flex justify-end px-6 py-4">
-          <Button size="sm">Save changes</Button>
-        </div>
-      </div>
+        {isEditing && (
+          <div className="flex justify-end gap-2 px-6 py-4">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={cancelEditing}
+              disabled={updateProfileMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" size="sm" disabled={updateProfileMutation.isPending}>
+              {updateProfileMutation.isPending ? "Saving…" : "Save changes"}
+            </Button>
+          </div>
+        )}
+      </form>
     </div>
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// Security Section
-// ─────────────────────────────────────────────────────────────
-
 function PasswordField({
   id,
   label,
+  value,
+  onChange,
   show,
   onToggle,
   placeholder,
 }: {
   id: string;
   label: string;
+  value: string;
+  onChange: (value: string) => void;
   show: boolean;
   onToggle: () => void;
   placeholder: string;
@@ -258,14 +346,17 @@ function PasswordField({
         <Input
           id={id}
           type={show ? "text" : "password"}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
           className="pr-9"
+          required
         />
         <button
           type="button"
           onClick={onToggle}
           aria-label={show ? "Hide password" : "Show password"}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
         >
           {show ? (
             <EyeOff className="size-3.5" aria-hidden />
@@ -279,215 +370,237 @@ function PasswordField({
 }
 
 function SecuritySection() {
+  const { clearUser } = useAuth({ fetchUser: false });
+  const [passwords, setPasswords] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
   const [show, setShow] = useState({
     current: false,
     next: false,
     confirm: false,
   });
+  const [passwordMessage, setPasswordMessage] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+
+  const changePasswordMutation = useMutation({
+    mutationFn: changePassword,
+    onSuccess: () => {
+      setPasswords({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      setPasswordMessage(
+        "Password updated. Please sign in again with your new password.",
+      );
+      setPasswordError("");
+      clearUser();
+      window.location.assign(authRoutes.login);
+    },
+    onError: (error) => {
+      setPasswordError(getErrorMessage(error, "Unable to update your password."));
+      setPasswordMessage("");
+    },
+  });
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: deleteAccount,
+    onSuccess: () => {
+      clearUser();
+      window.location.assign(authRoutes.login);
+    },
+    onError: (error) => {
+      setDeleteError(getErrorMessage(error, "Unable to delete your account."));
+    },
+  });
+
+  const updatePassword = (key: keyof typeof passwords, value: string) => {
+    setPasswords((current) => ({ ...current, [key]: value }));
+  };
 
   const toggle = (key: keyof typeof show) =>
-    setShow((s) => ({ ...s, [key]: !s[key] }));
+    setShow((current) => ({ ...current, [key]: !current[key] }));
+
+  const handlePasswordSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    changePasswordMutation.mutate(passwords);
+  };
+
+  const handleDeleteSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    deleteAccountMutation.mutate({ currentPassword: deletePassword });
+  };
 
   return (
     <div className="space-y-4">
-      {/* Change password */}
-      <div className="rounded-2xl border border-border bg-card">
-        <div className="px-6 py-5">
-          <h2 className="text-sm font-semibold text-foreground">
-            Change password
-          </h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Use a strong password with at least 8 characters.
+      <form
+        onSubmit={handlePasswordSubmit}
+        className="overflow-hidden rounded-2xl border border-border bg-card"
+      >
+        <div className="flex gap-4 px-6 py-5">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <KeyRound className="size-5" />
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold text-foreground">
+              Change password
+            </h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Choose a password with at least 8 characters, one uppercase letter,
+              and one number.
+            </p>
+          </div>
+        </div>
+
+        <div className="border-y border-border bg-muted/20 px-6 py-5">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <PasswordField
+              id="currentPassword"
+              label="Current password"
+              value={passwords.currentPassword}
+              onChange={(value) => updatePassword("currentPassword", value)}
+              show={show.current}
+              onToggle={() => toggle("current")}
+              placeholder="Enter current password"
+            />
+            <div className="hidden sm:block" />
+            <PasswordField
+              id="newPassword"
+              label="New password"
+              value={passwords.newPassword}
+              onChange={(value) => updatePassword("newPassword", value)}
+              show={show.next}
+              onToggle={() => toggle("next")}
+              placeholder="Create new password"
+            />
+            <PasswordField
+              id="confirmPassword"
+              label="Confirm new password"
+              value={passwords.confirmPassword}
+              onChange={(value) => updatePassword("confirmPassword", value)}
+              show={show.confirm}
+              onToggle={() => toggle("confirm")}
+              placeholder="Repeat new password"
+            />
+          </div>
+        </div>
+
+        {(passwordMessage || passwordError) && (
+          <div
+            role="status"
+            className={cn(
+              "mx-6 mt-5 rounded-lg px-3 py-2 text-sm",
+              passwordMessage
+                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                : "bg-destructive/10 text-destructive",
+            )}
+          >
+            {passwordMessage || passwordError}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between gap-4 px-6 py-4">
+          <p className="text-xs text-muted-foreground">
+            You will need to sign in again after changing your password.
           </p>
+          <Button
+            type="submit"
+            size="sm"
+            disabled={changePasswordMutation.isPending}
+            className="shrink-0"
+          >
+            {changePasswordMutation.isPending
+              ? "Updating…"
+              : "Update password"}
+          </Button>
         </div>
+      </form>
 
-        <Separator />
-
-        <div className="space-y-4 px-6 py-5">
-          <PasswordField
-            id="currentPassword"
-            label="Current password"
-            show={show.current}
-            onToggle={() => toggle("current")}
-            placeholder="Enter current password"
-          />
-          <PasswordField
-            id="newPassword"
-            label="New password"
-            show={show.next}
-            onToggle={() => toggle("next")}
-            placeholder="Enter new password"
-          />
-          <PasswordField
-            id="confirmPassword"
-            label="Confirm new password"
-            show={show.confirm}
-            onToggle={() => toggle("confirm")}
-            placeholder="Re-enter new password"
-          />
-        </div>
-
-        <Separator />
-
-        <div className="flex justify-end px-6 py-4">
-          <Button size="sm">Update password</Button>
-        </div>
-      </div>
-
-      {/* Danger zone */}
       <div className="rounded-2xl border border-destructive/30 bg-destructive/5">
         <div className="flex items-center justify-between gap-4 px-6 py-5">
           <div>
-            <p className="text-sm font-semibold text-destructive">
-              Delete account
-            </p>
+            <p className="text-sm font-semibold text-destructive">Delete account</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Permanently delete your account and all associated data. This
-              action cannot be undone.
+              Permanently remove your account. This action cannot be undone.
             </p>
           </div>
-          <Button variant="destructive" size="sm" className="shrink-0">
+          <Button
+            variant="destructive"
+            size="sm"
+            className="shrink-0"
+            onClick={() => {
+              setDeletePassword("");
+              setDeleteError("");
+              setIsDeleteDialogOpen(true);
+            }}
+          >
+            <Trash2 className="size-3.5" />
             Delete
           </Button>
         </div>
       </div>
-    </div>
-  );
-}
 
-// ─────────────────────────────────────────────────────────────
-// Notifications Section
-// ─────────────────────────────────────────────────────────────
-
-type NotifPrefs = {
-  emailNotifications: boolean;
-  taskReminders: boolean;
-  sprintUpdates: boolean;
-  commentMentions: boolean;
-  weeklyDigest: boolean;
-};
-
-const notifItems: {
-  key: keyof NotifPrefs;
-  label: string;
-  description: string;
-}[] = [
-  {
-    key: "emailNotifications",
-    label: "Email notifications",
-    description: "Receive important updates directly to your inbox.",
-  },
-  {
-    key: "taskReminders",
-    label: "Task reminders",
-    description: "Get reminded about tasks approaching their due date.",
-  },
-  {
-    key: "sprintUpdates",
-    label: "Sprint updates",
-    description: "Stay informed when sprint status or assignments change.",
-  },
-  {
-    key: "commentMentions",
-    label: "Comment mentions",
-    description: "Notify me when someone mentions @me in a comment.",
-  },
-  {
-    key: "weeklyDigest",
-    label: "Weekly digest",
-    description: "Receive a weekly summary of your activity and progress.",
-  },
-];
-
-function Toggle({
-  checked,
-  onToggle,
-  label,
-}: {
-  checked: boolean;
-  onToggle: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={onToggle}
-      className={cn(
-        "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors",
-        checked ? "bg-primary" : "bg-input",
-      )}
-    >
-      <span
-        className={cn(
-          "size-4 rounded-full bg-white shadow-sm transition-transform",
-          checked ? "translate-x-4" : "translate-x-0",
-        )}
-      />
-    </button>
-  );
-}
-
-function NotificationsSection() {
-  const [prefs, setPrefs] = useState<NotifPrefs>({
-    emailNotifications: true,
-    taskReminders: true,
-    sprintUpdates: false,
-    commentMentions: true,
-    weeklyDigest: false,
-  });
-
-  const toggle = (key: keyof NotifPrefs) =>
-    setPrefs((p) => ({ ...p, [key]: !p[key] }));
-
-  return (
-    <div className="rounded-2xl border border-border bg-card">
-      <div className="px-6 py-5">
-        <h2 className="text-sm font-semibold text-foreground">
-          Notification preferences
-        </h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          Choose what you get notified about and how.
-        </p>
-      </div>
-
-      <Separator />
-
-      <ul className="divide-y divide-border">
-        {notifItems.map(({ key, label, description }) => (
-          <li
-            key={key}
-            className="flex items-center justify-between gap-6 px-6 py-4"
-          >
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-foreground">{label}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                {description}
-              </p>
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="mb-2 flex size-10 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
+              <ShieldAlert className="size-5" />
             </div>
-            <Toggle
-              checked={prefs[key]}
-              onToggle={() => toggle(key)}
-              label={`Toggle ${label}`}
-            />
-          </li>
-        ))}
-      </ul>
+            <DialogTitle>Delete your account?</DialogTitle>
+            <DialogDescription>
+              Enter your current password to permanently delete your account.
+              This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
 
-      <Separator />
+          <form onSubmit={handleDeleteSubmit} className="mt-5 space-y-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="deletePassword">Current password</Label>
+              <Input
+                id="deletePassword"
+                type="password"
+                value={deletePassword}
+                onChange={(event) => setDeletePassword(event.target.value)}
+                placeholder="Enter current password"
+                required
+                autoFocus
+              />
+            </div>
 
-      <div className="flex justify-end px-6 py-4">
-        <Button size="sm">Save preferences</Button>
-      </div>
+            {deleteError && (
+              <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {deleteError}
+              </p>
+            )}
+
+            <div className="flex justify-end gap-2 pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDeleteDialogOpen(false)}
+                disabled={deleteAccountMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="destructive"
+                disabled={deleteAccountMutation.isPending}
+              >
+                {deleteAccountMutation.isPending ? "Deleting…" : "Delete account"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
-// ─────────────────────────────────────────────────────────────
-// Appearance Section
-// ─────────────────────────────────────────────────────────────
 
 const themeOptions: {
   value: Theme;
@@ -504,7 +617,7 @@ const themeOptions: {
         <div className="mb-2 h-2 w-12 rounded-full bg-gray-200" />
         <div className="mb-3 h-1.5 w-16 rounded-full bg-gray-100" />
         <div className="flex gap-1.5">
-          <div className="h-8 w-8 rounded-lg bg-gray-100" />
+          <div className="size-8 rounded-lg bg-gray-100" />
           <div className="flex-1 space-y-1.5 pt-0.5">
             <div className="h-1.5 w-full rounded-full bg-gray-100" />
             <div className="h-1.5 w-3/4 rounded-full bg-gray-100" />
@@ -522,7 +635,7 @@ const themeOptions: {
         <div className="mb-2 h-2 w-12 rounded-full bg-zinc-600" />
         <div className="mb-3 h-1.5 w-16 rounded-full bg-zinc-800" />
         <div className="flex gap-1.5">
-          <div className="h-8 w-8 rounded-lg bg-zinc-800" />
+          <div className="size-8 rounded-lg bg-zinc-800" />
           <div className="flex-1 space-y-1.5 pt-0.5">
             <div className="h-1.5 w-full rounded-full bg-zinc-800" />
             <div className="h-1.5 w-3/4 rounded-full bg-zinc-700" />
@@ -538,136 +651,52 @@ function AppearanceSection({
   setTheme,
 }: {
   theme: Theme;
-  setTheme: (t: Theme) => void;
+  setTheme: (theme: Theme) => void;
 }) {
   return (
-    <div className="space-y-4">
-      <div className="rounded-2xl border border-border bg-card">
-        <div className="px-6 py-5">
-          <h2 className="text-sm font-semibold text-foreground">
-            Color scheme
-          </h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Choose how NexTask looks for you.
-          </p>
-        </div>
+    <div className="rounded-2xl border border-border bg-card">
+      <div className="px-6 py-5">
+        <h2 className="text-sm font-semibold text-foreground">Color scheme</h2>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          Choose how NexTask looks for you.
+        </p>
+      </div>
 
-        <Separator />
+      <Separator />
 
-        <div className="px-6 py-5">
-          <div className="grid grid-cols-2 gap-3 sm:max-w-xs">
-            {themeOptions.map(({ value, label, icon: Icon, preview }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setTheme(value)}
+      <div className="px-6 py-5">
+        <div className="grid grid-cols-2 gap-3 sm:max-w-xs">
+          {themeOptions.map(({ value, label, icon: Icon, preview }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setTheme(value)}
+              className={cn(
+                "cursor-pointer overflow-hidden rounded-xl border-2 text-left transition-all",
+                theme === value
+                  ? "border-primary shadow-sm shadow-primary/10"
+                  : "border-border hover:border-muted-foreground/40",
+              )}
+            >
+              {preview}
+              <div
                 className={cn(
-                  "overflow-hidden rounded-xl border-2 text-left transition-all",
-                  theme === value
-                    ? "border-primary shadow-sm shadow-primary/10"
-                    : "border-border hover:border-muted-foreground/40",
+                  "flex items-center justify-between px-3 py-2.5",
+                  theme === value ? "bg-primary/5" : "bg-muted/40",
                 )}
               >
-                {preview}
-                <div
-                  className={cn(
-                    "flex items-center justify-between px-3 py-2.5",
-                    theme === value ? "bg-primary/5" : "bg-muted/40",
-                  )}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <Icon className="size-3.5 text-muted-foreground" />
-                    <span className="text-xs font-medium text-foreground">
-                      {label}
-                    </span>
-                  </div>
-                  {theme === value && (
-                    <CheckCircle2 className="size-3.5 text-primary" />
-                  )}
+                <div className="flex items-center gap-1.5">
+                  <Icon className="size-3.5 text-muted-foreground" />
+                  <span className="text-xs font-medium text-foreground">
+                    {label}
+                  </span>
                 </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Interface density */}
-      <div className="rounded-2xl border border-border bg-card">
-        <div className="px-6 py-5">
-          <h2 className="text-sm font-semibold text-foreground">
-            Interface density
-          </h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Control how compact the UI feels.
-          </p>
-        </div>
-
-        <Separator />
-
-        <div className="space-y-2 px-6 py-5">
-          {(
-            [
-              {
-                id: "comfortable",
-                label: "Comfortable",
-                desc: "More breathing room between elements.",
-              },
-              {
-                id: "compact",
-                label: "Compact",
-                desc: "Fit more content on screen at once.",
-              },
-            ] as const
-          ).map(({ id, label, desc }) => (
-            <label
-              key={id}
-              className="flex cursor-pointer items-center gap-3 rounded-lg border border-border px-4 py-3 transition-colors hover:bg-muted/40 has-checked:border-primary has-checked:bg-primary/5"
-            >
-              <input
-                type="radio"
-                name="density"
-                value={id}
-                defaultChecked={id === "comfortable"}
-                className="accent-primary"
-              />
-              <div>
-                <p className="text-sm font-medium text-foreground">{label}</p>
-                <p className="text-xs text-muted-foreground">{desc}</p>
+                {theme === value && (
+                  <CheckCircle2 className="size-3.5 text-primary" />
+                )}
               </div>
-            </label>
+            </button>
           ))}
-        </div>
-      </div>
-
-      {/* Language */}
-      <div className="rounded-2xl border border-border bg-card">
-        <div className="px-6 py-5">
-          <h2 className="text-sm font-semibold text-foreground">Language</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Choose your preferred language for the interface.
-          </p>
-        </div>
-
-        <Separator />
-
-        <div className="px-6 py-5">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="language">
-              <Monitor className="size-3.5" />
-              Display language
-            </Label>
-            <Select defaultValue="en">
-              <SelectTrigger className="w-full max-w-xs">
-                <SelectValue placeholder="Select language" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="en">English</SelectItem>
-                <SelectItem value="es">Español</SelectItem>
-                <SelectItem value="fr">Français</SelectItem>
-                <SelectItem value="de">Deutsch</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
       </div>
     </div>

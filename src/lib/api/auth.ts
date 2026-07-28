@@ -15,6 +15,21 @@ export type RegisterInput = {
   password: string;
 };
 
+export type UpdateProfileInput = Pick<
+  RegisterInput,
+  "firstName" | "lastName" | "username"
+>;
+
+export type ChangePasswordInput = {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+};
+
+export type DeleteAccountInput = {
+  currentPassword: string;
+};
+
 type VerifyEmailInput = {
   email: string;
   otp: string;
@@ -52,6 +67,25 @@ export const refreshSession = async () => {
 
 export const logout = async () => {
   await apiClient.post<ApiSuccessResponse<null>>("/auth/logout");
+};
+
+export const updateProfile = async (input: UpdateProfileInput) => {
+  const { data } = await apiClient.patch<ApiSuccessResponse<{ user: User }>>(
+    "/auth/profile",
+    input,
+  );
+
+  return data.data.user;
+};
+
+export const changePassword = async (input: ChangePasswordInput) => {
+  await apiClient.patch<ApiSuccessResponse<null>>("/auth/password", input);
+};
+
+export const deleteAccount = async (input: DeleteAccountInput) => {
+  await apiClient.delete<ApiSuccessResponse<null>>("/auth/account", {
+    data: input,
+  });
 };
 
 export const verifyEmail = async (input: VerifyEmailInput) => {

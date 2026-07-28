@@ -8,6 +8,7 @@ import { UserAvatar } from "@/components/app/user-avatar";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { appRoutes } from "@/config/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useNotifications } from "@/hooks/use-workflow";
 import type { User as AuthUser } from "@/types/auth";
@@ -74,7 +75,7 @@ export function UserMenu({ user, className }: UserMenuProps) {
               Profile
             </button>
             <Link
-              href="/dashboard#settings"
+              href={appRoutes.settings}
               role="menuitem"
               className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-muted"
               onClick={() => setIsOpen(false)}
