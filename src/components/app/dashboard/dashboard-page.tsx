@@ -2,7 +2,10 @@
 
 import { TrendingUp } from "lucide-react";
 import Link from "next/link";
+import { DashboardTaskList } from "@/components/app/dashboard/dashboard-task-list";
+import { RecentActivity } from "@/components/app/dashboard/recent-activity";
 import { StatsOverview } from "@/components/app/dashboard/stats-overview";
+import { UpcomingMeetings } from "@/components/app/dashboard/upcoming-meetings";
 import { appRoutes } from "@/config/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useDashboard } from "@/hooks/use-dashboard";
@@ -108,6 +111,25 @@ export function DashboardPage() {
           </div>
         )}
       </section>
+
+      {!dashboard.isLoading && !dashboard.isError && (
+        <>
+          <div className="grid gap-6 xl:grid-cols-3">
+            <DashboardTaskList
+              title="My current tasks"
+              tasks={dashboard.myTasks}
+              emptyMessage="You have no open tasks assigned to you."
+            />
+            <DashboardTaskList
+              title="Upcoming tasks"
+              tasks={dashboard.upcomingTasks}
+              emptyMessage="You have no backlog, overdue, or upcoming tasks."
+            />
+            <UpcomingMeetings meetings={dashboard.upcomingMeetings} />
+          </div>
+          <RecentActivity activity={dashboard.recentActivity} />
+        </>
+      )}
     </div>
   );
 }

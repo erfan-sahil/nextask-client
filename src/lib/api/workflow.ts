@@ -20,6 +20,12 @@ import type {
   NotificationDoc,
   WorkspaceChatMessageDoc,
 } from "@/types/domain";
+import type {
+  DashboardActivity,
+  DashboardMeeting,
+  DashboardStats,
+  DashboardTask,
+} from "@/types/workspace";
 import { apiClient } from "./client";
 
 type ListParams = { page?: number; limit?: number; search?: string };
@@ -28,11 +34,28 @@ type ProjectRef = WorkspaceRef & { projectId: string };
 type BoardRef = ProjectRef & { boardId: string };
 type TaskRef = BoardRef & { taskId: string };
 type GoalRef = WorkspaceRef & { goalId: string };
+type DashboardProject = ProjectDoc & {
+  completedTaskCount: number;
+  workspace: Pick<WorkspaceDoc, "_id" | "name" | "slug">;
+};
+type DashboardOverview = {
+  stats: DashboardStats;
+  projects: DashboardProject[];
+  myTasks: DashboardTask[];
+  upcomingTasks: DashboardTask[];
+  upcomingMeetings: DashboardMeeting[];
+  recentActivity: DashboardActivity[];
+};
 
 const unwrap = <T>(response: { data: ApiSuccessResponse<T> }) =>
   response.data.data;
 
 export const workflowApi = {
+  async getDashboard() {
+    return unwrap(
+      await apiClient.get<ApiSuccessResponse<DashboardOverview>>("/dashboard"),
+    );
+  },
   async previewWorkspaceInvitation(token: string) {
     return unwrap(
       await apiClient.get("/workspaces/invitations/preview", {

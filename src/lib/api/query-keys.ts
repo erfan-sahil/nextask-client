@@ -3,6 +3,7 @@ export const authQueryKeys = {
 };
 
 export const workflowQueryKeys = {
+  dashboard: ["dashboard"] as const,
   workspaces: ["workspaces"] as const,
   workspace: (workspaceId: string) => ["workspaces", workspaceId] as const,
   projects: (workspaceId: string) =>

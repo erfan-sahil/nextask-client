@@ -84,6 +84,76 @@ export type DashboardStats = {
   teamMembers: number;
 };
 
+export type DashboardTask = {
+  _id: string;
+  title: string;
+  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  dueDate: string | null;
+  completedAt: string | null;
+  status: {
+    name: string;
+    isCompleted: boolean;
+  } | null;
+  workspace: {
+    _id: string;
+    name: string;
+    slug: string;
+  };
+  project: {
+    _id: string;
+    name: string;
+  };
+  board: {
+    _id: string;
+    name: string;
+  };
+};
+
+export type DashboardActivity = {
+  _id: string;
+  type:
+    | "TASK_ASSIGNED"
+    | "TASK_UPDATED"
+    | "TASK_COMMENT"
+    | "MENTION"
+    | "CHAT_MENTION";
+  message: string;
+  createdAt: string;
+  readAt: string | null;
+  actor: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+  };
+  task: {
+    _id: string;
+    title: string;
+    workspaceId: {
+      _id: string;
+      slug: string;
+    };
+    projectId: {
+      _id: string;
+    };
+    boardId: {
+      _id: string;
+    };
+  } | null;
+};
+
+export type DashboardMeeting = {
+  _id: string;
+  title: string;
+  startsAt: string;
+  location: string;
+  workspace: {
+    _id: string;
+    name: string;
+    slug: string;
+  };
+  attendeeCount: number;
+};
+
 export type MemberRole = "owner" | "admin" | "member" | "viewer";
 
 export type Member = {
