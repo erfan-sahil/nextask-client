@@ -62,6 +62,12 @@ const EVENT_STYLE: Record<CalendarEventType, string> = {
   meeting: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
 };
 
+const PAST_EVENT_STYLE: Record<CalendarEventType, string> = {
+  "task-deadline": "bg-rose-500/10 text-rose-700 dark:text-rose-300",
+  "goal-deadline": "bg-violet-500/5 text-violet-700/65 dark:text-violet-300/65",
+  meeting: "bg-slate-500/10 text-slate-600 dark:text-slate-300",
+};
+
 const EVENT_DOT_STYLE: Record<CalendarEventType, string> = {
   "task-deadline": "bg-blue-500",
   "goal-deadline": "bg-violet-500",
@@ -80,9 +86,11 @@ const eventDate = (event: CalendarEventDoc) =>
 
 function EventPill({
   event,
+  isPast,
   onClick,
 }: {
   event: CalendarEventDoc;
+  isPast: boolean;
   onClick: () => void;
 }) {
   const time =
@@ -95,10 +103,10 @@ function EventPill({
         clickEvent.stopPropagation();
         onClick();
       }}
-      title={`${event.title} · ${time}`}
+      title={`${event.title} · ${isPast ? "Passed" : time}`}
       className={cn(
         "block w-full truncate rounded-md px-1.5 py-0.5 text-left text-[10px] font-medium transition-opacity hover:opacity-75",
-        EVENT_STYLE[event.type],
+        isPast ? PAST_EVENT_STYLE[event.type] : EVENT_STYLE[event.type],
       )}
     >
       {event.type === "meeting" && `${time} · `}
@@ -349,6 +357,7 @@ export function WorkspaceCalendarView({
                         <EventPill
                           key={event.id}
                           event={event}
+                          isPast={date < toDateString(today)}
                           onClick={() => setSelectedEvent(event)}
                         />
                       ))}

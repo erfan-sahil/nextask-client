@@ -24,7 +24,7 @@ export function UpcomingMeetings({ meetings }: UpcomingMeetingsProps) {
         <CalendarDays className="size-4 text-primary" aria-hidden />
         <h2 className="text-lg font-semibold">Upcoming meetings</h2>
       </div>
-      <div className="rounded-2xl border border-border bg-card shadow-sm">
+      <div className="max-h-80 overflow-y-auto rounded-2xl border border-border bg-card shadow-sm">
         {meetings.length === 0 ? (
           <p className="p-5 text-sm text-muted-foreground">
             No upcoming meetings.

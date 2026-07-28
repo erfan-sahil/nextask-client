@@ -20,6 +20,23 @@ function formatDueDate(dueDate: string | null) {
   }).format(new Date(dueDate));
 }
 
+function getStatusBadgeClass(status: string | undefined) {
+  switch (status?.trim().toLowerCase().replace(/[\s_]+/g, "-")) {
+    case "backlog":
+      return "border-muted-foreground/20 bg-muted text-muted-foreground";
+    case "in-progress":
+      return "border-primary/20 bg-primary/10 text-primary";
+    case "review":
+    case "in-review":
+      return "border-chart-4/25 bg-chart-4/15 text-chart-4";
+    case "done":
+    case "completed":
+      return "border-chart-3/25 bg-chart-3/15 text-chart-3";
+    default:
+      return "border-border bg-muted/60 text-muted-foreground";
+  }
+}
+
 export function DashboardTaskList({
   title,
   emptyMessage,
@@ -32,7 +49,7 @@ export function DashboardTaskList({
         <h2 className="text-lg font-semibold">{title}</h2>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card shadow-sm">
+      <div className="max-h-80 overflow-y-auto rounded-2xl border border-border bg-card shadow-sm">
         {tasks.length === 0 ? (
           <p className="p-5 text-sm text-muted-foreground">{emptyMessage}</p>
         ) : (
@@ -54,7 +71,11 @@ export function DashboardTaskList({
                         {task.project.name} · {task.board.name}
                       </p>
                     </div>
-                    <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                    <span
+                      className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-semibold ${getStatusBadgeClass(
+                        task.status?.name,
+                      )}`}
+                    >
                       {task.status?.name ?? "Unscheduled"}
                     </span>
                   </div>
