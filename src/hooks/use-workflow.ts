@@ -124,6 +124,20 @@ export function useCalendar(
           queryKey: ["workspaces", workspaceId, "calendar"],
         }),
     }),
+    updateMeeting: useMutation({
+      mutationFn: workflowApi.updateMeeting,
+      onSuccess: () =>
+        queryClient.invalidateQueries({
+          queryKey: ["workspaces", workspaceId, "calendar"],
+        }),
+    }),
+    deleteMeeting: useMutation({
+      mutationFn: workflowApi.deleteMeeting,
+      onSuccess: () =>
+        queryClient.invalidateQueries({
+          queryKey: ["workspaces", workspaceId, "calendar"],
+        }),
+    }),
   };
 }
 

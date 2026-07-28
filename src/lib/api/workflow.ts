@@ -230,6 +230,33 @@ export const workflowApi = {
       ),
     ).meeting;
   },
+  async updateMeeting({
+    workspaceId,
+    meetingId,
+    ...input
+  }: WorkspaceRef & {
+    meetingId: string;
+    title?: string;
+    message?: string;
+    startsAt?: string;
+    location?: string;
+    attendeeIds?: string[];
+  }) {
+    return unwrap(
+      await apiClient.patch<ApiSuccessResponse<{ meeting: MeetingDoc }>>(
+        `/workspaces/${workspaceId}/calendar/meetings/${meetingId}`,
+        input,
+      ),
+    ).meeting;
+  },
+  async deleteMeeting({
+    workspaceId,
+    meetingId,
+  }: WorkspaceRef & { meetingId: string }) {
+    await apiClient.delete(
+      `/workspaces/${workspaceId}/calendar/meetings/${meetingId}`,
+    );
+  },
 
   async listProjects({ workspaceId, ...params }: WorkspaceRef & ListParams) {
     return unwrap(

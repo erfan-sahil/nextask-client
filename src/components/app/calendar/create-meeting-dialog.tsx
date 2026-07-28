@@ -22,6 +22,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { getErrorMessage } from "@/lib/api/get-error-message";
 import { cn } from "@/lib/utils";
+import type { CalendarEventDoc } from "@/types/domain";
 
 type MeetingInput = {
   title: string;
@@ -43,18 +44,24 @@ export function CreateMeetingDialog({
   isPending,
   onOpenChange,
   onCreate,
+  meeting,
+  onUpdate,
 }: {
   open: boolean;
   defaultDate: Date;
   isPending: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreate: (meeting: MeetingInput) => Promise<void>;
+  onCreate?: (meeting: MeetingInput) => Promise<void>;
+  meeting?: CalendarEventDoc | null;
+  onUpdate?: (meeting: MeetingInput) => Promise<void>;
 }) {
-  const [title, setTitle] = useState("");
-  const [message, setMessage] = useState("");
-  const [location, setLocation] = useState("");
-  const [startDate, setStartDate] = useState(defaultDate);
-  const [startTime, setStartTime] = useState("09:00");
+  const isEditing = Boolean(meeting);
+  const initialStartsAt = meeting ? new Date(meeting.startsAt) : defaultDate;
+  const [title, setTitle] = useState(meeting?.title ?? "");
+  const [message, setMessage] = useState(meeting?.message ?? "");
+  const [location, setLocation] = useState(meeting?.location ?? "");
+  const [startDate, setStartDate] = useState(initialStartsAt);
+  const [startTime, setStartTime] = useState(format(initialStartsAt, "HH:mm"));
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -64,19 +71,30 @@ export function CreateMeetingDialog({
 
     try {
       setError(null);
-      await onCreate({
+      const input = {
         title,
         message: message || undefined,
         startsAt: startsAt.toISOString(),
         location: location || undefined,
-      });
+      };
+
+      if (isEditing && onUpdate) {
+        await onUpdate(input);
+      } else if (onCreate) {
+        await onCreate(input);
+      }
       setTitle("");
       setMessage("");
       setLocation("");
       setStartTime("09:00");
       onOpenChange(false);
     } catch (createError) {
-      setError(getErrorMessage(createError, "Unable to create the meeting."));
+      setError(
+        getErrorMessage(
+          createError,
+          isEditing ? "Unable to update the meeting." : "Unable to create the meeting.",
+        ),
+      );
     }
   };
 
@@ -84,9 +102,11 @@ export function CreateMeetingDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Schedule meeting</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit meeting" : "Schedule meeting"}</DialogTitle>
           <DialogDescription>
-            Choose the date and time for the meeting.
+            {isEditing
+              ? "Update the meeting details."
+              : "Choose the date and time for the meeting."}
           </DialogDescription>
         </DialogHeader>
 
@@ -157,7 +177,7 @@ export function CreateMeetingDialog({
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending && <Loader2 className="size-4 animate-spin" />}
-              Create meeting
+              {isEditing ? "Save changes" : "Create meeting"}
             </Button>
           </div>
         </form>

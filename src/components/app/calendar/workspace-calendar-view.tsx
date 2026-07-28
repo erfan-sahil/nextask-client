@@ -6,8 +6,11 @@ import {
   ChevronRight,
   ListTodo,
   Loader2,
+  MoreHorizontal,
+  Pencil,
   Plus,
   Target,
+  Trash2,
   Users,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -15,6 +18,20 @@ import { useMemo, useState } from "react";
 import { CalendarEventDetailsDialog } from "@/components/app/calendar/calendar-event-details-dialog";
 import { CreateMeetingDialog } from "@/components/app/calendar/create-meeting-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useCalendar, useWorkspaceBySlug } from "@/hooks/use-workflow";
 import { getErrorMessage } from "@/lib/api/get-error-message";
 import { cn } from "@/lib/utils";
@@ -102,6 +119,12 @@ export function WorkspaceCalendarView({
   const [selectedEvent, setSelectedEvent] = useState<CalendarEventDoc | null>(
     null,
   );
+  const [editingMeeting, setEditingMeeting] = useState<CalendarEventDoc | null>(
+    null,
+  );
+  const [deletingMeeting, setDeletingMeeting] =
+    useState<CalendarEventDoc | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const {
     workspace,
     isLoading: isWorkspaceLoading,
@@ -166,6 +189,25 @@ export function WorkspaceCalendarView({
   const openMeetingDialog = (date: Date) => {
     setMeetingDate(date);
     setIsMeetingDialogOpen(true);
+  };
+
+  const deleteMeeting = async () => {
+    if (!deletingMeeting || !workspace) {
+      return;
+    }
+
+    try {
+      setDeleteError(null);
+      await calendar.deleteMeeting.mutateAsync({
+        workspaceId: workspace._id,
+        meetingId: deletingMeeting.resourceId,
+      });
+      setDeletingMeeting(null);
+    } catch (deleteMeetingError) {
+      setDeleteError(
+        getErrorMessage(deleteMeetingError, "Unable to delete the meeting."),
+      );
+    }
   };
 
   if (isWorkspaceLoading) {
@@ -332,17 +374,17 @@ export function WorkspaceCalendarView({
                 No upcoming events.
               </p>
             ) : (
-              <ul className="space-y-3">
+              <ul className="space-y-1">
                 {upcomingEvents.map((event) => {
                   const Icon = EVENT_ICON[event.type];
                   const eventStartsAt = new Date(event.startsAt);
 
                   return (
-                    <li key={event.id}>
+                    <li key={event.id} className="flex items-start gap-1">
                       <button
                         type="button"
                         onClick={() => setSelectedEvent(event)}
-                        className="flex w-full items-start gap-2.5 rounded-md text-left transition-colors hover:bg-muted/60"
+                        className="group flex min-w-0 flex-1 cursor-pointer items-start gap-2.5 rounded-md px-1 py-1 text-left"
                       >
                         <div
                           className={cn(
@@ -353,10 +395,10 @@ export function WorkspaceCalendarView({
                           <Icon className="size-3" />
                         </div>
                         <div className="min-w-0">
-                          <p className="truncate text-xs font-medium">
+                          <p className="truncate text-xs font-medium transition-colors group-hover:text-primary">
                             {event.title}
                           </p>
-                          <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          <p className="mt-0.5 text-[11px] text-muted-foreground transition-colors group-hover:text-foreground">
                             {format(
                               eventStartsAt,
                               event.type === "meeting"
@@ -366,6 +408,38 @@ export function WorkspaceCalendarView({
                           </p>
                         </div>
                       </button>
+                      {canCreateMeetings && event.type === "meeting" && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                            aria-label={`Manage ${event.title}`}
+                          >
+                            <MoreHorizontal className="size-4" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedEvent(null);
+                                setEditingMeeting(event);
+                              }}
+                            >
+                              <Pencil className="size-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              variant="destructive"
+                              onClick={() => {
+                                setDeleteError(null);
+                                setDeletingMeeting(event);
+                              }}
+                            >
+                              <Trash2 className="size-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </li>
                   );
                 })}
@@ -399,10 +473,67 @@ export function WorkspaceCalendarView({
           }}
         />
       )}
+      {canCreateMeetings && editingMeeting && (
+        <CreateMeetingDialog
+          key={`edit-${editingMeeting.id}`}
+          open
+          defaultDate={new Date(editingMeeting.startsAt)}
+          isPending={calendar.updateMeeting.isPending}
+          meeting={editingMeeting}
+          onOpenChange={(open) => !open && setEditingMeeting(null)}
+          onUpdate={async (meeting) => {
+            await calendar.updateMeeting.mutateAsync({
+              workspaceId: workspace._id,
+              meetingId: editingMeeting.resourceId,
+              ...meeting,
+            });
+          }}
+        />
+      )}
       <CalendarEventDetailsDialog
         event={selectedEvent}
         onOpenChange={(open) => !open && setSelectedEvent(null)}
       />
+      <Dialog
+        open={Boolean(deletingMeeting)}
+        onOpenChange={(open) => {
+          if (!open && !calendar.deleteMeeting.isPending) {
+            setDeletingMeeting(null);
+            setDeleteError(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete meeting?</DialogTitle>
+            <DialogDescription>
+              This will permanently remove {deletingMeeting?.title ?? "this meeting"}.
+            </DialogDescription>
+          </DialogHeader>
+          {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeletingMeeting(null)}
+              disabled={calendar.deleteMeeting.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={deleteMeeting}
+              disabled={calendar.deleteMeeting.isPending}
+            >
+              {calendar.deleteMeeting.isPending && (
+                <Loader2 className="size-4 animate-spin" />
+              )}
+              Delete meeting
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
