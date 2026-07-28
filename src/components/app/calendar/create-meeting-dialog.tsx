@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { CalendarDays, Loader2 } from "lucide-react";
+import { CalendarDays, Loader2, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -99,32 +99,47 @@ export function CreateMeetingDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit meeting" : "Schedule meeting"}</DialogTitle>
-          <DialogDescription>
-            {isEditing
-              ? "Update the meeting details."
-              : "Choose the date and time for the meeting."}
-          </DialogDescription>
-        </DialogHeader>
-
-        <form className="mt-2 space-y-5" onSubmit={handleSubmit}>
-          <div className="space-y-2">
-            <Label htmlFor="meeting-title">Title</Label>
-            <Input
-              id="meeting-title"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="Weekly team sync"
-              maxLength={500}
-              required
-              disabled={isPending}
-            />
-          </div>
-
-          <div>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) =>
+        !nextOpen && !isPending && onOpenChange(false)
+      }
+    >
+      <DialogContent className="max-w-lg overflow-hidden p-0">
+        <form onSubmit={handleSubmit}>
+          <DialogHeader className="border-b border-border px-6 py-5 pr-14">
+            <DialogTitle>
+              {isEditing ? "Edit meeting" : "Schedule meeting"}
+            </DialogTitle>
+            <DialogDescription>
+              {isEditing
+                ? "Update the meeting details."
+                : "Choose the date and time for the meeting."}
+            </DialogDescription>
+          </DialogHeader>
+          <button
+            type="button"
+            aria-label="Close meeting dialog"
+            disabled={isPending}
+            onClick={() => onOpenChange(false)}
+            className="absolute top-4 right-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed"
+          >
+            <X className="size-4" />
+          </button>
+          <div className="space-y-4 px-6 py-5">
+            <div className="space-y-2">
+              <Label htmlFor="meeting-title">Title</Label>
+              <Input
+                id="meeting-title"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="Weekly team sync"
+                maxLength={500}
+                required
+                autoFocus
+                disabled={isPending}
+              />
+            </div>
             <DateTimeField
               label="Date and time"
               date={startDate}
@@ -133,40 +148,36 @@ export function CreateMeetingDialog({
               onTimeChange={setStartTime}
               disabled={isPending}
             />
+            <div className="space-y-2">
+              <Label htmlFor="meeting-location">Location or meeting link</Label>
+              <Input
+                id="meeting-location"
+                value={location}
+                onChange={(event) => setLocation(event.target.value)}
+                placeholder="Google Meet, Zoom, or a room name"
+                maxLength={500}
+                disabled={isPending}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="meeting-message">Message for attendees</Label>
+              <Textarea
+                id="meeting-message"
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+                placeholder="Please join on time. We will discuss the sprint plan."
+                maxLength={10000}
+                rows={3}
+                disabled={isPending}
+              />
+            </div>
+            {error && (
+              <p className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </p>
+            )}
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="meeting-location">Location or meeting link</Label>
-            <Input
-              id="meeting-location"
-              value={location}
-              onChange={(event) => setLocation(event.target.value)}
-              placeholder="Google Meet, Zoom, or a room name"
-              maxLength={500}
-              disabled={isPending}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="meeting-message">Message for attendees</Label>
-            <Textarea
-              id="meeting-message"
-              value={message}
-              onChange={(event) => setMessage(event.target.value)}
-              placeholder="Please join on time. We will discuss the sprint plan."
-              maxLength={10000}
-              rows={3}
-              disabled={isPending}
-            />
-          </div>
-
-          {error && (
-            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {error}
-            </p>
-          )}
-
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-3 border-t border-border bg-muted/30 px-6 py-4">
             <Button
               type="button"
               variant="outline"

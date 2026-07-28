@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AlertTriangle,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
@@ -12,6 +13,7 @@ import {
   Target,
   Trash2,
   Users,
+  X,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
@@ -503,15 +505,41 @@ export function WorkspaceCalendarView({
           }
         }}
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete meeting?</DialogTitle>
-            <DialogDescription>
-              This will permanently remove {deletingMeeting?.title ?? "this meeting"}.
-            </DialogDescription>
+        <DialogContent className="max-w-md overflow-hidden p-0">
+          <DialogHeader className="border-b border-border px-6 py-5 pr-14">
+            <DialogTitle className="text-destructive">Delete meeting</DialogTitle>
+            <DialogDescription>This action cannot be undone.</DialogDescription>
           </DialogHeader>
-          {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
-          <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            aria-label="Close delete meeting dialog"
+            disabled={calendar.deleteMeeting.isPending}
+            onClick={() => setDeletingMeeting(null)}
+            className="absolute top-4 right-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed"
+          >
+            <X className="size-4" />
+          </button>
+          <div className="px-6 py-5">
+            <div className="flex gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+                <AlertTriangle className="size-4" />
+              </span>
+              <div>
+                <p className="text-sm font-medium">
+                  Delete “{deletingMeeting?.title ?? "this meeting"}”?
+                </p>
+                <p className="mt-1 text-sm leading-5 text-muted-foreground">
+                  This will permanently remove the meeting from the workspace.
+                </p>
+              </div>
+            </div>
+            {deleteError && (
+              <p className="mt-4 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {deleteError}
+              </p>
+            )}
+          </div>
+          <div className="flex justify-end gap-3 border-t border-border bg-muted/30 px-6 py-4">
             <Button
               type="button"
               variant="outline"
