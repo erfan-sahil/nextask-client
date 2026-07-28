@@ -1,5 +1,9 @@
 export const authQueryKeys = {
   me: ["me"] as const,
+  workspaceInvitation: (token: string) =>
+    ["workspace-invitation", token] as const,
+  projectInvitation: (token: string) =>
+    ["project-invitation", token] as const,
 };
 
 export const workflowQueryKeys = {

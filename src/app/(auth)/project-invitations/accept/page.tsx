@@ -1,21 +1,15 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { authRoutes, appRoutes } from "@/config/navigation";
 import { getErrorMessage } from "@/lib/api/get-error-message";
-import { workflowApi } from "@/lib/api/workflow";
+import { useProjectInvitation } from "@/hooks/use-invitations";
 
 function ProjectInvitationAcceptContent() {
   const token = useSearchParams().get("token") ?? "";
-  const preview = useQuery({
-    queryKey: ["project-invitation", token],
-    queryFn: () => workflowApi.previewProjectInvitation(token),
-    enabled: Boolean(token),
-  });
-  const accept = useMutation({ mutationFn: () => workflowApi.acceptProjectInvitation(token) });
+  const { accept, preview } = useProjectInvitation(token);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-lg items-center px-4">

@@ -4,12 +4,20 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { authRoutes } from "@/config/navigation";
 import {
+  changePassword,
+  deleteAccount,
   getMe,
   login,
   logout as logoutRequest,
   register,
+  resendVerification,
+  updateProfile,
+  verifyEmail,
+  type ChangePasswordInput,
+  type DeleteAccountInput,
   type LoginInput,
   type RegisterInput,
+  type UpdateProfileInput,
 } from "@/lib/api/auth";
 import { authQueryKeys, workflowQueryKeys } from "@/lib/api/query-keys";
 import type { User } from "@/types/auth";
@@ -54,6 +62,28 @@ export function useAuth(options: UseAuthOptions = {}) {
     mutationFn: logoutRequest,
   });
 
+  const updateProfileMutation = useMutation({
+    mutationFn: updateProfile,
+    onSuccess: setUser,
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: changePassword,
+  });
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: deleteAccount,
+  });
+
+  const verifyEmailMutation = useMutation({
+    mutationFn: verifyEmail,
+    onSuccess: (data) => setUser(data.user),
+  });
+
+  const resendVerificationMutation = useMutation({
+    mutationFn: resendVerification,
+  });
+
   const logout = (redirectTo: string = authRoutes.login) => {
     logoutMutation.mutate(undefined, {
       onSettled: () => {
@@ -81,9 +111,20 @@ export function useAuth(options: UseAuthOptions = {}) {
     isRegistering: registerMutation.isPending,
     registerError: registerMutation.error,
     resetRegister: registerMutation.reset,
+    updateProfileMutation,
+    changePasswordMutation,
+    deleteAccountMutation,
+    verifyEmailMutation,
+    resendVerificationMutation,
     logout,
     isLoggingOut: logoutMutation.isPending,
   };
 }
 
-export type { LoginInput, RegisterInput };
+export type {
+  ChangePasswordInput,
+  DeleteAccountInput,
+  LoginInput,
+  RegisterInput,
+  UpdateProfileInput,
+};

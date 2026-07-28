@@ -1,12 +1,10 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { authRoutes, appRoutes } from "@/config/navigation";
-import { getMe } from "@/lib/api/auth";
-import { authQueryKeys } from "@/lib/api/query-keys";
+import { useAuth } from "@/hooks/use-auth";
 
 function AuthLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -21,19 +19,14 @@ function AuthLayoutContent({ children }: { children: React.ReactNode }) {
       ? callbackUrl
       : null;
 
-  const meQuery = useQuery({
-    queryKey: authQueryKeys.me,
-    queryFn: getMe,
-    retry: false,
-    enabled: isGuestOnlyRoute,
-  });
+  const meQuery = useAuth({ fetchUser: isGuestOnlyRoute });
 
   useEffect(() => {
-    if (!isGuestOnlyRoute || !meQuery.data) {
+    if (!isGuestOnlyRoute || !meQuery.user) {
       return;
     }
 
-    if (meQuery.data.isEmailVerified) {
+    if (meQuery.user.isEmailVerified) {
       router.replace(safeCallbackUrl ?? appRoutes.dashboard);
       return;
     }
@@ -43,9 +36,9 @@ function AuthLayoutContent({ children }: { children: React.ReactNode }) {
         ? `${authRoutes.verifyEmail}?callbackUrl=${encodeURIComponent(safeCallbackUrl)}`
         : authRoutes.verifyEmail,
     );
-  }, [isGuestOnlyRoute, meQuery.data, router, safeCallbackUrl]);
+  }, [isGuestOnlyRoute, meQuery.user, router, safeCallbackUrl]);
 
-  const isRedirecting = isGuestOnlyRoute && meQuery.isSuccess;
+  const isRedirecting = isGuestOnlyRoute && meQuery.isAuthenticated;
 
   return (
     <div className="relative flex min-h-svh flex-col overflow-hidden">
@@ -53,7 +46,7 @@ function AuthLayoutContent({ children }: { children: React.ReactNode }) {
         aria-hidden
         className="pointer-events-none absolute inset-0 overflow-hidden"
       >
-        <div className="absolute -top-32 -right-24 size-[28rem] rounded-full bg-primary-light/50 blur-3xl dark:bg-primary/10" />
+        <div className="absolute -top-32 -right-24 size-112 rounded-full bg-primary-light/50 blur-3xl dark:bg-primary/10" />
         <div className="absolute -bottom-40 -left-32 size-96 rounded-full bg-primary/5 blur-3xl dark:bg-primary-light/20" />
         <div className="absolute top-1/3 left-1/2 size-64 -translate-x-1/2 rounded-full bg-primary-light/30 blur-3xl dark:bg-primary/5" />
       </div>

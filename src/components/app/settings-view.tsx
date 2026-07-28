@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import {
   AtSign,
@@ -17,11 +16,6 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import {
-  changePassword,
-  deleteAccount,
-  updateProfile,
-} from "@/lib/api/auth";
 import { authRoutes } from "@/config/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme, type Theme } from "@/components/theme/theme-provider";
@@ -113,7 +107,7 @@ export function SettingsView() {
 }
 
 function ProfileSection({ user }: { user: UserType | undefined }) {
-  const { setUser } = useAuth({ fetchUser: false });
+  const { updateProfileMutation } = useAuth({ fetchUser: false });
   const [form, setForm] = useState(() => ({
     firstName: user?.firstName ?? "",
     lastName: user?.lastName ?? "",
@@ -122,20 +116,6 @@ function ProfileSection({ user }: { user: UserType | undefined }) {
   const [isEditing, setIsEditing] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-
-  const updateProfileMutation = useMutation({
-    mutationFn: updateProfile,
-    onSuccess: (updatedUser) => {
-      setUser(updatedUser);
-      setSuccessMessage("Profile updated successfully.");
-      setErrorMessage("");
-      setIsEditing(false);
-    },
-    onError: (error) => {
-      setErrorMessage(getErrorMessage(error, "Unable to update your profile."));
-      setSuccessMessage("");
-    },
-  });
 
   const fullName = user ? `${user.firstName} ${user.lastName}`.trim() : "";
   const memberSince = user?.createdAt
@@ -147,11 +127,24 @@ function ProfileSection({ user }: { user: UserType | undefined }) {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    updateProfileMutation.mutate({
-      firstName: form.firstName.trim(),
-      lastName: form.lastName.trim(),
-      username: form.username.trim().toLowerCase(),
-    });
+    updateProfileMutation.mutate(
+      {
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        username: form.username.trim().toLowerCase(),
+      },
+      {
+        onSuccess: () => {
+          setSuccessMessage("Profile updated successfully.");
+          setErrorMessage("");
+          setIsEditing(false);
+        },
+        onError: (error) => {
+          setErrorMessage(getErrorMessage(error, "Unable to update your profile."));
+          setSuccessMessage("");
+        },
+      },
+    );
   };
 
   const startEditing = () => {
@@ -370,7 +363,11 @@ function PasswordField({
 }
 
 function SecuritySection() {
-  const { clearUser } = useAuth({ fetchUser: false });
+  const {
+    changePasswordMutation,
+    clearUser,
+    deleteAccountMutation,
+  } = useAuth({ fetchUser: false });
   const [passwords, setPasswords] = useState({
     currentPassword: "",
     newPassword: "",
@@ -387,38 +384,6 @@ function SecuritySection() {
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteError, setDeleteError] = useState("");
 
-  const changePasswordMutation = useMutation({
-    mutationFn: changePassword,
-    onSuccess: () => {
-      setPasswords({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-      setPasswordMessage(
-        "Password updated. Please sign in again with your new password.",
-      );
-      setPasswordError("");
-      clearUser();
-      window.location.assign(authRoutes.login);
-    },
-    onError: (error) => {
-      setPasswordError(getErrorMessage(error, "Unable to update your password."));
-      setPasswordMessage("");
-    },
-  });
-
-  const deleteAccountMutation = useMutation({
-    mutationFn: deleteAccount,
-    onSuccess: () => {
-      clearUser();
-      window.location.assign(authRoutes.login);
-    },
-    onError: (error) => {
-      setDeleteError(getErrorMessage(error, "Unable to delete your account."));
-    },
-  });
-
   const updatePassword = (key: keyof typeof passwords, value: string) => {
     setPasswords((current) => ({ ...current, [key]: value }));
   };
@@ -428,12 +393,41 @@ function SecuritySection() {
 
   const handlePasswordSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    changePasswordMutation.mutate(passwords);
+    changePasswordMutation.mutate(passwords, {
+      onSuccess: () => {
+        setPasswords({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+        setPasswordMessage(
+          "Password updated. Please sign in again with your new password.",
+        );
+        setPasswordError("");
+        clearUser();
+        window.location.assign(authRoutes.login);
+      },
+      onError: (error) => {
+        setPasswordError(getErrorMessage(error, "Unable to update your password."));
+        setPasswordMessage("");
+      },
+    });
   };
 
   const handleDeleteSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    deleteAccountMutation.mutate({ currentPassword: deletePassword });
+    deleteAccountMutation.mutate(
+      { currentPassword: deletePassword },
+      {
+        onSuccess: () => {
+          clearUser();
+          window.location.assign(authRoutes.login);
+        },
+        onError: (error) => {
+          setDeleteError(getErrorMessage(error, "Unable to delete your account."));
+        },
+      },
+    );
   };
 
   return (

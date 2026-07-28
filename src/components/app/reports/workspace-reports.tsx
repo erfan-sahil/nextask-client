@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   BarChart3,
@@ -33,11 +33,12 @@ import {
 import {
   type ReportPeriod,
   type WorkspaceReportParams,
-  workflowApi,
 } from "@/lib/api/workflow";
 import { workflowQueryKeys } from "@/lib/api/query-keys";
 import { cn } from "@/lib/utils";
 import { canViewWorkspaceReports } from "@/lib/workspace-permissions";
+import { useProjects, useWorkspaceBySlug } from "@/hooks/use-workflow";
+import { useWorkspaceReport } from "@/hooks/use-reports";
 
 const PERIOD_OPTIONS: { value: ReportPeriod; label: string }[] = [
   { value: "last_week", label: "Last week" },
@@ -167,19 +168,12 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
   const [to, setTo] = useState("");
   const [selectedProjectId, setSelectedProjectId] = useState("all");
 
-  const workspacesQuery = useQuery({
-    queryKey: ["workspaces", "reports"],
-    queryFn: () => workflowApi.listWorkspaces({ limit: 100 }),
-  });
-  const workspace = workspacesQuery.data?.workspaces.find(
-    (item) => item.slug === workspaceSlug,
-  );
+  const workspacesQuery = useWorkspaceBySlug(workspaceSlug);
+  const workspace = workspacesQuery.workspace;
   const canViewReports = canViewWorkspaceReports(workspace?.membershipRole);
-  const projectsQuery = useQuery({
-    queryKey: ["projects", workspace?._id, "report-filter"],
-    queryFn: () => workflowApi.listProjects({ workspaceId: workspace!._id, limit: 100 }),
-    enabled: Boolean(workspace?._id) && canViewReports,
-  });
+  const projectsQuery = useProjects(
+    canViewReports ? workspace?._id : undefined,
+  );
 
   const reportParams = useMemo<WorkspaceReportParams>(() => {
     if (period === "custom") {
@@ -197,17 +191,12 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
     };
   }, [from, period, selectedProjectId, to]);
 
-  const reportQuery = useQuery({
-    queryKey: [
-      ...workflowQueryKeys.reports(workspace?._id ?? ""),
-      reportParams,
-    ],
-    queryFn: () => workflowApi.getWorkspaceReport(workspace!._id, reportParams),
-    enabled:
-      Boolean(workspace?._id) &&
-      canViewReports &&
+  const reportQuery = useWorkspaceReport(
+    workspace?._id,
+    reportParams,
+    canViewReports &&
       (period !== "custom" || (Boolean(from) && Boolean(to))),
-  });
+  );
 
   const report = reportQuery.data;
   const projects = report?.projectProgress ?? [];

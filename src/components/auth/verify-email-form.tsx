@@ -1,6 +1,5 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AuthShell } from "@/components/auth/auth-shell";
@@ -10,16 +9,16 @@ import {
   clearPendingVerificationEmail,
   getPendingVerificationEmail,
 } from "@/lib/auth/pending-verification";
-import { resendVerification, verifyEmail } from "@/lib/api/auth";
 import { getErrorMessage } from "@/lib/api/get-error-message";
-import { authQueryKeys } from "@/lib/api/query-keys";
+import { useAuth } from "@/hooks/use-auth";
 
 const OTP_LENGTH = 6;
 
 export function VerifyEmailForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
+  const { resendVerificationMutation: resendMutation, verifyEmailMutation: verifyMutation } =
+    useAuth({ fetchUser: false });
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -35,33 +34,6 @@ export function VerifyEmailForm() {
       );
     }
   }, [email, router, searchParams]);
-
-  const verifyMutation = useMutation({
-    mutationFn: verifyEmail,
-    onSuccess: (data) => {
-      clearPendingVerificationEmail();
-      queryClient.setQueryData(authQueryKeys.me, data.user);
-      const callbackUrl = searchParams.get("callbackUrl");
-      router.replace(
-        callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : appRoutes.dashboard,
-      );
-    },
-  });
-
-  const resendMutation = useMutation({
-    mutationFn: resendVerification,
-    onSuccess: () => {
-      setResendCooldown(60);
-    },
-    onError: (error) => {
-      const message = getErrorMessage(error);
-      const match = message.match(/wait (\d+) seconds/i);
-
-      if (match) {
-        setResendCooldown(Number(match[1]));
-      }
-    },
-  });
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -122,7 +94,20 @@ export function VerifyEmailForm() {
 
     if (!email || otp.length !== OTP_LENGTH) return;
 
-    verifyMutation.mutate({ email, otp });
+    verifyMutation.mutate(
+      { email, otp },
+      {
+        onSuccess: () => {
+          clearPendingVerificationEmail();
+          const callbackUrl = searchParams.get("callbackUrl");
+          router.replace(
+            callbackUrl && callbackUrl.startsWith("/")
+              ? callbackUrl
+              : appRoutes.dashboard,
+          );
+        },
+      },
+    );
   };
 
   const handleBackToRegistration = () => {
@@ -206,7 +191,18 @@ export function VerifyEmailForm() {
       <div className="mt-6 flex flex-col items-center gap-3 text-sm text-muted-foreground">
         <button
           type="button"
-          onClick={() => resendMutation.mutate({ email })}
+          onClick={() =>
+            resendMutation.mutate(
+              { email },
+              {
+                onSuccess: () => setResendCooldown(60),
+                onError: (error) => {
+                  const match = getErrorMessage(error).match(/wait (\d+) seconds/i);
+                  if (match) setResendCooldown(Number(match[1]));
+                },
+              },
+            )
+          }
           disabled={resendMutation.isPending || resendCooldown > 0}
           className="font-medium text-primary transition-colors hover:text-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
         >
