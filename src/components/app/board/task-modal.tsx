@@ -82,7 +82,7 @@ type TaskModalProps = {
   projectId: string;
   boardId: string;
   columns: ColumnDoc[];
-  mode: "create" | "details" | "edit" | "delete";
+  mode: "assign" | "create" | "details" | "edit" | "delete";
   task?: TaskDoc;
   initialColumnId?: string;
 };
@@ -138,6 +138,7 @@ export function TaskModal({
   const commentComposerRef = useRef<HTMLTextAreaElement>(null);
   const isDeleting = mode === "delete";
   const isDetails = mode === "details";
+  const isAssigning = mode === "assign";
   const isPending =
     kanban.createTask.isPending ||
     kanban.updateTask.isPending ||
@@ -236,12 +237,16 @@ export function TaskModal({
           projectId,
           boardId,
           taskId: task._id,
-          title: title.trim(),
-          details,
-          priority,
-          columnId,
           assignees: assigneeIds,
-          dueDate: dueDate || null,
+          ...(isAssigning
+            ? {}
+            : {
+                title: title.trim(),
+                details,
+                priority,
+                columnId,
+                dueDate: dueDate || null,
+              }),
         });
       } else {
         await kanban.createTask.mutateAsync({
@@ -284,11 +289,13 @@ export function TaskModal({
     ? "Delete task"
     : isDetails
       ? task?.title ?? "Task details"
+      : isAssigning
+        ? "Assign members"
       : task
         ? "Edit task"
         : "Create task";
   const selectedDueDate = dueDate ? new Date(`${dueDate}T00:00:00`) : undefined;
-  const hasScrollableTaskContent = !isDeleting;
+  const hasScrollableTaskContent = !isDeleting && !isAssigning;
 
   return (
     <Dialog
@@ -303,6 +310,8 @@ export function TaskModal({
             ? "h-[min(32rem,calc(100svh-2rem))] max-w-3xl overflow-hidden p-0"
             : isDeleting
               ? "max-w-md overflow-hidden p-0"
+              : isAssigning
+                ? "max-w-md overflow-hidden p-0"
               : hasScrollableTaskContent
                 ? "h-[min(32rem,calc(100svh-2rem))] overflow-hidden p-0"
                 : "overflow-hidden p-0"
@@ -318,6 +327,8 @@ export function TaskModal({
                 ? `This will permanently delete ${task?.title}.`
                 : isDetails
                   ? "Task details and discussion."
+                  : isAssigning
+                    ? "Choose the members responsible for this task."
                   : "Add the details needed to complete this work."}
             </DialogDescription>
             <button
@@ -439,6 +450,82 @@ export function TaskModal({
                 </div>
               </div>
             )}
+          </section>
+        ) : isAssigning && task ? (
+          <section className="mt-6">
+            <div className="space-y-1.5">
+              <Label>Assignees</Label>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className="flex h-10 w-full cursor-pointer items-center gap-2 rounded-xl border border-input bg-background px-3 text-left text-sm outline-none hover:bg-accent focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                  aria-label="Select task assignees"
+                >
+                  <Users className="size-4 shrink-0 text-muted-foreground" />
+                  <span className={assigneeIds.length ? "truncate" : "truncate text-muted-foreground"}>
+                    {assigneeIds.length
+                      ? `${assigneeIds.length} member${assigneeIds.length === 1 ? "" : "s"} selected`
+                      : "Assign members"}
+                  </span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-80 p-2">
+                  <div className="relative mb-2">
+                    <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={memberSearch}
+                      onChange={(event) => setMemberSearch(event.target.value)}
+                      onPointerDown={(event) => event.stopPropagation()}
+                      placeholder="Search members..."
+                      className="h-9 pl-8"
+                      aria-label="Search members"
+                    />
+                  </div>
+                  {workspaceMembers.isLoading || projectMembers.isLoading ? (
+                    <p className="px-2 py-1.5 text-sm text-muted-foreground">
+                      Loading members…
+                    </p>
+                  ) : filteredMembers.length ? (
+                    <div className="max-h-52 overflow-y-auto">
+                      {filteredMembers.map((member) => (
+                        <DropdownMenuCheckboxItem
+                          key={member._id}
+                          checked={assigneeIds.includes(member._id)}
+                          onCheckedChange={() => toggleAssignee(member._id)}
+                          className="cursor-pointer gap-2 px-2 py-2"
+                        >
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[0.65rem] font-semibold text-primary">
+                            {`${member.firstName[0] ?? ""}${member.lastName[0] ?? ""}`}
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate font-medium">
+                              {member.firstName} {member.lastName}
+                            </span>
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {member.email}
+                            </span>
+                          </span>
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="px-2 py-1.5 text-sm text-muted-foreground">
+                      {members.length ? "No members match your search." : "No members available to assign."}
+                    </p>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {selectedAssignees.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {selectedAssignees.map((member) => (
+                    <span
+                      key={member._id}
+                      className="rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary"
+                    >
+                      {member.firstName} {member.lastName}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </section>
         ) : (
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -711,7 +798,15 @@ export function TaskModal({
               Cancel
             </Button>
             <Button type="submit" variant={isDeleting ? "destructive" : "default"} disabled={isPending || (!isDeleting && (!title.trim() || !columnId))}>
-              {isPending ? "Saving…" : isDeleting ? "Delete task" : task ? "Save changes" : "Create task"}
+              {isPending
+                ? "Saving…"
+                : isDeleting
+                  ? "Delete task"
+                  : isAssigning
+                    ? "Assign members"
+                    : task
+                      ? "Save changes"
+                      : "Create task"}
             </Button>
           </>
         </div>

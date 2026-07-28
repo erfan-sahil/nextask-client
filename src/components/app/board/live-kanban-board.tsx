@@ -26,6 +26,7 @@ import {
   Pencil,
   Plus,
   Trash2,
+  Users,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ColumnModal } from "@/components/app/board/column-modal";
@@ -52,7 +53,7 @@ type LiveKanbanBoardProps = {
 
 type TaskModalState =
   | { mode: "create"; columnId: string }
-  | { mode: "details" | "edit" | "delete"; task: TaskDoc }
+  | { mode: "assign" | "details" | "edit" | "delete"; task: TaskDoc }
   | null;
 
 type ColumnModalState =
@@ -78,6 +79,7 @@ function TaskCard({
   task,
   isDragging = false,
   onClick,
+  onAssign,
   onEdit,
   onDelete,
   onMoveUp,
@@ -88,6 +90,7 @@ function TaskCard({
   task: TaskDoc;
   isDragging?: boolean;
   onClick?: () => void;
+  onAssign?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
   onMoveUp?: () => void;
@@ -125,7 +128,7 @@ function TaskCard({
             {task.title}
           </p>
         </div>
-        {(onEdit || onDelete) && (
+        {(onAssign || onEdit || onDelete) && (
           <DropdownMenu>
             <DropdownMenuTrigger
               onPointerDown={(event) => event.stopPropagation()}
@@ -135,7 +138,7 @@ function TaskCard({
             >
               <MoreHorizontal className="size-4" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-36">
+            <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuItem
                 onClick={(event) => {
                   event.stopPropagation();
@@ -147,7 +150,20 @@ function TaskCard({
                 <Eye className="size-3.5" />
                 View details
               </DropdownMenuItem>
-              {(onEdit || onDelete) && <DropdownMenuSeparator />}
+              {(onAssign || onEdit || onDelete) && <DropdownMenuSeparator />}
+              {onAssign && (
+                <DropdownMenuItem
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onAssign();
+                  }}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  className="cursor-pointer gap-2"
+                >
+                  <Users className="size-3.5" />
+                  Assign Member
+                </DropdownMenuItem>
+              )}
               {onEdit && (
                 <DropdownMenuItem
                   onClick={(event) => {
@@ -161,7 +177,7 @@ function TaskCard({
                   Edit task
                 </DropdownMenuItem>
               )}
-              {onEdit && onDelete && <DropdownMenuSeparator />}
+              {(onAssign || onEdit) && onDelete && <DropdownMenuSeparator />}
               {onDelete && (
                 <DropdownMenuItem
                   onClick={(event) => {
@@ -268,6 +284,7 @@ function TaskCard({
 function SortableTaskCard({
   task,
   onClick,
+  onAssign,
   onEdit,
   onDelete,
   onMoveUp,
@@ -277,6 +294,7 @@ function SortableTaskCard({
 }: {
   task: TaskDoc;
   onClick: () => void;
+  onAssign: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onMoveUp: () => void;
@@ -299,6 +317,7 @@ function SortableTaskCard({
         task={task}
         isDragging={isDragging}
         onClick={onClick}
+        onAssign={onAssign}
         onEdit={onEdit}
         onDelete={onDelete}
         onMoveUp={onMoveUp}
@@ -317,6 +336,7 @@ function KanbanColumn({
   onEditColumn,
   onDeleteColumn,
   onOpenTask,
+  onAssignTask,
   onEditTask,
   onDeleteTask,
   onMoveTask,
@@ -328,6 +348,7 @@ function KanbanColumn({
   onEditColumn: () => void;
   onDeleteColumn: () => void;
   onOpenTask: (task: TaskDoc) => void;
+  onAssignTask: (task: TaskDoc) => void;
   onEditTask: (task: TaskDoc) => void;
   onDeleteTask: (task: TaskDoc) => void;
   onMoveTask: (task: TaskDoc, position: number) => void;
@@ -396,6 +417,7 @@ function KanbanColumn({
               key={task._id}
               task={task}
               onClick={() => onOpenTask(task)}
+              onAssign={() => onAssignTask(task)}
               onEdit={() => onEditTask(task)}
               onDelete={() => onDeleteTask(task)}
               onMoveUp={() => onMoveTask(task, index - 1)}
@@ -544,6 +566,7 @@ export function LiveKanbanBoard({
                 onEditColumn={() => setColumnModal({ mode: "edit", column })}
                 onDeleteColumn={() => setColumnModal({ mode: "delete", column })}
                 onOpenTask={(task) => setTaskModal({ mode: "details", task })}
+                onAssignTask={(task) => setTaskModal({ mode: "assign", task })}
                 onEditTask={(task) => setTaskModal({ mode: "edit", task })}
                 onDeleteTask={(task) => setTaskModal({ mode: "delete", task })}
                 onMoveTask={moveTask}

@@ -37,6 +37,7 @@ import {
 } from "@/lib/api/workflow";
 import { workflowQueryKeys } from "@/lib/api/query-keys";
 import { cn } from "@/lib/utils";
+import { canViewWorkspaceReports } from "@/lib/workspace-permissions";
 
 const PERIOD_OPTIONS: { value: ReportPeriod; label: string }[] = [
   { value: "last_week", label: "Last week" },
@@ -173,10 +174,11 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
   const workspace = workspacesQuery.data?.workspaces.find(
     (item) => item.slug === workspaceSlug,
   );
+  const canViewReports = canViewWorkspaceReports(workspace?.membershipRole);
   const projectsQuery = useQuery({
     queryKey: ["projects", workspace?._id, "report-filter"],
     queryFn: () => workflowApi.listProjects({ workspaceId: workspace!._id, limit: 100 }),
-    enabled: Boolean(workspace?._id),
+    enabled: Boolean(workspace?._id) && canViewReports,
   });
 
   const reportParams = useMemo<WorkspaceReportParams>(() => {
@@ -203,6 +205,7 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
     queryFn: () => workflowApi.getWorkspaceReport(workspace!._id, reportParams),
     enabled:
       Boolean(workspace?._id) &&
+      canViewReports &&
       (period !== "custom" || (Boolean(from) && Boolean(to))),
   });
 
@@ -233,6 +236,19 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
           <h1 className="text-lg font-semibold">Workspace unavailable</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             We couldn&apos;t load this workspace. Check your access and try again.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!canViewReports) {
+    return (
+      <div className="px-4 py-6 sm:px-8">
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <h1 className="text-lg font-semibold">Reports are unavailable</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Workspace reports are available to owners and admins only.
           </p>
         </div>
       </div>

@@ -23,7 +23,10 @@ import { Separator } from "@/components/ui/separator";
 import { appRoutes, reservedAppSegments } from "@/config/navigation";
 import { useNotifications, useProjects, useWorkspaces } from "@/hooks/use-workflow";
 import { cn } from "@/lib/utils";
-import { canManageWorkspaceContent } from "@/lib/workspace-permissions";
+import {
+  canManageWorkspaceContent,
+  canViewWorkspaceReports,
+} from "@/lib/workspace-permissions";
 
 type AppSidebarProps = {
   className?: string;
@@ -147,6 +150,9 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
   const canManageProjects = canManageWorkspaceContent(
     activeWorkspace?.membershipRole,
   );
+  const canViewReports = canViewWorkspaceReports(
+    activeWorkspace?.membershipRole,
+  );
   const isProjectScoped = activeWorkspace?.membershipRole === null;
 
   const isAllProjectsActive =
@@ -226,13 +232,15 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
                 active={pathname === appRoutes.workspaceMembers(activeWorkspace.slug)}
                 onClick={onNavigate}
               />
-              <NavLink
-                href={appRoutes.workspaceReports(activeWorkspace.slug)}
-                icon={BarChart3}
-                label="Reports"
-                active={pathname === appRoutes.workspaceReports(activeWorkspace.slug)}
-                onClick={onNavigate}
-              />
+              {canViewReports && (
+                <NavLink
+                  href={appRoutes.workspaceReports(activeWorkspace.slug)}
+                  icon={BarChart3}
+                  label="Reports"
+                  active={pathname === appRoutes.workspaceReports(activeWorkspace.slug)}
+                  onClick={onNavigate}
+                />
+              )}
             </nav>
           </div>
         )}
