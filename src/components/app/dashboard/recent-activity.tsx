@@ -1,4 +1,5 @@
 import {
+  CalendarDays,
   CheckSquare,
   MessageSquare,
 } from "lucide-react";
@@ -17,6 +18,8 @@ const activityIcons = {
   TASK_COMMENT: MessageSquare,
   MENTION: MessageSquare,
   CHAT_MENTION: MessageSquare,
+  MEETING_CREATED: CalendarDays,
+  MEETING_UPDATED: CalendarDays,
 } as const;
 
 const activityTones = {
@@ -25,6 +28,8 @@ const activityTones = {
   TASK_COMMENT: "bg-chart-2/15 text-chart-2",
   MENTION: "bg-chart-2/15 text-chart-2",
   CHAT_MENTION: "bg-chart-2/15 text-chart-2",
+  MEETING_CREATED: "bg-chart-3/15 text-chart-3",
+  MEETING_UPDATED: "bg-chart-3/15 text-chart-3",
 } as const;
 
 export function RecentActivity({ activity }: RecentActivityProps) {

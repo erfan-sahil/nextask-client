@@ -116,7 +116,9 @@ export type DashboardActivity = {
     | "TASK_UPDATED"
     | "TASK_COMMENT"
     | "MENTION"
-    | "CHAT_MENTION";
+    | "CHAT_MENTION"
+    | "MEETING_CREATED"
+    | "MEETING_UPDATED";
   message: string;
   createdAt: string;
   readAt: string | null;

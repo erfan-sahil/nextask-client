@@ -6,6 +6,7 @@ import {
   CheckCheck,
   CheckSquare,
   Clock,
+  CalendarDays,
   MessageCircle,
   MessageSquare,
   Pencil,
@@ -64,6 +65,18 @@ const notificationTypeConfig: Record<
     icon: MessageCircle,
     accent: "bg-rose-500/10 text-rose-800 dark:text-rose-200",
     iconAccent: "bg-rose-500",
+  },
+  MEETING_CREATED: {
+    label: "Meeting scheduled",
+    icon: CalendarDays,
+    accent: "bg-emerald-500/10 text-emerald-800 dark:text-emerald-200",
+    iconAccent: "bg-emerald-500",
+  },
+  MEETING_UPDATED: {
+    label: "Meeting updated",
+    icon: CalendarDays,
+    accent: "bg-amber-500/10 text-amber-800 dark:text-amber-200",
+    iconAccent: "bg-amber-500",
   },
 };
 

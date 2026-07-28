@@ -171,11 +171,19 @@ export type NotificationDoc = {
   _id: Id;
   workspaceId: Id;
   actorId: ApiUser;
-  type: "TASK_ASSIGNED" | "TASK_UPDATED" | "TASK_COMMENT" | "MENTION" | "CHAT_MENTION";
+  type:
+    | "TASK_ASSIGNED"
+    | "TASK_UPDATED"
+    | "TASK_COMMENT"
+    | "MENTION"
+    | "CHAT_MENTION"
+    | "MEETING_CREATED"
+    | "MEETING_UPDATED";
   message: string;
   taskId: Id | null;
   commentId: Id | null;
   chatMessageId: Id | null;
+  meetingId: Id | null;
   readAt: string | null;
   createdAt: string;
 };
