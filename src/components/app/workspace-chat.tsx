@@ -229,7 +229,7 @@ export function WorkspaceChat({ workspace }: { workspace?: WorkspaceDoc }) {
                       className={
                         isOwnMessage
                           ? "rounded-2xl rounded-tr-md bg-primary px-3.5 py-2.5 text-primary-foreground shadow-sm"
-                          : "rounded-2xl rounded-tl-md border border-border/70 bg-card px-3.5 py-2.5 shadow-sm"
+                          : "rounded-2xl rounded-tl-md border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 shadow-sm dark:border-emerald-900 dark:bg-emerald-950"
                       }
                     >
                       {!isOwnMessage && <p className="text-xs font-semibold text-foreground">{name}</p>}

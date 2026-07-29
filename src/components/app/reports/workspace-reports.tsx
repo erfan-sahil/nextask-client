@@ -95,13 +95,26 @@ function StatCard({
   subtitle?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-5">
-      <div className={cn("flex size-10 items-center justify-center rounded-xl", className)}>
-        <Icon className="size-5" />
+    <div className="rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/20 hover:bg-muted/40">
+      <div className="flex items-center justify-between gap-3">
+        <span
+          className={cn(
+            "flex size-9 shrink-0 items-center justify-center rounded-xl",
+            className,
+          )}
+        >
+          <Icon className="size-4" aria-hidden />
+        </span>
+        <div className="min-w-0 text-right">
+          <p className="text-2xl font-bold tracking-tight">{value}</p>
+          <p className="text-xs text-muted-foreground">{label}</p>
+          {subtitle && (
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              {subtitle}
+            </p>
+          )}
+        </div>
       </div>
-      <p className="mt-4 text-3xl font-bold tracking-tight">{value}</p>
-      <p className="mt-0.5 text-sm text-muted-foreground">{label}</p>
-      {subtitle && <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>}
     </div>
   );
 }
@@ -354,7 +367,7 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
         </div>
       ) : (
         <>
-          <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard
               label="Total tasks"
               value={report.overview.totalTasks}
@@ -407,7 +420,7 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
                 <h2 className="text-sm font-semibold">Project progress</h2>
                 <span className="ml-auto text-xs text-muted-foreground">{projects.length}</span>
               </header>
-              <div className="max-h-105 space-y-5 overflow-y-auto p-5 pr-3">
+              <div className="max-h-105 space-y-2 overflow-y-auto p-5 pr-3">
                 {projects.length ? (
                   projects.map((item, index) => {
                     const overdue =
@@ -416,7 +429,10 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
                       item.project.status !== "COMPLETED";
                     const complete = item.completionRate === 100;
                     return (
-                      <div key={item.project._id}>
+                      <div
+                        key={item.project._id}
+                        className="rounded-xl p-3 transition-colors hover:bg-muted/40"
+                      >
                         <div className="mb-2 flex items-center justify-between gap-3">
                           <div className="flex min-w-0 items-center gap-2">
                             <span
@@ -465,7 +481,10 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
                     const name = `${item.member.firstName} ${item.member.lastName}`.trim();
                     const initials = `${item.member.firstName[0] ?? ""}${item.member.lastName[0] ?? ""}`;
                     return (
-                      <div key={item.member._id} className="rounded-xl border border-border p-3">
+                      <div
+                        key={item.member._id}
+                        className="rounded-xl border border-border p-3 transition-colors hover:border-primary/20 hover:bg-muted/40"
+                      >
                         <div className="flex items-center gap-3">
                           <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
                             {initials}
