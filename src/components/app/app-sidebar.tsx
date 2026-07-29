@@ -65,7 +65,7 @@ function NavLink({
         "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
         active
           ? "bg-sidebar-accent text-sidebar-accent-foreground"
-          : "text-sidebar-foreground hover:bg-emerald-500/5",
+          : "text-sidebar-foreground hover:bg-emerald-500/5 hover:text-primary",
       )}
     >
       <Icon className="size-4 shrink-0" aria-hidden />
@@ -113,7 +113,7 @@ function ChatNavButton({
         window.dispatchEvent(new Event("workspace-chat:open"));
         onNavigate?.();
       }}
-      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-emerald-500/5 disabled:cursor-not-allowed disabled:opacity-50"
+      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-emerald-500/5 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
     >
       <MessageCircle className="size-4 shrink-0" aria-hidden />
       <span className="truncate">Chat</span>
@@ -257,7 +257,7 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
                 <button
                   type="button"
                   onClick={() => setIsCreateProjectModalOpen(true)}
-                  className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-sidebar-foreground"
+                  className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-primary"
                   aria-label="New project"
                 >
                   <Plus className="size-3.5" />
@@ -285,7 +285,7 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
                       "flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
                       isActive
                         ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "text-sidebar-foreground hover:bg-emerald-500/5",
+                        : "text-sidebar-foreground hover:bg-emerald-500/5 hover:text-primary",
                     )}
                   >
                     <span
