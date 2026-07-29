@@ -988,8 +988,7 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
         </div>
         {canManageGoals && (
           <Button
-            size="sm"
-            className="gap-1.5"
+            size="page"
             onClick={() => setDialogGoal(null)}
           >
             <Plus className="size-4" />

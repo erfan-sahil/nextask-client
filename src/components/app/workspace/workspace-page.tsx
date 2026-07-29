@@ -15,6 +15,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { CreateProjectModal } from "@/components/app/project/create-project-modal";
 import { ProjectModal } from "@/components/app/project/project-modal";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -94,14 +95,15 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
               </p>
             </div>
             {canManageProjects && (
-              <button
+              <Button
                 type="button"
+                size="page"
                 onClick={() => setIsCreateProjectModalOpen(true)}
-                className="hidden shrink-0 cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:inline-flex"
+                className="hidden shrink-0 sm:inline-flex"
               >
                 <Plus className="size-4" />
                 New project
-              </button>
+              </Button>
             )}
           </div>
           {!isProjectScoped && (
@@ -157,14 +159,15 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
           </p>
         </div>
         {canManageProjects && (
-          <button
+          <Button
             type="button"
+            size="page-sm"
             onClick={() => setIsCreateProjectModalOpen(true)}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:hidden"
+            className="sm:hidden"
           >
             <Plus className="size-4" />
             New project
-          </button>
+          </Button>
         )}
       </div>
 
@@ -181,14 +184,15 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
             work.
           </p>
           {canManageProjects && (
-            <button
+            <Button
               type="button"
+              size="page"
               onClick={() => setIsCreateProjectModalOpen(true)}
-              className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+              className="mt-5"
             >
               <Plus className="size-4" />
               Create project
-            </button>
+            </Button>
           )}
         </div>
       ) : (

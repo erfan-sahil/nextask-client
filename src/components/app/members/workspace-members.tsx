@@ -587,7 +587,7 @@ export function WorkspaceMembers({ workspaceSlug }: { workspaceSlug: string }) {
             </div>
             {canManageMembers && (
               <Button
-                className="gap-2"
+                size="page"
                 onClick={() => setModalState({ mode: "invite" })}
               >
                 <UserPlus className="size-4" />

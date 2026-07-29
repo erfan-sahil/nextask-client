@@ -4,6 +4,7 @@ import { ArrowRight, Layers, Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { WorkspaceModal } from "@/components/app/workspaces/workspace-modal";
+import { Button } from "@/components/ui/button";
 import { appRoutes } from "@/config/navigation";
 import { useWorkspaces } from "@/hooks/use-workflow";
 import { cn } from "@/lib/utils";
@@ -68,14 +69,14 @@ export function WorkspacesPage() {
             {workspaceList.length !== 1 ? "s" : ""} you&apos;re part of
           </p>
         </div>
-        <button
+        <Button
           type="button"
+          size="page"
           onClick={() => setIsCreateDialogOpen(true)}
-          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
         >
           <Plus className="size-4" />
           New workspace
-        </button>
+        </Button>
       </div>
 
       {/* Grid */}

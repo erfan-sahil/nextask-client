@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BoardModal } from "@/components/app/board/board-modal";
 import { ProjectMemberInviteModal } from "@/components/app/project/project-member-invite-modal";
+import { Button } from "@/components/ui/button";
 import { appRoutes } from "@/config/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { mockBoards } from "@/lib/mock/dashboard-data";
@@ -277,24 +278,25 @@ function ConnectedProjectPage({
             </div>
             <div className="flex flex-wrap justify-end gap-2">
               {canInviteProjectMembers && (
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="page"
                   onClick={() => setIsInviteModalOpen(true)}
-                  className="inline-flex cursor-pointer items-center rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-emerald-500/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
-                  <UserPlus className="mr-2 inline size-4" />
+                  <UserPlus className="size-4" />
                   Invite member
-                </button>
+                </Button>
               )}
               {canManageBoards && (
-                <button
+                <Button
                   type="button"
+                  size="page"
                   onClick={() => setBoardModal({ mode: "create" })}
-                  className="inline-flex cursor-pointer items-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
-                  <Plus className="mr-2 inline size-4" />
+                  <Plus className="size-4" />
                   New board
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -340,13 +342,14 @@ function ConnectedProjectPage({
           <Columns3 className="mx-auto size-8 text-muted-foreground" />
           <p className="mt-3 font-semibold">No boards yet</p>
           {canManageBoards && (
-            <button
+            <Button
               type="button"
+              size="page"
               onClick={() => setBoardModal({ mode: "create" })}
-              className="mt-4 inline-flex cursor-pointer items-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="mt-4"
             >
               Create board
-            </button>
+            </Button>
           )}
         </div>
       ) : (
@@ -520,13 +523,14 @@ export function ProjectPage(props: ProjectPageProps) {
             </div>
 
             {/* Action */}
-            <button
+            <Button
               type="button"
-              className="hidden sm:flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover shrink-0"
+              size="page"
+              className="hidden shrink-0 sm:inline-flex"
             >
               <Plus className="size-4" />
               New board
-            </button>
+            </Button>
           </div>
 
           {/* Progress section */}
@@ -596,13 +600,14 @@ export function ProjectPage(props: ProjectPageProps) {
             project
           </p>
         </div>
-        <button
+        <Button
           type="button"
-          className="sm:hidden flex items-center gap-2 rounded-xl bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+          size="page-sm"
+          className="sm:hidden"
         >
-          <Plus className="size-3.5" />
+          <Plus className="size-4" />
           New board
-        </button>
+        </Button>
       </div>
 
       {boards.length === 0 ? (
@@ -615,13 +620,14 @@ export function ProjectPage(props: ProjectPageProps) {
             Boards let you organize and track tasks visually. Create your first
             board to get started.
           </p>
-          <button
+          <Button
             type="button"
-            className="mt-5 flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+            size="page"
+            className="mt-5"
           >
             <Plus className="size-4" />
             Create board
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

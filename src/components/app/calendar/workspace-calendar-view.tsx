@@ -250,14 +250,14 @@ export function WorkspaceCalendarView({
 
         <div className="flex flex-wrap items-center gap-2">
           {canCreateMeetings && (
-            <Button size="sm" onClick={() => openMeetingDialog(today)}>
+            <Button size="page" onClick={() => openMeetingDialog(today)}>
               <Plus className="size-4" />
               Schedule meeting
             </Button>
           )}
           <Button
             variant="outline"
-            size="sm"
+            size="page"
             onClick={() =>
               setViewDate(new Date(today.getFullYear(), today.getMonth(), 1))
             }
