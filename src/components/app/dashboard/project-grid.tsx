@@ -31,7 +31,11 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
             Active initiatives across your current workspace.
           </p>
         </div>
-        <Button variant="outline" size="sm" className="hidden rounded-full sm:inline-flex">
+        <Button
+          variant="outline"
+          size="sm"
+          className="hidden rounded-full sm:inline-flex"
+        >
           New project
         </Button>
       </div>
@@ -46,7 +50,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
             <article
               key={project.id}
               className={cn(
-                "rounded-2xl border bg-card p-5 shadow-sm transition-shadow hover:shadow-md",
+                "rounded-2xl border bg-card p-5 shadow-sm transition-all hover:bg-emerald-500/5 dark:hover:bg-emerald-400/10 dark:hover:shadow-lg",
                 project.color,
               )}
             >

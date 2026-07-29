@@ -38,7 +38,7 @@ export function AuthActions({
 
   const loginClassName = cn(
     buttonVariants({ variant: "outline", size: "default" }),
-    "h-9 rounded-full border-border/70 bg-background/60 px-4 shadow-sm backdrop-blur-sm hover:bg-muted/80",
+    "h-9 rounded-full border-border/70 bg-background/60 px-4 shadow-sm backdrop-blur-sm hover:bg-emerald-500/5",
   );
 
   const getStartedClassName = cn(
@@ -48,7 +48,7 @@ export function AuthActions({
 
   const stackedLoginClassName = cn(
     buttonVariants({ variant: "outline", size: "default" }),
-    "h-11 w-full rounded-xl border-border/70 bg-muted/30 px-5 hover:bg-muted/60",
+    "h-11 w-full rounded-xl border-border/70 bg-muted/30 px-5 hover:bg-emerald-500/5",
   );
 
   const stackedGetStartedClassName = cn(

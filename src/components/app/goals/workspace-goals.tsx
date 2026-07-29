@@ -52,11 +52,7 @@ import { RichTextEditor } from "@/components/app/rich-text-editor";
 import { useGoals, useWorkspaceBySlug } from "@/hooks/use-workflow";
 import { getErrorMessage } from "@/lib/api/get-error-message";
 import { cn } from "@/lib/utils";
-import type {
-  GoalDoc,
-  GoalPriority,
-  GoalStatus,
-} from "@/types/domain";
+import type { GoalDoc, GoalPriority, GoalStatus } from "@/types/domain";
 
 // ─── Status config ─────────────────────────────────────────────────────────
 
@@ -173,7 +169,10 @@ function goalProgress(goal: GoalDoc): number {
 }
 
 function getPlainText(value: string) {
-  return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return value
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function GoalCard({
@@ -219,7 +218,7 @@ function GoalCard({
   return (
     <div
       className={cn(
-        "group relative rounded-2xl border border-border border-l-[3px] bg-card transition-all duration-200 hover:shadow-md hover:shadow-black/5",
+        "group relative rounded-2xl border border-border border-l-[3px] bg-card transition-all duration-200 hover:bg-emerald-500/5 dark:hover:bg-emerald-400/10 dark:hover:shadow-lg",
         cfg.borderAccent,
       )}
     >
@@ -230,7 +229,7 @@ function GoalCard({
         aria-label={`View details for ${goal.title}`}
         onClick={showDetails}
         onKeyDown={handleCardKeyDown}
-        className="flex cursor-pointer items-start gap-4 p-5 pr-12 outline-none transition-colors hover:bg-emerald-500/5 focus-visible:bg-emerald-500/5 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+        className="flex cursor-pointer items-start gap-4 p-5 pr-12 outline-none transition-colors focus-visible:bg-emerald-500/5 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       >
         {/* Progress ring */}
         <div className="relative shrink-0">
@@ -278,9 +277,7 @@ function GoalCard({
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5">
             {/* Owner */}
             <div className="flex items-center gap-1.5">
-              <div
-                className="flex size-5 items-center justify-center rounded-full bg-primary/15 text-[9px] font-bold text-primary"
-              >
+              <div className="flex size-5 items-center justify-center rounded-full bg-primary/15 text-[9px] font-bold text-primary">
                 {ownerInitials}
               </div>
               <span className="text-[11px] text-muted-foreground">
@@ -312,20 +309,26 @@ function GoalCard({
       <div className="absolute right-5 top-5 flex shrink-0 items-center gap-1">
         <DropdownMenu>
           <DropdownMenuTrigger
-            className="cursor-pointer rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground"
+            className="cursor-pointer rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-emerald-500/5 hover:text-foreground"
             aria-label="More options"
           >
             <MoreHorizontal className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem className="cursor-pointer gap-2 text-xs" onClick={showDetails}>
+            <DropdownMenuItem
+              className="cursor-pointer gap-2 text-xs"
+              onClick={showDetails}
+            >
               <Eye className="size-3.5" />
               View details
             </DropdownMenuItem>
             {canManage && (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer gap-2 text-xs" onClick={() => onEdit(goal)}>
+                <DropdownMenuItem
+                  className="cursor-pointer gap-2 text-xs"
+                  onClick={() => onEdit(goal)}
+                >
                   <Pencil className="size-3.5" />
                   Edit goal
                 </DropdownMenuItem>
@@ -379,23 +382,33 @@ function GoalDatePicker({
         <PopoverTrigger
           id={id}
           className={cn(
-            "flex h-10 w-full cursor-pointer items-center justify-between rounded-lg border border-input bg-background px-3 text-left text-sm shadow-xs outline-none transition-colors hover:bg-accent/50 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+            "flex h-10 w-full cursor-pointer items-center justify-between rounded-lg border border-input bg-background px-3 text-left text-sm shadow-xs outline-none transition-colors hover:bg-emerald-500/5 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
             !selectedDate && "text-muted-foreground",
           )}
         >
-          <span>{selectedDate ? format(selectedDate, "PPP") : "Select a date"}</span>
+          <span>
+            {selectedDate ? format(selectedDate, "PPP") : "Select a date"}
+          </span>
           <CalendarDays className="size-4 text-muted-foreground" />
         </PopoverTrigger>
         <PopoverContent align="start" className="w-auto p-0">
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={(date) => onChange(date ? format(date, "yyyy-MM-dd") : "")}
+            onSelect={(date) =>
+              onChange(date ? format(date, "yyyy-MM-dd") : "")
+            }
             captionLayout="dropdown"
           />
           {selectedDate && (
             <div className="border-t border-border p-2">
-              <Button type="button" variant="ghost" size="sm" className="w-full" onClick={() => onChange("")}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="w-full"
+                onClick={() => onChange("")}
+              >
                 Clear date
               </Button>
             </div>
@@ -445,8 +458,12 @@ function GoalDialog({
   const [priority, setPriority] = useState<GoalPriority>(
     goal?.priority ?? "MEDIUM",
   );
-  const [startDate, setStartDate] = useState(toDateInputValue(goal?.startDate ?? null));
-  const [dueDate, setDueDate] = useState(toDateInputValue(goal?.dueDate ?? null));
+  const [startDate, setStartDate] = useState(
+    toDateInputValue(goal?.startDate ?? null),
+  );
+  const [dueDate, setDueDate] = useState(
+    toDateInputValue(goal?.dueDate ?? null),
+  );
   const [error, setError] = useState<string | null>(null);
   const isEditing = Boolean(goal);
   const isPending = goals.create.isPending || goals.update.isPending;
@@ -498,7 +515,7 @@ function GoalDialog({
             aria-label="Close goal dialog"
             disabled={isPending}
             onClick={onClose}
-          className="absolute right-4 top-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed"
+            className="absolute right-4 top-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground disabled:cursor-not-allowed"
           >
             <X className="size-4" />
           </button>
@@ -515,11 +532,18 @@ function GoalDialog({
                 autoFocus
               />
             </div>
-            <GoalDetailsEditor value={details} onChange={setDetails} disabled={isPending} />
+            <GoalDetailsEditor
+              value={details}
+              onChange={setDetails}
+              disabled={isPending}
+            />
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select value={status} onValueChange={(value) => setStatus(value as GoalStatus)}>
+                <Select
+                  value={status}
+                  onValueChange={(value) => setStatus(value as GoalStatus)}
+                >
                   <SelectTrigger className="w-full">
                     <span>{STATUS_CONFIG[status].label}</span>
                   </SelectTrigger>
@@ -534,7 +558,10 @@ function GoalDialog({
               </div>
               <div className="space-y-2">
                 <Label>Priority</Label>
-                <Select value={priority} onValueChange={(value) => setPriority(value as GoalPriority)}>
+                <Select
+                  value={priority}
+                  onValueChange={(value) => setPriority(value as GoalPriority)}
+                >
                   <SelectTrigger className="w-full">
                     <span>{priority[0] + priority.slice(1).toLowerCase()}</span>
                   </SelectTrigger>
@@ -549,8 +576,18 @@ function GoalDialog({
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <GoalDatePicker id="goal-start-date" label="Start date" value={startDate} onChange={setStartDate} />
-              <GoalDatePicker id="goal-due-date" label="Due date" value={dueDate} onChange={setDueDate} />
+              <GoalDatePicker
+                id="goal-start-date"
+                label="Start date"
+                value={startDate}
+                onChange={setStartDate}
+              />
+              <GoalDatePicker
+                id="goal-due-date"
+                label="Due date"
+                value={dueDate}
+                onChange={setDueDate}
+              />
             </div>
             {error && (
               <p className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -559,11 +596,20 @@ function GoalDialog({
             )}
           </div>
           <div className="flex justify-end gap-3 border-t border-border bg-muted/30 px-6 py-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isPending}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Saving…" : isEditing ? "Save changes" : "Create goal"}
+              {isPending
+                ? "Saving…"
+                : isEditing
+                  ? "Save changes"
+                  : "Create goal"}
             </Button>
           </div>
         </form>
@@ -591,7 +637,9 @@ function GoalDetailsDialog({
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-lg overflow-hidden p-0">
-        <DialogHeader className={cn("relative gap-4 p-6 pb-5", statusConfig.detailsAccent)}>
+        <DialogHeader
+          className={cn("relative gap-4 p-6 pb-5", statusConfig.detailsAccent)}
+        >
           <button
             type="button"
             aria-label="Close goal details"
@@ -601,26 +649,42 @@ function GoalDetailsDialog({
             <X className="size-4" />
           </button>
           <div className="flex items-start gap-3">
-            <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl text-white shadow-sm", statusConfig.bgAccent)}>
+            <span
+              className={cn(
+                "flex size-10 shrink-0 items-center justify-center rounded-xl text-white shadow-sm",
+                statusConfig.bgAccent,
+              )}
+            >
               <StatusIcon className="size-5" />
             </span>
             <div className="min-w-0 pr-8">
               <DialogDescription className="font-medium text-current/75">
                 {statusConfig.label} goal
               </DialogDescription>
-              <DialogTitle className="mt-1 text-xl leading-tight">{goal.title}</DialogTitle>
+              <DialogTitle className="mt-1 text-xl leading-tight">
+                {goal.title}
+              </DialogTitle>
             </div>
           </div>
           <div className="flex items-center gap-3 rounded-xl border border-current/10 bg-background/35 p-3">
             <div className="relative shrink-0">
-              <ProgressRing value={goalProgress(goal)} size={42} strokeWidth={4} status={goal.status} />
+              <ProgressRing
+                value={goalProgress(goal)}
+                size={42}
+                strokeWidth={4}
+                status={goal.status}
+              />
               <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold tabular-nums">
                 {goalProgress(goal)}%
               </span>
             </div>
             <div>
-              <p className="text-xs font-medium text-current/70">Goal progress</p>
-              <p className="text-sm font-semibold">{isCompleted ? "Completed" : "In progress"}</p>
+              <p className="text-xs font-medium text-current/70">
+                Goal progress
+              </p>
+              <p className="text-sm font-semibold">
+                {isCompleted ? "Completed" : "In progress"}
+              </p>
             </div>
           </div>
         </DialogHeader>
@@ -677,12 +741,21 @@ function GoalDetailRow({
 }) {
   return (
     <div className="flex gap-3 rounded-xl border border-border bg-card p-3.5">
-      <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", tone)}>
+      <span
+        className={cn(
+          "flex size-8 shrink-0 items-center justify-center rounded-lg",
+          tone,
+        )}
+      >
         <Icon className="size-4" />
       </span>
       <div className="min-w-0">
-        <dt className="pt-0.5 text-xs font-medium text-muted-foreground">{label}</dt>
-        <dd className="mt-1 whitespace-pre-wrap text-sm font-medium text-foreground">{value}</dd>
+        <dt className="pt-0.5 text-xs font-medium text-muted-foreground">
+          {label}
+        </dt>
+        <dd className="mt-1 whitespace-pre-wrap text-sm font-medium text-foreground">
+          {value}
+        </dd>
       </div>
     </div>
   );
@@ -695,7 +768,9 @@ function GoalRichTextRow({ details }: { details: string }) {
         <Pencil className="size-4" />
       </span>
       <div className="min-w-0">
-        <dt className="pt-0.5 text-xs font-medium text-muted-foreground">Goal details</dt>
+        <dt className="pt-0.5 text-xs font-medium text-muted-foreground">
+          Goal details
+        </dt>
         {details ? (
           <dd
             className="mt-1 text-sm font-medium text-foreground [&_a]:text-primary [&_a]:underline [&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-primary/40 [&_blockquote]:pl-3 [&_h2]:mt-3 [&_h2]:mb-1 [&_h2]:text-base [&_h2]:font-semibold [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5"
@@ -746,7 +821,7 @@ function GoalDeleteDialog({
           aria-label="Close delete goal dialog"
           disabled={isPending}
           onClick={onClose}
-          className="absolute right-4 top-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed"
+          className="absolute right-4 top-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground disabled:cursor-not-allowed"
         >
           <X className="size-4" />
         </button>
@@ -769,10 +844,20 @@ function GoalDeleteDialog({
           )}
         </div>
         <div className="flex justify-end gap-3 border-t border-border bg-muted/30 px-6 py-4">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isPending}
+          >
             Cancel
           </Button>
-          <Button type="button" variant="destructive" onClick={handleDelete} disabled={isPending}>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isPending}
+          >
             {isPending ? "Deleting…" : "Delete goal"}
           </Button>
         </div>
@@ -827,7 +912,8 @@ const STAT_CONFIG: {
 ];
 
 export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
-  const { workspace, isLoading: isWorkspaceLoading } = useWorkspaceBySlug(workspaceSlug);
+  const { workspace, isLoading: isWorkspaceLoading } =
+    useWorkspaceBySlug(workspaceSlug);
   const goalsQuery = useGoals(workspace?._id);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [dialogGoal, setDialogGoal] = useState<GoalDoc | null | undefined>(
@@ -862,8 +948,7 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
     if (goals.every((goal) => goal.status === "COMPLETED")) return "COMPLETED";
     if (
       goals.some(
-        (goal) =>
-          goal.status === "IN_PROGRESS" || goal.status === "COMPLETED",
+        (goal) => goal.status === "IN_PROGRESS" || goal.status === "COMPLETED",
       )
     ) {
       return "IN_PROGRESS";
@@ -879,14 +964,21 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
   );
 
   const canManageGoals =
-    workspace?.membershipRole === "OWNER" || workspace?.membershipRole === "ADMIN";
+    workspace?.membershipRole === "OWNER" ||
+    workspace?.membershipRole === "ADMIN";
 
   if (isWorkspaceLoading) {
-    return <div className="p-8 text-sm text-muted-foreground">Loading goals…</div>;
+    return (
+      <div className="p-8 text-sm text-muted-foreground">Loading goals…</div>
+    );
   }
 
   if (!workspace) {
-    return <div className="p-8 text-sm text-destructive">Workspace not found or you do not have access.</div>;
+    return (
+      <div className="p-8 text-sm text-destructive">
+        Workspace not found or you do not have access.
+      </div>
+    );
   }
 
   return (
@@ -903,7 +995,11 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
           </p>
         </div>
         {canManageGoals && (
-          <Button size="sm" className="gap-1.5" onClick={() => setDialogGoal(null)}>
+          <Button
+            size="sm"
+            className="gap-1.5"
+            onClick={() => setDialogGoal(null)}
+          >
             <Plus className="size-4" />
             New Goal
           </Button>
@@ -966,8 +1062,11 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
                   type="button"
                   onClick={() => setStatusFilter(status)}
                   className={cn(
-                    "flex cursor-pointer flex-col items-center gap-1 rounded-xl px-4 py-2.5 transition-colors hover:bg-emerald-500/10 dark:hover:bg-emerald-400/10",
-                    statusFilter === status && "bg-emerald-500/10 dark:bg-emerald-400/10",
+                    "flex cursor-pointer flex-col items-center gap-1 rounded-xl border border-transparent px-3.75 py-2.25 transition-colors",
+                    statusFilter === status &&
+                      "border-primary/20 bg-emerald-500/10 dark:bg-emerald-400/10",
+                    statusFilter !== status &&
+                      "hover:border-primary/20 hover:bg-muted/40",
                   )}
                 >
                   <div
@@ -1001,7 +1100,7 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
               "cursor-pointer rounded-lg px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap",
               statusFilter === opt.value
                 ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                : "text-muted-foreground hover:bg-emerald-500/5 hover:text-foreground",
             )}
           >
             {opt.label}

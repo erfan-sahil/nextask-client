@@ -73,7 +73,7 @@ export function BoardPreview({ board }: BoardPreviewProps) {
                   {column.tasks.map((task) => (
                     <li
                       key={task.id}
-                      className="rounded-xl border border-border bg-card p-3 shadow-sm transition-shadow hover:shadow-md"
+                      className="rounded-xl border border-border bg-card p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-emerald-500/5 dark:hover:bg-emerald-400/10 dark:hover:shadow-lg"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-sm font-medium leading-5">{task.title}</p>

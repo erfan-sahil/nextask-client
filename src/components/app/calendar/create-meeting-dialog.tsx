@@ -122,7 +122,7 @@ export function CreateMeetingDialog({
             aria-label="Close meeting dialog"
             disabled={isPending}
             onClick={() => onOpenChange(false)}
-            className="absolute top-4 right-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed"
+            className="absolute top-4 right-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground disabled:cursor-not-allowed"
           >
             <X className="size-4" />
           </button>

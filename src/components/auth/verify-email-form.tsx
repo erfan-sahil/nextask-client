@@ -17,8 +17,10 @@ const OTP_LENGTH = 6;
 export function VerifyEmailForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { resendVerificationMutation: resendMutation, verifyEmailMutation: verifyMutation } =
-    useAuth({ fetchUser: false });
+  const {
+    resendVerificationMutation: resendMutation,
+    verifyEmailMutation: verifyMutation,
+  } = useAuth({ fetchUser: false });
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -197,7 +199,8 @@ export function VerifyEmailForm() {
               {
                 onSuccess: () => setResendCooldown(60),
                 onError: (error) => {
-                  const match = getErrorMessage(error).match(/wait (\d+) seconds/i);
+                  const match =
+                    getErrorMessage(error).match(/wait (\d+) seconds/i);
                   if (match) setResendCooldown(Number(match[1]));
                 },
               },

@@ -126,7 +126,7 @@ function ReportDateRangePicker({
 
   return (
     <Popover>
-      <PopoverTrigger className="flex h-9 w-full cursor-pointer items-center justify-between rounded-lg border border-input bg-background px-2.5 text-left text-sm text-foreground outline-none transition-colors hover:bg-accent/50 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
+      <PopoverTrigger className="flex h-9 w-full cursor-pointer items-center justify-between rounded-lg border border-input bg-background px-2.5 text-left text-sm text-foreground outline-none transition-colors hover:bg-emerald-500/5 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
         <span className={cn(!selectedRange.from && "text-muted-foreground")}>{label}</span>
         <CalendarDays className="size-4 shrink-0 text-muted-foreground" />
       </PopoverTrigger>

@@ -1,8 +1,4 @@
-import {
-  CalendarDays,
-  CheckSquare,
-  MessageSquare,
-} from "lucide-react";
+import { CalendarDays, CheckSquare, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { appRoutes } from "@/config/navigation";
 import type { DashboardActivity } from "@/types/workspace";
@@ -36,7 +32,9 @@ export function RecentActivity({ activity }: RecentActivityProps) {
   return (
     <section aria-label="Recent activity">
       <div className="mb-3">
-        <h3 className="text-sm font-semibold text-foreground">Recent activity</h3>
+        <h3 className="text-sm font-semibold text-foreground">
+          Recent activity
+        </h3>
       </div>
 
       <div className="rounded-2xl border border-border bg-card shadow-sm">
@@ -84,7 +82,7 @@ export function RecentActivity({ activity }: RecentActivityProps) {
                         item.task.projectId._id,
                         item.task.boardId._id,
                       )}
-                      className="flex gap-3 p-4 transition-colors hover:bg-muted/50"
+                      className="flex gap-3 p-4 transition-colors duration-200 hover:bg-emerald-500/5 dark:hover:bg-emerald-400/10"
                     >
                       {content}
                     </Link>

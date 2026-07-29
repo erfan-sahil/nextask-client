@@ -78,7 +78,7 @@ export function FeaturesSection() {
           {features.map((feature) => (
             <Card
               key={feature.title}
-              className="border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md dark:border-border/80 dark:bg-card/80 dark:hover:shadow-primary/5"
+              className="border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:bg-emerald-500/5 dark:border-border/80 dark:bg-card/80 dark:hover:bg-emerald-400/10 dark:hover:shadow-lg"
             >
               <CardHeader>
                 <div className="mb-2 flex size-10 items-center justify-center rounded-xl bg-primary-light text-primary">

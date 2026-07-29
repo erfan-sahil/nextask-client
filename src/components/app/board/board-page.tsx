@@ -76,7 +76,9 @@ const columnBgColors: Record<TaskStatus, string> = {
 
 function PriorityIcon({ priority }: { priority: TaskPriority }) {
   const { icon: Icon, label, className } = priorityConfig[priority];
-  return <Icon className={cn("size-3.5 shrink-0", className)} aria-label={label} />;
+  return (
+    <Icon className={cn("size-3.5 shrink-0", className)} aria-label={label} />
+  );
 }
 
 // ─── TaskCard ─────────────────────────────────────────────────────────────────
@@ -99,7 +101,7 @@ function TaskCard({
         "group rounded-xl border border-border bg-card p-3 shadow-sm transition-all",
         isDragging
           ? "opacity-40 shadow-none"
-          : "hover:border-primary/30 hover:shadow-md",
+          : "hover:bg-emerald-500/5 dark:hover:bg-emerald-400/10 dark:hover:shadow-lg",
       )}
     >
       <p className="text-sm font-medium leading-snug text-foreground transition-colors group-hover:text-primary">
@@ -142,8 +144,14 @@ function TaskCard({
 // ─── SortableTaskCard ─────────────────────────────────────────────────────────
 
 function SortableTaskCard({ task }: { task: Task }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: task.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
 
   return (
     <div
@@ -175,22 +183,29 @@ function KanbanColumn({ column }: { column: BoardColumn }) {
     >
       {/* Header */}
       <div className="flex items-center gap-2 px-1 py-0.5">
-        <span className={cn("size-2 shrink-0 rounded-full", statusDotColors[column.status])} />
-        <span className="text-sm font-semibold text-foreground">{column.title}</span>
+        <span
+          className={cn(
+            "size-2 shrink-0 rounded-full",
+            statusDotColors[column.status],
+          )}
+        />
+        <span className="text-sm font-semibold text-foreground">
+          {column.title}
+        </span>
         <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-background text-xs font-medium text-muted-foreground shadow-sm">
           {column.tasks.length}
         </span>
         <div className="ml-auto flex items-center gap-1">
           <button
             type="button"
-            className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+            className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground"
             aria-label={`Add task to ${column.title}`}
           >
             <Plus className="size-3.5" />
           </button>
           <button
             type="button"
-            className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+            className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground"
             aria-label="Column options"
           >
             <MoreHorizontal className="size-3.5" />
@@ -221,7 +236,7 @@ function KanbanColumn({ column }: { column: BoardColumn }) {
       {/* Add task button */}
       <button
         type="button"
-        className="flex items-center gap-2 rounded-xl px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+        className="flex items-center gap-2 rounded-xl px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground"
       >
         <Plus className="size-3.5" />
         Add task
@@ -243,15 +258,24 @@ function Breadcrumb({
 }) {
   return (
     <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
-      <Link href={appRoutes.workspaces} className="transition-colors hover:text-foreground">
+      <Link
+        href={appRoutes.workspaces}
+        className="transition-colors hover:text-foreground"
+      >
         Workspaces
       </Link>
       <ChevronRight className="size-3.5" />
-      <Link href={appRoutes.workspace(workspace.slug)} className="transition-colors hover:text-foreground">
+      <Link
+        href={appRoutes.workspace(workspace.slug)}
+        className="transition-colors hover:text-foreground"
+      >
         {workspace.name}
       </Link>
       <ChevronRight className="size-3.5" />
-      <Link href={appRoutes.project(workspace.slug, project.id)} className="transition-colors hover:text-foreground">
+      <Link
+        href={appRoutes.project(workspace.slug, project.id)}
+        className="transition-colors hover:text-foreground"
+      >
         {project.name}
       </Link>
       <ChevronRight className="size-3.5" />
@@ -285,10 +309,16 @@ function ConnectedBoardPage({
     useWorkspaceBySlug(workspaceSlug);
 
   if (isWorkspaceLoading) {
-    return <div className="p-8 text-sm text-muted-foreground">Loading board…</div>;
+    return (
+      <div className="p-8 text-sm text-muted-foreground">Loading board…</div>
+    );
   }
   if (!workspace) {
-    return <div className="p-8 text-sm text-destructive">Board not found or you do not have access.</div>;
+    return (
+      <div className="p-8 text-sm text-destructive">
+        Board not found or you do not have access.
+      </div>
+    );
   }
 
   return (
@@ -314,7 +344,9 @@ export function BoardPage(props: BoardPageProps) {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 },
+    }),
   );
 
   function findColumnByTaskId(taskId: string): BoardColumn | undefined {
@@ -397,18 +429,20 @@ export function BoardPage(props: BoardPageProps) {
         <div className="mt-3 flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-foreground">{board.name}</h1>
-            <p className="mt-0.5 text-xs text-muted-foreground">{totalTasks} tasks</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {totalTasks} tasks
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="flex items-center gap-2 rounded-xl border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex items-center gap-2 rounded-xl border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground"
             >
               Filter
             </button>
             <button
               type="button"
-              className="flex items-center gap-2 rounded-xl bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              className="flex items-center gap-2 rounded-xl bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
             >
               <Plus className="size-3.5" />
               Add task
@@ -439,7 +473,7 @@ export function BoardPage(props: BoardPageProps) {
             <div className="w-72 shrink-0 pt-1">
               <button
                 type="button"
-                className="flex w-full items-center gap-2 rounded-2xl border-2 border-dashed border-border px-4 py-3 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
+                className="flex w-full items-center gap-2 rounded-2xl border-2 border-dashed border-border px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-primary dark:hover:bg-emerald-400/10"
               >
                 <Plus className="size-4" />
                 Add column

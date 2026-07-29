@@ -287,7 +287,7 @@ export function WorkspaceChat({ workspace }: { workspace?: WorkspaceDoc }) {
                         type="button"
                         onMouseDown={(event) => event.preventDefault()}
                         onClick={() => selectMention(user.username)}
-                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-emerald-500/5"
                       >
                         <UserAvatar name={name} avatar={user.avatar} size="sm" />
                         <span className="min-w-0">

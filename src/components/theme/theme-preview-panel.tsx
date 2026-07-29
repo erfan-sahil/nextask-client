@@ -46,7 +46,7 @@ export function ThemePreviewPanel({ mode }: ThemePreviewPanelProps) {
             </button>
             <button
               type="button"
-              className="rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-card-foreground transition-colors hover:border-primary-muted hover:text-primary"
+              className="rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-card-foreground transition-colors hover:bg-emerald-500/5 hover:text-primary dark:hover:bg-emerald-400/10"
             >
               Secondary button
             </button>

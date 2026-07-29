@@ -20,7 +20,11 @@ export function WorkspaceGrid({ workspaces }: WorkspaceGridProps) {
             Dedicated spaces for each team with their own projects and boards.
           </p>
         </div>
-        <Button variant="outline" size="sm" className="hidden rounded-full sm:inline-flex">
+        <Button
+          variant="outline"
+          size="sm"
+          className="hidden rounded-full sm:inline-flex"
+        >
           New workspace
         </Button>
       </div>
@@ -29,7 +33,7 @@ export function WorkspaceGrid({ workspaces }: WorkspaceGridProps) {
         {workspaces.map((workspace) => (
           <article
             key={workspace.id}
-            className="group rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+            className="group rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-emerald-500/5 dark:hover:bg-emerald-400/10 dark:hover:shadow-lg"
           >
             <div className="flex items-start justify-between gap-3">
               <span

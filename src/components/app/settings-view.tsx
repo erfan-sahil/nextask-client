@@ -82,7 +82,7 @@ export function SettingsView() {
                   "flex cursor-pointer items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   activeTab === id
                     ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    : "text-muted-foreground hover:bg-emerald-500/5 hover:text-foreground",
                 )}
               >
                 <Icon className="size-4 shrink-0" />
@@ -140,7 +140,9 @@ function ProfileSection({ user }: { user: UserType | undefined }) {
           setIsEditing(false);
         },
         onError: (error) => {
-          setErrorMessage(getErrorMessage(error, "Unable to update your profile."));
+          setErrorMessage(
+            getErrorMessage(error, "Unable to update your profile."),
+          );
           setSuccessMessage("");
         },
       },
@@ -205,7 +207,12 @@ function ProfileSection({ user }: { user: UserType | undefined }) {
             </p>
           </div>
           {!isEditing && (
-            <Button type="button" size="sm" onClick={startEditing} disabled={!user}>
+            <Button
+              type="button"
+              size="sm"
+              onClick={startEditing}
+              disabled={!user}
+            >
               Edit
             </Button>
           )}
@@ -269,7 +276,7 @@ function ProfileSection({ user }: { user: UserType | undefined }) {
                 minLength={3}
                 maxLength={30}
                 pattern="[a-z0-9_]+"
-              disabled={!isEditing}
+                disabled={!isEditing}
               />
             </div>
             <p className="text-xs text-muted-foreground">
@@ -305,7 +312,11 @@ function ProfileSection({ user }: { user: UserType | undefined }) {
             >
               Cancel
             </Button>
-            <Button type="submit" size="sm" disabled={updateProfileMutation.isPending}>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={updateProfileMutation.isPending}
+            >
               {updateProfileMutation.isPending ? "Saving…" : "Save changes"}
             </Button>
           </div>
@@ -363,11 +374,9 @@ function PasswordField({
 }
 
 function SecuritySection() {
-  const {
-    changePasswordMutation,
-    clearUser,
-    deleteAccountMutation,
-  } = useAuth({ fetchUser: false });
+  const { changePasswordMutation, clearUser, deleteAccountMutation } = useAuth({
+    fetchUser: false,
+  });
   const [passwords, setPasswords] = useState({
     currentPassword: "",
     newPassword: "",
@@ -408,7 +417,9 @@ function SecuritySection() {
         window.location.assign(authRoutes.login);
       },
       onError: (error) => {
-        setPasswordError(getErrorMessage(error, "Unable to update your password."));
+        setPasswordError(
+          getErrorMessage(error, "Unable to update your password."),
+        );
         setPasswordMessage("");
       },
     });
@@ -424,7 +435,9 @@ function SecuritySection() {
           window.location.assign(authRoutes.login);
         },
         onError: (error) => {
-          setDeleteError(getErrorMessage(error, "Unable to delete your account."));
+          setDeleteError(
+            getErrorMessage(error, "Unable to delete your account."),
+          );
         },
       },
     );
@@ -445,8 +458,8 @@ function SecuritySection() {
               Change password
             </h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Choose a password with at least 8 characters, one uppercase letter,
-              and one number.
+              Choose a password with at least 8 characters, one uppercase
+              letter, and one number.
             </p>
           </div>
         </div>
@@ -508,9 +521,7 @@ function SecuritySection() {
             disabled={changePasswordMutation.isPending}
             className="shrink-0"
           >
-            {changePasswordMutation.isPending
-              ? "Updating…"
-              : "Update password"}
+            {changePasswordMutation.isPending ? "Updating…" : "Update password"}
           </Button>
         </div>
       </form>
@@ -518,7 +529,9 @@ function SecuritySection() {
       <div className="rounded-2xl border border-destructive/30 bg-destructive/5">
         <div className="flex items-center justify-between gap-4 px-6 py-5">
           <div>
-            <p className="text-sm font-semibold text-destructive">Delete account</p>
+            <p className="text-sm font-semibold text-destructive">
+              Delete account
+            </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               Permanently remove your account. This action cannot be undone.
             </p>
@@ -567,7 +580,10 @@ function SecuritySection() {
             </div>
 
             {deleteError && (
-              <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              <p
+                role="alert"
+                className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+              >
                 {deleteError}
               </p>
             )}
@@ -586,7 +602,9 @@ function SecuritySection() {
                 variant="destructive"
                 disabled={deleteAccountMutation.isPending}
               >
-                {deleteAccountMutation.isPending ? "Deleting…" : "Delete account"}
+                {deleteAccountMutation.isPending
+                  ? "Deleting…"
+                  : "Delete account"}
               </Button>
             </div>
           </form>
@@ -669,7 +687,7 @@ function AppearanceSection({
                 "cursor-pointer overflow-hidden rounded-xl border-2 text-left transition-all",
                 theme === value
                   ? "border-primary shadow-sm shadow-primary/10"
-                  : "border-border hover:border-muted-foreground/40",
+                  : "border-border hover:bg-emerald-500/5 dark:hover:bg-emerald-400/10",
               )}
             >
               {preview}

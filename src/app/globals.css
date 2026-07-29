@@ -152,6 +152,14 @@
 }
 
 @layer utilities {
+  /*
+   * Keep every neutral interactive surface aligned with project cards in dark
+   * mode. The light counterpart is `hover:bg-emerald-500/5`.
+   */
+  :is(.dark, .theme-dark) .hover\:bg-emerald-500\/5:hover {
+    background-color: color-mix(in oklab, #34d399 10%, transparent);
+  }
+
   .scrollbar-hidden {
     scrollbar-width: none;
     -ms-overflow-style: none;

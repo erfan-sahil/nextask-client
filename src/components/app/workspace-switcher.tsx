@@ -96,7 +96,7 @@ export function WorkspaceSwitcher({
       <button
         type="button"
         onClick={() => setIsOpen((v) => !v)}
-        className="flex w-full items-center gap-3 rounded-xl border border-sidebar-border bg-sidebar px-3 py-2.5 text-left transition-colors hover:bg-sidebar-accent"
+        className="flex w-full items-center gap-3 rounded-xl border border-sidebar-border bg-sidebar px-3 py-2.5 text-left transition-colors hover:bg-emerald-500/5"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
       >
@@ -153,7 +153,7 @@ export function WorkspaceSwitcher({
                       "group flex items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors",
                       isActive
                         ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "hover:bg-muted",
+                        : "hover:bg-emerald-500/5",
                     )}
                   >
                     <button
@@ -183,7 +183,7 @@ export function WorkspaceSwitcher({
                     </button>
                     <DropdownMenu>
                       <DropdownMenuTrigger
-                        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         aria-label={`Manage ${workspace.name}`}
                         onClick={(event) => event.stopPropagation()}
                       >

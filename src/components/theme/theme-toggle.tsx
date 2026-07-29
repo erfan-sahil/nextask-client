@@ -21,7 +21,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       onClick={toggleTheme}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       className={cn(
-        "relative size-9 overflow-hidden rounded-full bg-transparent transition-colors hover:bg-muted/80",
+        "relative size-9 overflow-hidden rounded-full bg-transparent transition-colors hover:bg-emerald-500/5",
         className,
       )}
     >

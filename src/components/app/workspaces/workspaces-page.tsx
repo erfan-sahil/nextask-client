@@ -24,7 +24,7 @@ function WorkspaceCard({ workspace }: { workspace: WorkspaceDoc }) {
   return (
     <Link
       href={appRoutes.workspace(workspace.slug)}
-      className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-md"
+      className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:bg-emerald-500/5 dark:hover:bg-emerald-400/10 dark:hover:shadow-lg"
     >
       <div className="flex items-start gap-4">
         <span
@@ -77,7 +77,9 @@ export function WorkspacesPage() {
     setFormError(null);
   }
 
-  async function handleCreateWorkspace(event: React.FormEvent<HTMLFormElement>) {
+  async function handleCreateWorkspace(
+    event: React.FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
     setFormError(null);
 
@@ -114,7 +116,7 @@ export function WorkspacesPage() {
         <button
           type="button"
           onClick={() => setIsCreateDialogOpen(true)}
-          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
         >
           <Plus className="size-4" />
           New workspace
@@ -129,23 +131,23 @@ export function WorkspacesPage() {
           Unable to load workspaces. Please try again.
         </p>
       ) : (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {workspaceList.map((workspace) => (
-          <WorkspaceCard key={workspace._id} workspace={workspace} />
-        ))}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {workspaceList.map((workspace) => (
+            <WorkspaceCard key={workspace._id} workspace={workspace} />
+          ))}
 
-        {/* Create new card */}
-        <button
-          type="button"
-          onClick={() => setIsCreateDialogOpen(true)}
-          className="flex min-h-35 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border p-5 text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
-        >
-          <div className="flex size-11 items-center justify-center rounded-xl border-2 border-dashed border-current">
-            <Plus className="size-5" />
-          </div>
-          <span className="text-sm font-medium">Create a workspace</span>
-        </button>
-      </div>
+          {/* Create new card */}
+          <button
+            type="button"
+            onClick={() => setIsCreateDialogOpen(true)}
+            className="flex min-h-35 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border p-5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-primary dark:hover:bg-emerald-400/10"
+          >
+            <div className="flex size-11 items-center justify-center rounded-xl border-2 border-dashed border-current">
+              <Plus className="size-5" />
+            </div>
+            <span className="text-sm font-medium">Create a workspace</span>
+          </button>
+        </div>
       )}
 
       {isCreateDialogOpen && (
@@ -215,9 +217,15 @@ export function WorkspacesPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent align="start">
-                    <SelectItem value="PRIVATE">Private — invite only</SelectItem>
-                    <SelectItem value="TEAM">Team — visible to your team</SelectItem>
-                    <SelectItem value="PUBLIC">Public — visible to everyone</SelectItem>
+                    <SelectItem value="PRIVATE">
+                      Private — invite only
+                    </SelectItem>
+                    <SelectItem value="TEAM">
+                      Team — visible to your team
+                    </SelectItem>
+                    <SelectItem value="PUBLIC">
+                      Public — visible to everyone
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -244,9 +252,7 @@ export function WorkspacesPage() {
                 disabled={workspaces.create.isPending || !name.trim()}
                 className="h-10 rounded-xl px-4"
               >
-                {workspaces.create.isPending
-                  ? "Creating…"
-                  : "Create workspace"}
+                {workspaces.create.isPending ? "Creating…" : "Create workspace"}
               </Button>
             </div>
           </form>

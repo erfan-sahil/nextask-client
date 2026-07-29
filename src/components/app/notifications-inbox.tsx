@@ -105,36 +105,60 @@ export function NotificationsInbox() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Inbox</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {unreadCount ? `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}` : "All caught up"}
+            {unreadCount
+              ? `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`
+              : "All caught up"}
           </p>
         </div>
         {unreadCount > 0 && (
-          <Button variant="ghost" size="sm" onClick={() => notifications.markAllRead.mutate()} disabled={notifications.markAllRead.isPending}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => notifications.markAllRead.mutate()}
+            disabled={notifications.markAllRead.isPending}
+          >
             <CheckCheck className="mr-2 size-4" /> Mark all as read
           </Button>
         )}
       </div>
       <div className="rounded-2xl border border-border bg-card">
-        {notifications.isLoading ? <p className="px-5 py-8 text-sm text-muted-foreground">Loading notifications…</p> : null}
-        {!notifications.isLoading && !items.length ? <p className="px-5 py-8 text-sm text-muted-foreground">No notifications yet.</p> : null}
+        {notifications.isLoading ? (
+          <p className="px-5 py-8 text-sm text-muted-foreground">
+            Loading notifications…
+          </p>
+        ) : null}
+        {!notifications.isLoading && !items.length ? (
+          <p className="px-5 py-8 text-sm text-muted-foreground">
+            No notifications yet.
+          </p>
+        ) : null}
         <ul className="divide-y divide-border">
           {items.map((item) => (
             <li key={item._id}>
               <button
                 type="button"
                 onClick={() => setSelectedNotification(item)}
-                className={`flex w-full items-start gap-4 px-5 py-4 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset ${!item.readAt ? "bg-primary/5" : ""}`}
+                className={`flex w-full items-start gap-4 px-5 py-4 text-left transition-colors hover:bg-emerald-500/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset ${!item.readAt ? "bg-primary/5" : ""}`}
               >
                 <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <Bell className="size-4" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium leading-snug">{item.message}</span>
+                  <span className="block text-sm font-medium leading-snug">
+                    {item.message}
+                  </span>
                   <span className="mt-0.5 block text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(item.createdAt), {
+                      addSuffix: true,
+                    })}
                   </span>
                 </span>
-                {!item.readAt && <span className="mt-1.5 size-2 rounded-full bg-primary" aria-label="Unread" />}
+                {!item.readAt && (
+                  <span
+                    className="mt-1.5 size-2 rounded-full bg-primary"
+                    aria-label="Unread"
+                  />
+                )}
               </button>
             </li>
           ))}
@@ -159,7 +183,8 @@ function NotificationDetailsDialog({
 }) {
   if (!notification) return null;
 
-  const actorName = `${notification.actorId.firstName} ${notification.actorId.lastName}`.trim();
+  const actorName =
+    `${notification.actorId.firstName} ${notification.actorId.lastName}`.trim();
   const displayName = actorName || notification.actorId.username;
   const config = notificationTypeConfig[notification.type];
   const NotificationIcon = config.icon;
@@ -245,11 +270,18 @@ function NotificationDetailRow({
 }) {
   return (
     <div className="flex gap-3 rounded-xl border border-border bg-card p-3.5">
-      <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", tone)}>
+      <span
+        className={cn(
+          "flex size-8 shrink-0 items-center justify-center rounded-lg",
+          tone,
+        )}
+      >
         <Icon className="size-4" />
       </span>
       <div className="min-w-0">
-        <dt className="pt-0.5 text-xs font-medium text-muted-foreground">{label}</dt>
+        <dt className="pt-0.5 text-xs font-medium text-muted-foreground">
+          {label}
+        </dt>
         <dd className="mt-1 whitespace-pre-wrap text-sm font-medium text-foreground">
           {value}
         </dd>

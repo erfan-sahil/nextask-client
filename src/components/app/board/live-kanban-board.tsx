@@ -63,7 +63,8 @@ type ColumnModalState =
 
 const priorityClass = {
   LOW: "border-lime-500/20 bg-lime-500/10 text-lime-700 dark:text-lime-400",
-  MEDIUM: "border-yellow-500/20 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
+  MEDIUM:
+    "border-yellow-500/20 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
   HIGH: "border-orange-500/20 bg-orange-500/10 text-orange-600 dark:text-orange-400",
   URGENT: "border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-400",
 } as const;
@@ -99,18 +100,17 @@ function TaskCard({
   canMoveDown?: boolean;
 }) {
   const isOverdue =
-    task.dueDate &&
-    !task.completedAt &&
-    new Date(task.dueDate) < new Date();
+    task.dueDate && !task.completedAt && new Date(task.dueDate) < new Date();
 
   return (
     <div
       className={cn(
         "group w-full rounded-xl border border-border bg-card p-3 text-left transition-colors",
-        onClick && "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        onClick &&
+          "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         isDragging
           ? "opacity-40"
-          : "hover:border-primary/35 hover:bg-primary/1 dark:hover:border-primary/30 dark:hover:bg-muted/40",
+          : "hover:bg-emerald-500/5 dark:hover:bg-emerald-400/10 dark:hover:shadow-lg",
       )}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
@@ -133,7 +133,7 @@ function TaskCard({
             <DropdownMenuTrigger
               onPointerDown={(event) => event.stopPropagation()}
               onClick={(event) => event.stopPropagation()}
-              className="cursor-pointer rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="cursor-pointer rounded-md p-1 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground"
               aria-label={`Options for ${task.title}`}
             >
               <MoreHorizontal className="size-4" />
@@ -203,7 +203,8 @@ function TaskCard({
               priorityClass[task.priority],
             )}
           >
-            {task.priority[0]}{task.priority.slice(1).toLowerCase()}
+            {task.priority[0]}
+            {task.priority.slice(1).toLowerCase()}
           </span>
           {task.dueDate && (
             <span
@@ -224,7 +225,7 @@ function TaskCard({
             {task.commentCount ?? 0}
           </span>
           {task.assignees.length > 0 && (
-            <span className="ml-auto flex items-center rounded-full border border-border/70 bg-background p-0.5 transition-colors group-hover:bg-card">
+            <span className="ml-auto flex items-center rounded-full border border-border/70 bg-background p-0.5">
               <span className="sr-only">Assigned to </span>
               <span className="flex -space-x-1.5">
                 {task.assignees.slice(0, 3).map((assignee) => (
@@ -238,7 +239,7 @@ function TaskCard({
                   />
                 ))}
                 {task.assignees.length > 3 && (
-                  <span className="flex size-6 items-center justify-center rounded-full border-2 border-background bg-muted text-[0.6rem] font-semibold text-muted-foreground group-hover:border-card">
+                  <span className="flex size-6 items-center justify-center rounded-full border-2 border-background bg-muted text-[0.6rem] font-semibold text-muted-foreground">
                     +{task.assignees.length - 3}
                   </span>
                 )}
@@ -257,7 +258,7 @@ function TaskCard({
             }}
             onPointerDown={(event) => event.stopPropagation()}
             disabled={!canMoveUp}
-            className="flex size-7 cursor-pointer items-center justify-center rounded-md border border-transparent bg-background text-muted-foreground transition-colors hover:border-primary/25 hover:bg-primary/10 hover:text-primary disabled:pointer-events-none disabled:opacity-40"
+            className="flex size-7 cursor-pointer items-center justify-center rounded-md border border-transparent bg-background text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-primary disabled:pointer-events-none disabled:opacity-40"
             aria-label={`Move ${task.title} up`}
           >
             <ArrowUp className="size-3.5" />
@@ -270,7 +271,7 @@ function TaskCard({
             }}
             onPointerDown={(event) => event.stopPropagation()}
             disabled={!canMoveDown}
-            className="flex size-7 cursor-pointer items-center justify-center rounded-md border border-transparent bg-background text-muted-foreground transition-colors hover:border-primary/25 hover:bg-primary/10 hover:text-primary disabled:pointer-events-none disabled:opacity-40"
+            className="flex size-7 cursor-pointer items-center justify-center rounded-md border border-transparent bg-background text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-primary disabled:pointer-events-none disabled:opacity-40"
             aria-label={`Move ${task.title} down`}
           >
             <ArrowDown className="size-3.5" />
@@ -302,8 +303,14 @@ function SortableTaskCard({
   canMoveUp: boolean;
   canMoveDown: boolean;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: task._id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task._id });
 
   return (
     <div
@@ -370,7 +377,9 @@ function KanbanColumn({
           className="size-2 shrink-0 rounded-full"
           style={{ backgroundColor: column.color ?? "#64748b" }}
         />
-        <span className="truncate text-sm font-semibold text-foreground">{column.name}</span>
+        <span className="truncate text-sm font-semibold text-foreground">
+          {column.name}
+        </span>
         <span className="flex size-5 items-center justify-center rounded-full bg-background text-xs text-muted-foreground">
           {tasks.length}
         </span>
@@ -378,7 +387,7 @@ function KanbanColumn({
           <button
             type="button"
             onClick={onCreateTask}
-            className="cursor-pointer rounded-lg p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+            className="cursor-pointer rounded-lg p-1 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-primary"
             aria-label={`Add task to ${column.name}`}
           >
             <Plus className="size-3.5" />
@@ -386,13 +395,16 @@ function KanbanColumn({
           {canManageColumns && (
             <DropdownMenu>
               <DropdownMenuTrigger
-                className="cursor-pointer rounded-lg p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                className="cursor-pointer rounded-lg p-1 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-primary"
                 aria-label={`Options for ${column.name}`}
               >
                 <MoreHorizontal className="size-3.5" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem onClick={onEditColumn} className="cursor-pointer gap-2">
+                <DropdownMenuItem
+                  onClick={onEditColumn}
+                  className="cursor-pointer gap-2"
+                >
                   <Pencil className="size-3.5" />
                   Edit
                 </DropdownMenuItem>
@@ -437,7 +449,7 @@ function KanbanColumn({
       <button
         type="button"
         onClick={onCreateTask}
-        className="flex cursor-pointer items-center gap-2 rounded-xl px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+        className="flex cursor-pointer items-center gap-2 rounded-xl px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-primary"
       >
         <Plus className="size-3.5" />
         Add task
@@ -525,9 +537,13 @@ export function LiveKanbanBoard({
       <div className="border-b border-border bg-background/95 px-4 py-4 backdrop-blur supports-backdrop-filter:bg-background/75 sm:px-6">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <p className="mb-1 text-xs font-medium text-muted-foreground">Project board</p>
+            <p className="mb-1 text-xs font-medium text-muted-foreground">
+              Project board
+            </p>
             <div className="flex items-center gap-2">
-              <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground">{boardName}</h1>
+              <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground">
+                {boardName}
+              </h1>
               <span className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-primary">
                 {kanban.tasks.data?.pagination.total ?? 0} total tasks
               </span>
@@ -537,7 +553,7 @@ export function LiveKanbanBoard({
             <button
               type="button"
               onClick={() => setColumnModal({ mode: "create" })}
-              className="shrink-0 cursor-pointer rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              className="shrink-0 cursor-pointer rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
             >
               <Plus className="mr-1 inline size-3.5" />
               Add column
@@ -556,15 +572,22 @@ export function LiveKanbanBoard({
         onDragCancel={() => setActiveTask(null)}
       >
         <div className="scrollbar-hidden flex-1 overflow-x-auto">
-          <div className="flex h-full items-start gap-4 p-4 sm:p-6" style={{ minWidth: "max-content" }}>
+          <div
+            className="flex h-full items-start gap-4 p-4 sm:p-6"
+            style={{ minWidth: "max-content" }}
+          >
             {columns.map((column) => (
               <KanbanColumn
                 key={column._id}
                 column={column}
                 tasks={tasksByColumn.get(column._id) ?? []}
-                onCreateTask={() => setTaskModal({ mode: "create", columnId: column._id })}
+                onCreateTask={() =>
+                  setTaskModal({ mode: "create", columnId: column._id })
+                }
                 onEditColumn={() => setColumnModal({ mode: "edit", column })}
-                onDeleteColumn={() => setColumnModal({ mode: "delete", column })}
+                onDeleteColumn={() =>
+                  setColumnModal({ mode: "delete", column })
+                }
                 onOpenTask={(task) => setTaskModal({ mode: "details", task })}
                 onAssignTask={(task) => setTaskModal({ mode: "assign", task })}
                 onEditTask={(task) => setTaskModal({ mode: "edit", task })}
@@ -577,7 +600,7 @@ export function LiveKanbanBoard({
               <button
                 type="button"
                 onClick={() => setColumnModal({ mode: "create" })}
-                className="w-72 shrink-0 cursor-pointer rounded-2xl border-2 border-dashed border-border px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
+                className="w-72 shrink-0 cursor-pointer rounded-2xl border-2 border-dashed border-border px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-primary dark:hover:bg-emerald-400/10"
               >
                 <Plus className="mr-2 inline size-4" />
                 Add column
@@ -586,13 +609,21 @@ export function LiveKanbanBoard({
           </div>
         </div>
         <DragOverlay dropAnimation={{ duration: 150, easing: "ease" }}>
-          {activeTask && <div className="w-72 rotate-1"><TaskCard task={activeTask} /></div>}
+          {activeTask && (
+            <div className="w-72 rotate-1">
+              <TaskCard task={activeTask} />
+            </div>
+          )}
         </DragOverlay>
       </DndContext>
 
       {taskModal && (
         <TaskModal
-          key={taskModal.mode === "create" ? `create-${taskModal.columnId}` : `${taskModal.mode}-${taskModal.task._id}`}
+          key={
+            taskModal.mode === "create"
+              ? `create-${taskModal.columnId}`
+              : `${taskModal.mode}-${taskModal.task._id}`
+          }
           isOpen
           onOpenChange={(isOpen) => !isOpen && setTaskModal(null)}
           workspaceId={workspaceId}
@@ -601,12 +632,18 @@ export function LiveKanbanBoard({
           columns={columns}
           mode={taskModal.mode}
           task={taskModal.mode === "create" ? undefined : taskModal.task}
-          initialColumnId={taskModal.mode === "create" ? taskModal.columnId : undefined}
+          initialColumnId={
+            taskModal.mode === "create" ? taskModal.columnId : undefined
+          }
         />
       )}
       {canManageColumns && columnModal && (
         <ColumnModal
-          key={columnModal.mode === "create" ? "create" : `${columnModal.mode}-${columnModal.column._id}`}
+          key={
+            columnModal.mode === "create"
+              ? "create"
+              : `${columnModal.mode}-${columnModal.column._id}`
+          }
           isOpen
           onOpenChange={(isOpen) => !isOpen && setColumnModal(null)}
           workspaceId={workspaceId}
@@ -614,7 +651,9 @@ export function LiveKanbanBoard({
           boardId={boardId}
           nextPosition={columns.length}
           mode={columnModal.mode}
-          column={columnModal.mode === "create" ? undefined : columnModal.column}
+          column={
+            columnModal.mode === "create" ? undefined : columnModal.column
+          }
         />
       )}
     </>

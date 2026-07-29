@@ -46,10 +46,10 @@ function formatStatus(status: ProjectDoc["status"]) {
 export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] =
     useState(false);
-  const [projectModal, setProjectModal] = useState<
-    | { mode: "edit" | "delete"; project: ProjectDoc }
-    | null
-  >(null);
+  const [projectModal, setProjectModal] = useState<{
+    mode: "edit" | "delete";
+    project: ProjectDoc;
+  } | null>(null);
   const { workspace, isLoading, error } = useWorkspaceBySlug(workspaceSlug);
   const projects = useProjects(workspace?._id);
 
@@ -97,7 +97,7 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
               <button
                 type="button"
                 onClick={() => setIsCreateProjectModalOpen(true)}
-                className="hidden shrink-0 cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:inline-flex"
+                className="hidden shrink-0 cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:inline-flex"
               >
                 <Plus className="size-4" />
                 New project
@@ -112,7 +112,9 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
                 </span>
                 <div>
                   <p className="text-[11px] text-muted-foreground">Projects</p>
-                  <p className="text-sm font-semibold text-foreground">{workspace.projectCount}</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {workspace.projectCount}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
@@ -121,7 +123,9 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
                 </span>
                 <div>
                   <p className="text-[11px] text-muted-foreground">Members</p>
-                  <p className="text-sm font-semibold text-foreground">{workspace.memberCount}</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {workspace.memberCount}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
@@ -130,7 +134,9 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
                 </span>
                 <div>
                   <p className="text-[11px] text-muted-foreground">Tasks</p>
-                  <p className="text-sm font-semibold text-foreground">{workspace.taskCount}</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {workspace.taskCount}
+                  </p>
                 </div>
               </div>
             </div>
@@ -154,7 +160,7 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
           <button
             type="button"
             onClick={() => setIsCreateProjectModalOpen(true)}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:hidden"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:hidden"
           >
             <Plus className="size-4" />
             New project
@@ -163,9 +169,7 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
       </div>
 
       {projects.isLoading ? (
-        <p className="py-12 text-sm text-muted-foreground">
-          Loading projects…
-        </p>
+        <p className="py-12 text-sm text-muted-foreground">Loading projects…</p>
       ) : !projects.data?.projects.length ? (
         <div className="flex flex-col items-center rounded-2xl border-2 border-dashed border-border py-20 text-center">
           <span className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-muted">
@@ -173,13 +177,14 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
           </span>
           <p className="font-semibold">No projects yet</p>
           <p className="mt-1 max-w-xs text-xs text-muted-foreground">
-            Create a project to organize boards, tasks, and your team&apos;s work.
+            Create a project to organize boards, tasks, and your team&apos;s
+            work.
           </p>
           {canManageProjects && (
             <button
               type="button"
               onClick={() => setIsCreateProjectModalOpen(true)}
-              className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              className="mt-5 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
             >
               <Plus className="size-4" />
               Create project
@@ -191,7 +196,7 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
           {projects.data.projects.map((project, index) => (
             <article
               key={project._id}
-              className="group cursor-pointer rounded-2xl border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 dark:hover:bg-muted/40 dark:hover:shadow-lg"
+              className="group cursor-pointer rounded-2xl border border-border bg-card p-5 transition-all duration-200 hover:bg-emerald-500/5 dark:hover:bg-emerald-400/10 dark:hover:shadow-lg"
             >
               <div className="flex items-start justify-between gap-3">
                 <Link
@@ -215,14 +220,16 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
                 {canManageProjects && (
                   <DropdownMenu>
                     <DropdownMenuTrigger
-                      className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       aria-label={`Project actions for ${project.name}`}
                     >
                       <MoreHorizontal className="size-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-40">
                       <DropdownMenuItem
-                        onClick={() => setProjectModal({ mode: "edit", project })}
+                        onClick={() =>
+                          setProjectModal({ mode: "edit", project })
+                        }
                         className="gap-2"
                       >
                         <Pencil className="size-3.5" />
@@ -230,7 +237,9 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => setProjectModal({ mode: "delete", project })}
+                        onClick={() =>
+                          setProjectModal({ mode: "delete", project })
+                        }
                         className="gap-2 text-destructive focus:text-destructive"
                       >
                         <Trash2 className="size-3.5" />

@@ -35,11 +35,14 @@ export function UpcomingMeetings({ meetings }: UpcomingMeetingsProps) {
               <li key={meeting._id}>
                 <Link
                   href={appRoutes.workspaceCalendar(meeting.workspace.slug)}
-                  className="block p-4 transition-colors hover:bg-muted/50"
+                  className="block p-4 transition-colors duration-200 hover:bg-emerald-500/5 dark:hover:bg-emerald-400/10"
                 >
-                  <p className="truncate text-sm font-medium">{meeting.title}</p>
+                  <p className="truncate text-sm font-medium">
+                    {meeting.title}
+                  </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {meeting.workspace.name} · {formatMeetingTime(meeting.startsAt)}
+                    {meeting.workspace.name} ·{" "}
+                    {formatMeetingTime(meeting.startsAt)}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                     {meeting.location && (

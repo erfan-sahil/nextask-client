@@ -48,7 +48,7 @@ export function StatsOverview({ stats }: StatsOverviewProps) {
           return (
             <article
               key={item.key}
-              className="rounded-2xl border border-border bg-card p-5 transition-shadow hover:shadow-sm"
+              className="rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/20 hover:bg-muted/40"
             >
               <div className="flex items-center justify-between gap-3">
                 <span

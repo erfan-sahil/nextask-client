@@ -142,7 +142,7 @@ export function WorkspaceCalendar({ workspace }: { workspace: Workspace }) {
             <button
               type="button"
               onClick={() => setViewDate(new Date(year, month - 1, 1))}
-              className="flex size-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex size-9 items-center justify-center text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground"
               aria-label="Previous month"
             >
               <ChevronLeft className="size-4" />
@@ -153,7 +153,7 @@ export function WorkspaceCalendar({ workspace }: { workspace: Workspace }) {
             <button
               type="button"
               onClick={() => setViewDate(new Date(year, month + 1, 1))}
-              className="flex size-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex size-9 items-center justify-center text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground"
               aria-label="Next month"
             >
               <ChevronRight className="size-4" />
@@ -195,7 +195,7 @@ export function WorkspaceCalendar({ workspace }: { workspace: Workspace }) {
                     "border-b",
                     i % 7 === 6 && "border-r-0",
                     isToday && "bg-primary/5",
-                    cell.currentMonth && !isToday && "hover:bg-muted/50 cursor-pointer",
+                    cell.currentMonth && !isToday && "hover:bg-emerald-500/5 cursor-pointer",
                   )}
                 >
                   {/* Day number — top right */}

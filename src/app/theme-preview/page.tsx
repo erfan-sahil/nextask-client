@@ -24,7 +24,9 @@ export default function ThemePreviewPage() {
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight">Theme comparison</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Theme comparison
+          </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
             Light and dark palettes side by side. Use the toggle above to switch
             the full app theme, or compare both variants below at once.

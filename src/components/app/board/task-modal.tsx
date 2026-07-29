@@ -334,7 +334,7 @@ export function TaskModal({
             <button
               type="button"
               onClick={closeModal}
-              className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label="Close task modal"
               disabled={isPending}
             >
@@ -457,7 +457,7 @@ export function TaskModal({
               <Label>Assignees</Label>
               <DropdownMenu>
                 <DropdownMenuTrigger
-                  className="flex h-10 w-full cursor-pointer items-center gap-2 rounded-xl border border-input bg-background px-3 text-left text-sm outline-none hover:bg-accent focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                  className="flex h-10 w-full cursor-pointer items-center gap-2 rounded-xl border border-input bg-background px-3 text-left text-sm outline-none hover:bg-emerald-500/5 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                   aria-label="Select task assignees"
                 >
                   <Users className="size-4 shrink-0 text-muted-foreground" />
@@ -597,7 +597,7 @@ export function TaskModal({
               <Popover>
                 <PopoverTrigger
                   type="button"
-                  className="flex h-10 w-full cursor-pointer items-center gap-2 rounded-xl border border-input bg-background px-3 text-left text-sm font-normal transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                  className="flex h-10 w-full cursor-pointer items-center gap-2 rounded-xl border border-input bg-background px-3 text-left text-sm font-normal transition-colors hover:bg-emerald-500/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                   aria-label="Select task deadline"
                 >
                   <CalendarDays className="size-4 text-muted-foreground" />
@@ -636,7 +636,7 @@ export function TaskModal({
               <Label>Assignees</Label>
               <DropdownMenu>
                 <DropdownMenuTrigger
-                  className="flex h-10 w-full cursor-pointer items-center gap-2 rounded-xl border border-input bg-background px-3 text-left text-sm outline-none hover:bg-accent focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                  className="flex h-10 w-full cursor-pointer items-center gap-2 rounded-xl border border-input bg-background px-3 text-left text-sm outline-none hover:bg-emerald-500/5 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                   aria-label="Select task assignees"
                 >
                   <Users className="size-4 shrink-0 text-muted-foreground" />
@@ -761,7 +761,7 @@ export function TaskModal({
                           type="button"
                           onMouseDown={(event) => event.preventDefault()}
                           onClick={() => selectCommentMention(member.username)}
-                          className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+                          className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-emerald-500/5"
                         >
                           <UserAvatar name={name} avatar={member.avatar} size="sm" />
                           <span className="min-w-0">

@@ -133,7 +133,7 @@ function BoardCard({
           router.push(boardHref);
         }
       }}
-      className="group relative flex cursor-pointer flex-col gap-4 rounded-2xl border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 dark:hover:bg-muted/40 dark:hover:shadow-lg"
+      className="group relative flex cursor-pointer flex-col gap-4 rounded-2xl border border-border bg-card p-5 transition-all duration-200 hover:bg-emerald-500/5 dark:hover:bg-emerald-400/10 dark:hover:shadow-lg"
     >
       {/* Top row */}
       <div className="flex items-start justify-between gap-3">
@@ -157,7 +157,7 @@ function BoardCard({
         <DropdownMenu>
           <DropdownMenuTrigger
             onClick={(event) => event.stopPropagation()}
-            className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100"
+            className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground opacity-0 transition-all hover:bg-emerald-500/5 hover:text-foreground group-hover:opacity-100"
           >
             <MoreHorizontal className="size-4" />
           </DropdownMenuTrigger>
@@ -218,9 +218,7 @@ function ConnectedProjectPage({
   projectId: string;
 }) {
   const [boardModal, setBoardModal] = useState<
-    | { mode: "create" }
-    | { mode: "edit" | "delete"; board: BoardDoc }
-    | null
+    { mode: "create" } | { mode: "edit" | "delete"; board: BoardDoc } | null
   >(null);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const router = useRouter();
@@ -232,10 +230,16 @@ function ConnectedProjectPage({
   const projectMembers = useProjectMembers(workspace?._id, projectId);
 
   if (isWorkspaceLoading || project.isLoading) {
-    return <div className="p-8 text-sm text-muted-foreground">Loading project…</div>;
+    return (
+      <div className="p-8 text-sm text-muted-foreground">Loading project…</div>
+    );
   }
   if (!workspace || !project.data) {
-    return <div className="p-8 text-sm text-destructive">Project not found or you do not have access.</div>;
+    return (
+      <div className="p-8 text-sm text-destructive">
+        Project not found or you do not have access.
+      </div>
+    );
   }
 
   const canManageBoards = canManageWorkspaceContent(workspace.membershipRole);
@@ -251,7 +255,10 @@ function ConnectedProjectPage({
   return (
     <div className="max-w-6xl px-4 py-6 sm:px-8">
       <nav className="mb-8 flex gap-2 text-sm text-muted-foreground">
-        <Link href={appRoutes.workspace(workspace.slug)} className="cursor-pointer transition-colors hover:text-foreground">
+        <Link
+          href={appRoutes.workspace(workspace.slug)}
+          className="cursor-pointer transition-colors hover:text-foreground"
+        >
           {workspace.name}
         </Link>
         <ChevronRight className="size-4" />
@@ -273,7 +280,7 @@ function ConnectedProjectPage({
                 <button
                   type="button"
                   onClick={() => setIsInviteModalOpen(true)}
-                  className="inline-flex cursor-pointer items-center rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                  className="inline-flex cursor-pointer items-center rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-emerald-500/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
                   <UserPlus className="mr-2 inline size-4" />
                   Invite member
@@ -283,7 +290,7 @@ function ConnectedProjectPage({
                 <button
                   type="button"
                   onClick={() => setBoardModal({ mode: "create" })}
-                  className="inline-flex cursor-pointer items-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                  className="inline-flex cursor-pointer items-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
                   <Plus className="mr-2 inline size-4" />
                   New board
@@ -299,7 +306,8 @@ function ConnectedProjectPage({
               <div>
                 <p className="text-[11px] text-muted-foreground">Tasks</p>
                 <p className="text-sm font-semibold text-foreground">
-                  {project.data.taskCount} task{project.data.taskCount === 1 ? "" : "s"}
+                  {project.data.taskCount} task
+                  {project.data.taskCount === 1 ? "" : "s"}
                 </p>
               </div>
             </div>
@@ -335,7 +343,7 @@ function ConnectedProjectPage({
             <button
               type="button"
               onClick={() => setBoardModal({ mode: "create" })}
-              className="mt-4 inline-flex cursor-pointer items-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="mt-4 inline-flex cursor-pointer items-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               Create board
             </button>
@@ -344,7 +352,11 @@ function ConnectedProjectPage({
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {boards.data.boards.map((board) => {
-            const boardHref = appRoutes.board(workspace.slug, projectId, board._id);
+            const boardHref = appRoutes.board(
+              workspace.slug,
+              projectId,
+              board._id,
+            );
 
             return (
               <article
@@ -358,7 +370,7 @@ function ConnectedProjectPage({
                     router.push(boardHref);
                   }
                 }}
-                className="group cursor-pointer rounded-2xl border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 dark:hover:bg-muted/40 dark:hover:shadow-lg"
+                className="group cursor-pointer rounded-2xl border border-border bg-card p-5 transition-all duration-200 hover:bg-emerald-500/5 dark:hover:bg-emerald-400/10 dark:hover:shadow-lg"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
@@ -381,7 +393,7 @@ function ConnectedProjectPage({
                       <DropdownMenuTrigger
                         onClick={(event) => event.stopPropagation()}
                         onPointerDown={(event) => event.stopPropagation()}
-                        className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        className="cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground"
                         aria-label={`Board actions for ${board.name}`}
                       >
                         <MoreHorizontal className="size-4" />
@@ -422,7 +434,11 @@ function ConnectedProjectPage({
 
       {canManageBoards && boardModal && (
         <BoardModal
-          key={boardModal.mode === "create" ? "create" : `${boardModal.mode}-${boardModal.board._id}`}
+          key={
+            boardModal.mode === "create"
+              ? "create"
+              : `${boardModal.mode}-${boardModal.board._id}`
+          }
           isOpen
           onOpenChange={(isOpen) => {
             if (!isOpen) setBoardModal(null);
@@ -456,8 +472,7 @@ export function ProjectPage(props: ProjectPageProps) {
       ? 0
       : Math.round((project.completedTaskCount / project.taskCount) * 100);
 
-  const isOverdue =
-    project.dueDate && new Date(project.dueDate) < new Date();
+  const isOverdue = project.dueDate && new Date(project.dueDate) < new Date();
 
   return (
     <div className="px-4 py-6 sm:px-8 max-w-6xl">
@@ -507,7 +522,7 @@ export function ProjectPage(props: ProjectPageProps) {
             {/* Action */}
             <button
               type="button"
-              className="hidden sm:flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 shrink-0"
+              className="hidden sm:flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover shrink-0"
             >
               <Plus className="size-4" />
               New board
@@ -518,7 +533,8 @@ export function ProjectPage(props: ProjectPageProps) {
           <div className="mt-6">
             <div className="mb-2 flex items-center justify-between text-xs">
               <span className="text-muted-foreground">
-                {project.completedTaskCount} of {project.taskCount} tasks complete
+                {project.completedTaskCount} of {project.taskCount} tasks
+                complete
               </span>
               <span className="font-semibold text-foreground">{pct}%</span>
             </div>
@@ -576,12 +592,13 @@ export function ProjectPage(props: ProjectPageProps) {
         <div>
           <h2 className="text-base font-semibold text-foreground">Boards</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {boards.length} board{boards.length !== 1 ? "s" : ""} in this project
+            {boards.length} board{boards.length !== 1 ? "s" : ""} in this
+            project
           </p>
         </div>
         <button
           type="button"
-          className="sm:hidden flex items-center gap-2 rounded-xl bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          className="sm:hidden flex items-center gap-2 rounded-xl bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
         >
           <Plus className="size-3.5" />
           New board
@@ -595,11 +612,12 @@ export function ProjectPage(props: ProjectPageProps) {
           </div>
           <p className="text-sm font-semibold text-foreground">No boards yet</p>
           <p className="mt-1 text-xs text-muted-foreground max-w-xs">
-            Boards let you organize and track tasks visually. Create your first board to get started.
+            Boards let you organize and track tasks visually. Create your first
+            board to get started.
           </p>
           <button
             type="button"
-            className="mt-5 flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="mt-5 flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
           >
             <Plus className="size-4" />
             Create board

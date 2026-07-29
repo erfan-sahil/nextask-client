@@ -271,7 +271,7 @@ export function WorkspaceCalendarView({
             <button
               type="button"
               onClick={() => setViewDate(new Date(year, month - 1, 1))}
-              className="flex size-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex size-9 items-center justify-center text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground"
               aria-label="Previous month"
             >
               <ChevronLeft className="size-4" />
@@ -282,7 +282,7 @@ export function WorkspaceCalendarView({
             <button
               type="button"
               onClick={() => setViewDate(new Date(year, month + 1, 1))}
-              className="flex size-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex size-9 items-center justify-center text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground"
               aria-label="Next month"
             >
               <ChevronRight className="size-4" />
@@ -333,10 +333,10 @@ export function WorkspaceCalendarView({
                     className={cn(
                       "min-h-26 border-r border-b p-2 text-left transition-colors",
                       index % 7 === 6 && "border-r-0",
-                      isToday && "bg-primary/5",
+                      isToday && "bg-primary/10",
                       canCreateMeetings &&
                         cell.currentMonth &&
-                        "cursor-pointer hover:bg-muted/50",
+                        "cursor-pointer hover:bg-emerald-500/5",
                       !cell.currentMonth && "cursor-default opacity-50",
                     )}
                   >
@@ -516,7 +516,9 @@ export function WorkspaceCalendarView({
       >
         <DialogContent className="max-w-md overflow-hidden p-0">
           <DialogHeader className="border-b border-border px-6 py-5 pr-14">
-            <DialogTitle className="text-destructive">Delete meeting</DialogTitle>
+            <DialogTitle className="text-destructive">
+              Delete meeting
+            </DialogTitle>
             <DialogDescription>This action cannot be undone.</DialogDescription>
           </DialogHeader>
           <button
@@ -524,7 +526,7 @@ export function WorkspaceCalendarView({
             aria-label="Close delete meeting dialog"
             disabled={calendar.deleteMeeting.isPending}
             onClick={() => setDeletingMeeting(null)}
-            className="absolute top-4 right-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed"
+            className="absolute top-4 right-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground disabled:cursor-not-allowed"
           >
             <X className="size-4" />
           </button>

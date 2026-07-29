@@ -1,6 +1,13 @@
 "use client";
 
-import { LogOut, Menu, PanelLeft, PanelLeftClose, Search, User } from "lucide-react";
+import {
+  LogOut,
+  Menu,
+  PanelLeft,
+  PanelLeftClose,
+  Search,
+  User,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { AppNavIcon, NotificationIcon } from "@/components/app/app-nav-icon";
@@ -45,7 +52,7 @@ export function UserMenu({ user, className }: UserMenuProps) {
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className="flex items-center gap-2.5 rounded-full border border-border bg-card py-1 pr-3 pl-1 transition-colors hover:bg-muted"
+        className="flex items-center gap-2.5 rounded-full border border-border bg-card py-1 pr-3 pl-1 transition-colors hover:bg-emerald-500/5"
         aria-expanded={isOpen}
         aria-haspopup="menu"
       >
@@ -62,13 +69,15 @@ export function UserMenu({ user, className }: UserMenuProps) {
         >
           <div className="border-b border-border px-4 py-3">
             <p className="truncate text-sm font-semibold">{displayName}</p>
-            <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {user.email}
+            </p>
           </div>
           <div className="p-1.5">
             <button
               type="button"
               role="menuitem"
-              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-muted"
+              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-emerald-500/5"
               onClick={() => setIsOpen(false)}
             >
               <User className="size-4 text-muted-foreground" />
@@ -77,10 +86,13 @@ export function UserMenu({ user, className }: UserMenuProps) {
             <Link
               href={appRoutes.settings}
               role="menuitem"
-              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-muted"
+              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-emerald-500/5"
               onClick={() => setIsOpen(false)}
             >
-              <AppNavIcon icon="settings" className="size-4 text-muted-foreground" />
+              <AppNavIcon
+                icon="settings"
+                className="size-4 text-muted-foreground"
+              />
               Settings
             </Link>
             <button
@@ -152,7 +164,9 @@ export function AppHeader({
       </Button>
 
       <div className="min-w-0 flex-1">
-        <h1 className="truncate text-lg font-semibold tracking-tight">{title}</h1>
+        <h1 className="truncate text-lg font-semibold tracking-tight">
+          {title}
+        </h1>
         <p className="hidden text-sm text-muted-foreground sm:block">
           Workspaces, projects, boards, and tasks — all in one place.
         </p>
@@ -173,10 +187,12 @@ export function AppHeader({
         <Link
           href="/inbox"
           aria-label="Notifications"
-          className="relative inline-flex size-9 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground"
+          className="relative inline-flex size-9 items-center justify-center rounded-md transition-colors hover:bg-emerald-500/5 hover:text-accent-foreground"
         >
           <NotificationIcon className="size-4" />
-          {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />}
+          {unreadCount > 0 && (
+            <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />
+          )}
         </Link>
         <ThemeToggle />
         <UserMenu user={user} />

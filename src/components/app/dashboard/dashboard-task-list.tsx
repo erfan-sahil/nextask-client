@@ -21,7 +21,12 @@ function formatDueDate(dueDate: string | null) {
 }
 
 function getStatusBadgeClass(status: string | undefined) {
-  switch (status?.trim().toLowerCase().replace(/[\s_]+/g, "-")) {
+  switch (
+    status
+      ?.trim()
+      .toLowerCase()
+      .replace(/[\s_]+/g, "-")
+  ) {
     case "backlog":
       return "border-muted-foreground/20 bg-muted text-muted-foreground";
     case "in-progress":
@@ -62,11 +67,13 @@ export function DashboardTaskList({
                     task.project._id,
                     task.board._id,
                   )}
-                  className="block p-4 transition-colors hover:bg-muted/50"
+                  className="block p-4 transition-colors duration-200 hover:bg-emerald-500/5 dark:hover:bg-emerald-400/10"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{task.title}</p>
+                      <p className="truncate text-sm font-medium">
+                        {task.title}
+                      </p>
                       <p className="mt-1 truncate text-xs text-muted-foreground">
                         {task.project.name} · {task.board.name}
                       </p>

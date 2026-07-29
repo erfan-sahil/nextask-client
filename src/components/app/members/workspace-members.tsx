@@ -66,13 +66,15 @@ const roleConfig: Record<
 > = {
   OWNER: {
     label: "Owner",
-    className: "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+    className:
+      "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300",
     detailsClass: "bg-amber-500/10 text-amber-800 dark:text-amber-200",
     icon: Crown,
   },
   ADMIN: {
     label: "Admin",
-    className: "border-violet-500/20 bg-violet-500/10 text-violet-700 dark:text-violet-300",
+    className:
+      "border-violet-500/20 bg-violet-500/10 text-violet-700 dark:text-violet-300",
     detailsClass: "bg-violet-500/10 text-violet-800 dark:text-violet-200",
     icon: Shield,
   },
@@ -219,7 +221,12 @@ function MemberModal({
       <DialogContent className="max-w-md overflow-hidden p-0">
         <form onSubmit={handleSubmit}>
           {isDetails && member && detailsConfig && RoleIcon ? (
-            <DialogHeader className={cn("relative gap-4 p-6 pb-5", detailsConfig.detailsClass)}>
+            <DialogHeader
+              className={cn(
+                "relative gap-4 p-6 pb-5",
+                detailsConfig.detailsClass,
+              )}
+            >
               <button
                 type="button"
                 aria-label="Close member details"
@@ -262,7 +269,7 @@ function MemberModal({
                 aria-label="Close dialog"
                 disabled={isPending}
                 onClick={onClose}
-                className="absolute right-4 top-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed"
+                className="absolute right-4 top-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground disabled:cursor-not-allowed"
               >
                 <X className="size-4" />
               </button>
@@ -321,29 +328,31 @@ function MemberModal({
               </p>
             )}
           </div>
-          {!isDetails && <div className="flex justify-end gap-3 border-t border-border bg-muted/30 px-6 py-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant={isRemove ? "destructive" : "default"}
-              disabled={isPending}
-            >
-              {isPending
-                ? "Saving…"
-                : isInvite
-                  ? "Send invitation"
-                  : isRemove
-                    ? "Remove member"
-                    : "Save changes"}
-            </Button>
-          </div>}
+          {!isDetails && (
+            <div className="flex justify-end gap-3 border-t border-border bg-muted/30 px-6 py-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant={isRemove ? "destructive" : "default"}
+                disabled={isPending}
+              >
+                {isPending
+                  ? "Saving…"
+                  : isInvite
+                    ? "Send invitation"
+                    : isRemove
+                      ? "Remove member"
+                      : "Save changes"}
+              </Button>
+            </div>
+          )}
         </form>
       </DialogContent>
     </Dialog>
@@ -363,12 +372,21 @@ function MemberDetailRow({
 }) {
   return (
     <div className="flex gap-3 rounded-xl border border-border bg-card p-3.5">
-      <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", accent)}>
+      <span
+        className={cn(
+          "flex size-8 shrink-0 items-center justify-center rounded-lg",
+          accent,
+        )}
+      >
         <Icon className="size-4" />
       </span>
       <div className="min-w-0">
-        <dt className="pt-0.5 text-xs font-medium text-muted-foreground">{label}</dt>
-        <dd className="mt-1 wrap-break-word text-sm font-medium text-foreground">{value}</dd>
+        <dt className="pt-0.5 text-xs font-medium text-muted-foreground">
+          {label}
+        </dt>
+        <dd className="mt-1 wrap-break-word text-sm font-medium text-foreground">
+          {value}
+        </dd>
       </div>
     </div>
   );
@@ -402,7 +420,7 @@ function MemberCard({
           onOpenDetails();
         }
       }}
-      className="group cursor-pointer rounded-2xl border border-border bg-card transition-all duration-200 hover:border-primary/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="group cursor-pointer rounded-2xl border border-border bg-card transition-all duration-200 hover:bg-emerald-500/5 dark:hover:bg-emerald-400/10 dark:hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <div className="flex items-center gap-3 px-3 py-2.5 sm:px-4">
         <UserAvatar name={name} avatar={member.userId.avatar} size="md" />
@@ -437,7 +455,7 @@ function MemberCard({
               aria-label={`Actions for ${name}`}
               onClick={(event) => event.stopPropagation()}
               onKeyDown={(event) => event.stopPropagation()}
-              className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+              className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-all hover:bg-emerald-500/5 hover:text-foreground"
             >
               <MoreHorizontal className="size-4" />
             </DropdownMenuTrigger>

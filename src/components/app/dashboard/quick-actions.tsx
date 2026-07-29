@@ -43,7 +43,7 @@ export function QuickActions() {
               <li key={action.label}>
                 <button
                   type="button"
-                  className="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-3 text-left transition-colors hover:border-border hover:bg-muted/50"
+                  className="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-3 text-left transition-colors hover:bg-emerald-500/5"
                 >
                   <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-light text-primary">
                     <Icon className="size-4" aria-hidden />

@@ -48,7 +48,7 @@ export function GoogleSignInButton({
       variant="outline"
       onClick={handleClick}
       className={cn(
-        "h-11 w-full gap-2.5 rounded-full border-border bg-background px-6 text-sm font-semibold hover:bg-muted",
+        "h-11 w-full gap-2.5 rounded-full border-border bg-background px-6 text-sm font-semibold hover:bg-emerald-500/5",
         className,
       )}
     >

@@ -117,7 +117,7 @@ export function MobileMenuButton({ open, onClick }: MobileMenuButtonProps) {
       aria-label={open ? "Close menu" : "Open menu"}
       aria-expanded={open}
       onClick={onClick}
-      className="relative flex size-9 items-center justify-center rounded-full bg-transparent transition-colors hover:bg-muted/80 md:hidden"
+      className="relative flex size-9 items-center justify-center rounded-full bg-transparent transition-colors hover:bg-emerald-500/5 md:hidden"
     >
       <span className="relative block size-4">
         <span
