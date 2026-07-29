@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { AppModalHeader } from "@/components/app/app-modal-header";
 import { UserAvatar } from "@/components/app/user-avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -255,25 +256,15 @@ function MemberModal({
               </div>
             </DialogHeader>
           ) : (
-            <>
-              <DialogHeader className="border-b border-border px-6 py-5 pr-14">
-                <DialogTitle
-                  className={isRemove ? "text-destructive" : "text-primary"}
-                >
-                  {title}
-                </DialogTitle>
-                <DialogDescription>{description}</DialogDescription>
-              </DialogHeader>
-              <button
-                type="button"
-                aria-label="Close dialog"
-                disabled={isPending}
-                onClick={onClose}
-                className="absolute right-4 top-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground disabled:cursor-not-allowed"
-              >
-                <X className="size-4" />
-              </button>
-            </>
+            <AppModalHeader
+              title={title}
+              description={description}
+              icon={isRemove ? LogOut : UserPlus}
+              tone={isRemove ? "destructive" : "default"}
+              onClose={onClose}
+              closeLabel="Close dialog"
+              disabled={isPending}
+            />
           )}
           <div className="space-y-5 px-6 py-5">
             {isDetails && member && (

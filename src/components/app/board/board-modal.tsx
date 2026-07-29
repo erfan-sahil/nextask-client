@@ -1,14 +1,12 @@
 "use client";
 
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
+import { AppModalHeader } from "@/components/app/app-modal-header";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -95,27 +93,21 @@ export function BoardModal({
     >
       <DialogContent className="max-w-lg overflow-hidden p-0">
         <form onSubmit={handleSubmit}>
-          <DialogHeader className="relative border-b border-border px-6 py-4 pr-16">
-            <DialogTitle className={!isDeleting ? "text-primary" : undefined}>
-              {title}
-            </DialogTitle>
-            <DialogDescription>
-              {isCreating
+          <AppModalHeader
+            title={title}
+            description={
+              isCreating
                 ? `Add a new board to ${projectName}.`
                 : isDeleting
                   ? `This will permanently delete ${board?.name}.`
-                  : `Update the details for ${board?.name}.`}
-            </DialogDescription>
-            <button
-              type="button"
-              onClick={closeModal}
-              className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label={`Close ${title.toLowerCase()} dialog`}
-              disabled={isPending}
-            >
-              <X className="size-4" />
-            </button>
-          </DialogHeader>
+                  : `Update the details for ${board?.name}.`
+            }
+            icon={isDeleting ? AlertTriangle : LayoutDashboard}
+            tone={isDeleting ? "destructive" : "default"}
+            onClose={closeModal}
+            closeLabel={`Close ${title.toLowerCase()} dialog`}
+            disabled={isPending}
+          />
 
           <div className="px-6 pb-6">
             {isDeleting ? (

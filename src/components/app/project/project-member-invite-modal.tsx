@@ -1,14 +1,12 @@
 "use client";
 
-import { X } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { useState } from "react";
+import { AppModalHeader } from "@/components/app/app-modal-header";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -79,21 +77,14 @@ export function ProjectMemberInviteModal({
     >
       <DialogContent className="max-w-md overflow-hidden p-0">
         <form onSubmit={handleSubmit}>
-          <DialogHeader className="relative border-b border-border px-6 py-5 pr-14">
-            <DialogTitle className="text-primary">Invite to project</DialogTitle>
-            <DialogDescription>
-              Send an invitation to join {projectName} with project-specific access.
-            </DialogDescription>
-            <button
-              type="button"
-              onClick={closeModal}
-              className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="Close invite dialog"
-              disabled={isPending}
-            >
-              <X className="size-4" />
-            </button>
-          </DialogHeader>
+          <AppModalHeader
+            title="Invite to project"
+            description={`Send an invitation to join ${projectName} with project-specific access.`}
+            icon={UserPlus}
+            onClose={closeModal}
+            closeLabel="Close invite dialog"
+            disabled={isPending}
+          />
 
           <div className="space-y-5 px-6 py-5">
             <div className="space-y-2">

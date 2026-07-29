@@ -9,19 +9,16 @@ import {
   MessageSquare,
   Search,
   Users,
-  X,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useMemo, useRef, useState } from "react";
+import { AppModalHeader } from "@/components/app/app-modal-header";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/app/user-avatar";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -318,29 +315,23 @@ export function TaskModal({
         }
       >
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <DialogHeader className="relative shrink-0 border-b border-border px-6 py-4 pr-16">
-            <DialogTitle className={!isDeleting ? "text-primary" : undefined}>
-              {heading}
-            </DialogTitle>
-            <DialogDescription>
-              {isDeleting
+          <AppModalHeader
+            title={heading}
+            description={
+              isDeleting
                 ? `This will permanently delete ${task?.title}.`
                 : isDetails
                   ? "Task details and discussion."
                   : isAssigning
                     ? "Choose the members responsible for this task."
-                  : "Add the details needed to complete this work."}
-            </DialogDescription>
-            <button
-              type="button"
-              onClick={closeModal}
-              className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="Close task modal"
-              disabled={isPending}
-            >
-              <X className="size-4" />
-            </button>
-          </DialogHeader>
+                    : "Add the details needed to complete this work."
+            }
+            icon={isDeleting ? AlertTriangle : isDetails ? ListTodo : Users}
+            tone={isDeleting ? "destructive" : "default"}
+            onClose={closeModal}
+            closeLabel="Close task modal"
+            disabled={isPending}
+          />
 
         <ScrollArea className="min-h-0 flex-1">
           <div className="px-6 pb-6">

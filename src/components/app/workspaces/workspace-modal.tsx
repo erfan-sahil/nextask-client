@@ -1,14 +1,12 @@
 "use client";
 
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle, BriefcaseBusiness } from "lucide-react";
 import { useState } from "react";
+import { AppModalHeader } from "@/components/app/app-modal-header";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -107,21 +105,15 @@ export function WorkspaceModal({
     >
       <DialogContent className="max-w-lg overflow-hidden p-0">
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <DialogHeader className="relative shrink-0 border-b border-border px-6 py-4 pr-16">
-            <DialogTitle className={!isDeleting ? "text-primary" : undefined}>
-              {heading}
-            </DialogTitle>
-            <DialogDescription>{descriptionText}</DialogDescription>
-            <button
-              type="button"
-              onClick={closeModal}
-              className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="Close workspace modal"
-              disabled={isPending}
-            >
-              <X className="size-4" />
-            </button>
-          </DialogHeader>
+          <AppModalHeader
+            title={heading}
+            description={descriptionText}
+            icon={isDeleting ? AlertTriangle : BriefcaseBusiness}
+            tone={isDeleting ? "destructive" : "default"}
+            onClose={closeModal}
+            closeLabel="Close workspace modal"
+            disabled={isPending}
+          />
 
           <div className="px-6 pb-6">
             {isDeleting ? (

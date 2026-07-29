@@ -13,19 +13,16 @@ import {
   Target,
   Trash2,
   Users,
-  X,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
+import { AppModalHeader } from "@/components/app/app-modal-header";
 import { CalendarEventDetailsDialog } from "@/components/app/calendar/calendar-event-details-dialog";
 import { CreateMeetingDialog } from "@/components/app/calendar/create-meeting-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -515,21 +512,15 @@ export function WorkspaceCalendarView({
         }}
       >
         <DialogContent className="max-w-md overflow-hidden p-0">
-          <DialogHeader className="border-b border-border px-6 py-5 pr-14">
-            <DialogTitle className="text-destructive">
-              Delete meeting
-            </DialogTitle>
-            <DialogDescription>This action cannot be undone.</DialogDescription>
-          </DialogHeader>
-          <button
-            type="button"
-            aria-label="Close delete meeting dialog"
+          <AppModalHeader
+            title="Delete meeting"
+            description="This action cannot be undone."
+            icon={AlertTriangle}
+            tone="destructive"
+            onClose={() => setDeletingMeeting(null)}
+            closeLabel="Close delete meeting dialog"
             disabled={calendar.deleteMeeting.isPending}
-            onClick={() => setDeletingMeeting(null)}
-            className="absolute top-4 right-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground disabled:cursor-not-allowed"
-          >
-            <X className="size-4" />
-          </button>
+          />
           <div className="px-6 py-5">
             <div className="flex gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">

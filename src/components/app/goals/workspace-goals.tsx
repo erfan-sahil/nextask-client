@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
+import { AppModalHeader } from "@/components/app/app-modal-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -502,23 +503,18 @@ function GoalDialog({
     <Dialog open onOpenChange={(open) => !open && !isPending && onClose()}>
       <DialogContent className="max-w-lg p-0">
         <form onSubmit={handleSubmit}>
-          <DialogHeader className="border-b border-border px-6 py-5 pr-14">
-            <DialogTitle>{isEditing ? "Edit goal" : "Create goal"}</DialogTitle>
-            <DialogDescription>
-              {isEditing
+          <AppModalHeader
+            title={isEditing ? "Edit goal" : "Create goal"}
+            description={
+              isEditing
                 ? "Update the goal details and its current status."
-                : "Define an objective for this workspace."}
-            </DialogDescription>
-          </DialogHeader>
-          <button
-            type="button"
-            aria-label="Close goal dialog"
+                : "Define an objective for this workspace."
+            }
+            icon={Target}
+            onClose={onClose}
+            closeLabel="Close goal dialog"
             disabled={isPending}
-            onClick={onClose}
-            className="absolute right-4 top-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground disabled:cursor-not-allowed"
-          >
-            <X className="size-4" />
-          </button>
+          />
           <div className="space-y-4 px-6 py-5">
             <div className="space-y-2">
               <Label htmlFor="goal-title">Title</Label>
@@ -812,19 +808,15 @@ function GoalDeleteDialog({
   return (
     <Dialog open onOpenChange={(open) => !open && !isPending && onClose()}>
       <DialogContent className="max-w-md overflow-hidden p-0">
-        <DialogHeader className="border-b border-border px-6 py-5 pr-14">
-          <DialogTitle className="text-destructive">Delete goal</DialogTitle>
-          <DialogDescription>This action cannot be undone.</DialogDescription>
-        </DialogHeader>
-        <button
-          type="button"
-          aria-label="Close delete goal dialog"
+        <AppModalHeader
+          title="Delete goal"
+          description="This action cannot be undone."
+          icon={AlertTriangle}
+          tone="destructive"
+          onClose={onClose}
+          closeLabel="Close delete goal dialog"
           disabled={isPending}
-          onClick={onClose}
-          className="absolute right-4 top-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground disabled:cursor-not-allowed"
-        >
-          <X className="size-4" />
-        </button>
+        />
         <div className="px-6 py-5">
           <div className="flex gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">

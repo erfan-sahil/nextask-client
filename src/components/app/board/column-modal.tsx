@@ -1,14 +1,12 @@
 "use client";
 
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle, Columns3 } from "lucide-react";
 import { useState } from "react";
+import { AppModalHeader } from "@/components/app/app-modal-header";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -114,21 +112,15 @@ export function ColumnModal({
     >
       <DialogContent className="max-w-md overflow-hidden p-0">
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <DialogHeader className="relative shrink-0 border-b border-border px-6 py-4 pr-16">
-            <DialogTitle className={!isDeleting ? "text-primary" : undefined}>
-              {title}
-            </DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
-            <button
-              type="button"
-              onClick={closeModal}
-              className="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="Close column modal"
-              disabled={isPending}
-            >
-              <X className="size-4" />
-            </button>
-          </DialogHeader>
+          <AppModalHeader
+            title={title}
+            description={description}
+            icon={isDeleting ? AlertTriangle : Columns3}
+            tone={isDeleting ? "destructive" : "default"}
+            onClose={closeModal}
+            closeLabel="Close column modal"
+            disabled={isPending}
+          />
 
           <div className="px-6 py-6">
             {isDeleting ? (

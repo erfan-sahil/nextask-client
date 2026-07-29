@@ -1,16 +1,14 @@
 "use client";
 
 import { format } from "date-fns";
-import { CalendarDays, Loader2, X } from "lucide-react";
+import { CalendarDays, Loader2, Users } from "lucide-react";
 import { useState } from "react";
+import { AppModalHeader } from "@/components/app/app-modal-header";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -107,25 +105,18 @@ export function CreateMeetingDialog({
     >
       <DialogContent className="max-w-lg overflow-hidden p-0">
         <form onSubmit={handleSubmit}>
-          <DialogHeader className="border-b border-border px-6 py-5 pr-14">
-            <DialogTitle>
-              {isEditing ? "Edit meeting" : "Schedule meeting"}
-            </DialogTitle>
-            <DialogDescription>
-              {isEditing
+          <AppModalHeader
+            title={isEditing ? "Edit meeting" : "Schedule meeting"}
+            description={
+              isEditing
                 ? "Update the meeting details."
-                : "Choose the date and time for the meeting."}
-            </DialogDescription>
-          </DialogHeader>
-          <button
-            type="button"
-            aria-label="Close meeting dialog"
+                : "Choose the date and time for the meeting."
+            }
+            icon={Users}
+            onClose={() => onOpenChange(false)}
+            closeLabel="Close meeting dialog"
             disabled={isPending}
-            onClick={() => onOpenChange(false)}
-            className="absolute top-4 right-4 cursor-pointer rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground disabled:cursor-not-allowed"
-          >
-            <X className="size-4" />
-          </button>
+          />
           <div className="space-y-4 px-6 py-5">
             <div className="space-y-2">
               <Label htmlFor="meeting-title">Title</Label>

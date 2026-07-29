@@ -17,6 +17,7 @@ import {
   User,
 } from "lucide-react";
 import { authRoutes } from "@/config/navigation";
+import { AppModalHeader } from "@/components/app/app-modal-header";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme, type Theme } from "@/components/theme/theme-provider";
 import { UserAvatar } from "@/components/app/user-avatar";
@@ -24,9 +25,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -553,19 +551,17 @@ function SecuritySection() {
       </div>
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <div className="mb-2 flex size-10 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
-              <ShieldAlert className="size-5" />
-            </div>
-            <DialogTitle>Delete your account?</DialogTitle>
-            <DialogDescription>
-              Enter your current password to permanently delete your account.
-              This cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleDeleteSubmit} className="mt-5 space-y-4">
+        <DialogContent className="max-w-md overflow-hidden p-0">
+          <AppModalHeader
+            title="Delete your account?"
+            description="Enter your current password to permanently delete your account. This cannot be undone."
+            icon={ShieldAlert}
+            tone="destructive"
+            onClose={() => setIsDeleteDialogOpen(false)}
+            closeLabel="Close delete account dialog"
+            disabled={deleteAccountMutation.isPending}
+          />
+          <form onSubmit={handleDeleteSubmit} className="space-y-4 px-6 py-5">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="deletePassword">Current password</Label>
               <Input
@@ -588,7 +584,7 @@ function SecuritySection() {
               </p>
             )}
 
-            <div className="flex justify-end gap-2 pt-1">
+            <div className="flex justify-end gap-2 border-t border-border pt-4">
               <Button
                 type="button"
                 variant="outline"

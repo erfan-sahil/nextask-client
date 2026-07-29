@@ -3,20 +3,9 @@
 import { ArrowRight, Layers, Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { WorkspaceModal } from "@/components/app/workspaces/workspace-modal";
 import { appRoutes } from "@/config/navigation";
 import { useWorkspaces } from "@/hooks/use-workflow";
-import { getErrorMessage } from "@/lib/api/get-error-message";
 import { cn } from "@/lib/utils";
 import type { WorkspaceDoc } from "@/types/domain";
 
@@ -64,41 +53,7 @@ export function WorkspacesPage() {
   const workspaces = useWorkspaces();
   const workspaceList = workspaces.data?.workspaces ?? [];
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [visibility, setVisibility] =
-    useState<WorkspaceDoc["visibility"]>("PRIVATE");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
-
-  function closeCreateDialog() {
-    if (workspaces.create.isPending) return;
-    setIsCreateDialogOpen(false);
-    setFormError(null);
-  }
-
-  async function handleCreateWorkspace(
-    event: React.FormEvent<HTMLFormElement>,
-  ) {
-    event.preventDefault();
-    setFormError(null);
-
-    try {
-      const workspace = await workspaces.create.mutateAsync({
-        name: name.trim(),
-        description: description.trim() || undefined,
-        visibility,
-      });
-      setName("");
-      setDescription("");
-      setVisibility("PRIVATE");
-      setIsCreateDialogOpen(false);
-      setToastMessage(`${workspace.name} was created successfully.`);
-      window.setTimeout(() => setToastMessage(null), 4000);
-    } catch (error) {
-      setFormError(getErrorMessage(error));
-    }
-  }
 
   return (
     <div className="px-4 py-6 sm:px-6">
@@ -150,114 +105,15 @@ export function WorkspacesPage() {
         </div>
       )}
 
-      {isCreateDialogOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="create-workspace-title"
-        >
-          <button
-            type="button"
-            className="absolute inset-0 bg-background/80 backdrop-blur-sm"
-            aria-label="Close create workspace dialog"
-            onClick={closeCreateDialog}
-          />
-          <form
-            onSubmit={handleCreateWorkspace}
-            className="relative z-10 w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-xl"
-          >
-            <div>
-              <h2
-                id="create-workspace-title"
-                className="text-lg font-semibold tracking-tight"
-              >
-                Create workspace
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Set up a shared space for your team and projects.
-              </p>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="workspace-name">Workspace name</Label>
-                <Input
-                  id="workspace-name"
-                  required
-                  autoFocus
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="e.g. Product team"
-                  className="h-10 rounded-xl bg-background px-3"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="workspace-description">Description</Label>
-                <Textarea
-                  id="workspace-description"
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  placeholder="What will your team work on?"
-                  rows={3}
-                  className="rounded-xl bg-background px-3"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>Visibility</Label>
-                <Select
-                  value={visibility}
-                  onValueChange={(value) =>
-                    setVisibility(value as WorkspaceDoc["visibility"])
-                  }
-                >
-                  <SelectTrigger className="h-10 w-full rounded-xl bg-background px-3">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent align="start">
-                    <SelectItem value="PRIVATE">
-                      Private — invite only
-                    </SelectItem>
-                    <SelectItem value="TEAM">
-                      Team — visible to your team
-                    </SelectItem>
-                    <SelectItem value="PUBLIC">
-                      Public — visible to everyone
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {formError && (
-                <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                  {formError}
-                </p>
-              )}
-            </div>
-
-            <div className="mt-6 flex justify-end gap-3">
-              <Button
-                type="button"
-                onClick={closeCreateDialog}
-                disabled={workspaces.create.isPending}
-                variant="outline"
-                className="h-10 rounded-xl px-4"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={workspaces.create.isPending || !name.trim()}
-                className="h-10 rounded-xl px-4"
-              >
-                {workspaces.create.isPending ? "Creating…" : "Create workspace"}
-              </Button>
-            </div>
-          </form>
-        </div>
-      )}
+      <WorkspaceModal
+        isOpen={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        mode="create"
+        onCreated={(workspace) => {
+          setToastMessage(`${workspace.name} was created successfully.`);
+          window.setTimeout(() => setToastMessage(null), 4000);
+        }}
+      />
 
       {toastMessage && (
         <div
