@@ -116,21 +116,25 @@ export function WorkspaceChat({ workspace }: { workspace?: WorkspaceDoc }) {
       );
     };
     socket.on("chat:message", handleMessage);
-    return () => socket.off("chat:message", handleMessage);
+    return () => {
+      socket.off("chat:message", handleMessage);
+    };
   }, [isOpen, workspace]);
 
   if (!workspace) return null;
+
+  const activeWorkspace = workspace;
 
   function stopTyping() {
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
       typingTimeoutRef.current = null;
     }
-    socket.emit("chat:stop-typing", workspace._id);
+    socket.emit("chat:stop-typing", activeWorkspace._id);
   }
 
   function announceTyping() {
-    socket.emit("chat:typing", workspace._id);
+    socket.emit("chat:typing", activeWorkspace._id);
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(stopTyping, 1200);
   }
@@ -152,8 +156,8 @@ export function WorkspaceChat({ workspace }: { workspace?: WorkspaceDoc }) {
 
   async function sendMessage() {
     const message = content.trim();
-    if (!message || !workspace) return;
-    await chat.create.mutateAsync({ workspaceId: workspace._id, content: message });
+    if (!message) return;
+    await chat.create.mutateAsync({ workspaceId: activeWorkspace._id, content: message });
     setContent("");
     stopTyping();
   }

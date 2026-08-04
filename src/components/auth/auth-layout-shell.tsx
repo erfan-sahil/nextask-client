@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { authRoutes, appRoutes } from "@/config/navigation";
 import { useAuth } from "@/hooks/use-auth";
 
-function AuthLayoutContent({ children }: { children: React.ReactNode }) {
+export function AuthLayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -68,6 +68,3 @@ function AuthLayoutContent({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function AuthLayoutShell({ children }: { children: React.ReactNode }) {
-  return <AuthLayoutContent>{children}</AuthLayoutContent>;
-}
