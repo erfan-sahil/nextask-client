@@ -1,7 +1,9 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, LayoutDashboard } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { AppModalHeader } from "@/components/app/app-modal-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +15,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useBoards } from "@/hooks/use-workflow";
 import { getErrorMessage } from "@/lib/api/get-error-message";
+import {
+  boardFormSchema,
+  type BoardFormValues,
+} from "@/lib/validations/board";
 import type { BoardDoc } from "@/types/domain";
 
 type BoardModalProps = {
@@ -35,8 +41,6 @@ export function BoardModal({
   mode,
 }: BoardModalProps) {
   const boards = useBoards(workspaceId, projectId);
-  const [name, setName] = useState(board?.name ?? "");
-  const [description, setDescription] = useState(board?.description ?? "");
   const [formError, setFormError] = useState<string | null>(null);
   const isPending =
     boards.create.isPending || boards.update.isPending || boards.remove.isPending;
@@ -44,40 +48,79 @@ export function BoardModal({
   const isDeleting = mode === "delete";
   const title = isCreating ? "Create board" : isDeleting ? "Delete board" : "Edit board";
 
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<BoardFormValues>({
+    resolver: zodResolver(boardFormSchema),
+    defaultValues: {
+      name: board?.name ?? "",
+      description: board?.description ?? "",
+    },
+  });
+
+  const nameValue = watch("name");
+
+  useEffect(() => {
+    if (!isOpen) return;
+    reset({
+      name: board?.name ?? "",
+      description: board?.description ?? "",
+    });
+    setFormError(null);
+  }, [isOpen, board, reset]);
+
   function closeModal() {
     if (isPending) return;
     setFormError(null);
     onOpenChange(false);
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function onSubmit(values: BoardFormValues) {
     setFormError(null);
 
+    const payload = {
+      name: values.name.trim(),
+      description: values.description?.trim() || undefined,
+    };
+
     try {
-      if (isDeleting && board) {
-        await boards.remove.mutateAsync({
-          workspaceId,
-          projectId,
-          boardId: board._id,
-        });
-      } else if (board) {
+      if (board) {
         await boards.update.mutateAsync({
           workspaceId,
           projectId,
           boardId: board._id,
-          name: name.trim(),
-          description: description.trim() || undefined,
+          ...payload,
         });
       } else {
         await boards.create.mutateAsync({
           workspaceId,
           projectId,
-          name: name.trim(),
-          description: description.trim() || undefined,
+          ...payload,
         });
       }
 
+      onOpenChange(false);
+    } catch (error) {
+      setFormError(getErrorMessage(error));
+    }
+  }
+
+  async function handleDelete(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!board) return;
+
+    setFormError(null);
+
+    try {
+      await boards.remove.mutateAsync({
+        workspaceId,
+        projectId,
+        boardId: board._id,
+      });
       onOpenChange(false);
     } catch (error) {
       setFormError(getErrorMessage(error));
@@ -92,7 +135,7 @@ export function BoardModal({
       }}
     >
       <DialogContent className="max-w-lg overflow-hidden p-0">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={isDeleting ? handleDelete : handleSubmit(onSubmit)}>
           <AppModalHeader
             title={title}
             description={
@@ -128,25 +171,35 @@ export function BoardModal({
                   <Label htmlFor="board-name">Board name</Label>
                   <Input
                     id="board-name"
-                    required
                     autoFocus
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
                     placeholder="e.g. Product roadmap"
                     className="h-10 rounded-xl bg-background px-3"
+                    aria-invalid={Boolean(errors.name)}
+                    {...register("name")}
                   />
+                  {errors.name && (
+                    <p className="text-sm text-destructive">{errors.name.message}</p>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="board-description">Description</Label>
+                  <Label htmlFor="board-description">
+                    Description{" "}
+                    <span className="font-normal text-muted-foreground">(optional)</span>
+                  </Label>
                   <Textarea
                     id="board-description"
-                    value={description}
-                    onChange={(event) => setDescription(event.target.value)}
                     placeholder="What is this board for?"
                     rows={3}
                     className="rounded-xl bg-background px-3"
+                    aria-invalid={Boolean(errors.description)}
+                    {...register("description")}
                   />
+                  {errors.description && (
+                    <p className="text-sm text-destructive">
+                      {errors.description.message}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -164,7 +217,7 @@ export function BoardModal({
             </Button>
             <Button
               type="submit"
-              disabled={isPending || (!isDeleting && !name.trim())}
+              disabled={isPending || (!isDeleting && !nameValue?.trim())}
               variant={isDeleting ? "destructive" : "default"}
             >
               {isPending

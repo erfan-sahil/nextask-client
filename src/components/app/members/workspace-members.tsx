@@ -256,7 +256,7 @@ function MemberModal({
   return (
     <Dialog open onOpenChange={(open) => !open && !isPending && onClose()}>
       <DialogContent className="max-w-md overflow-hidden p-0">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           {isDetails && member && detailsConfig && RoleIcon ? (
             <DialogHeader
               className={cn(

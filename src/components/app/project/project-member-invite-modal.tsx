@@ -1,7 +1,9 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { UserPlus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { AppModalHeader } from "@/components/app/app-modal-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +20,10 @@ import {
 } from "@/components/ui/select";
 import { useProjectMembers } from "@/hooks/use-workflow";
 import { getErrorMessage } from "@/lib/api/get-error-message";
+import {
+  memberInviteFormSchema,
+  type MemberInviteFormValues,
+} from "@/lib/validations/member";
 import type { MemberRole } from "@/types/domain";
 
 const ASSIGNABLE_ROLES: MemberRole[] = ["MEMBER", "ADMIN"];
@@ -38,10 +44,31 @@ export function ProjectMemberInviteModal({
   projectName,
 }: ProjectMemberInviteModalProps) {
   const members = useProjectMembers(workspaceId, projectId);
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState<MemberRole>("MEMBER");
   const [formError, setFormError] = useState<string | null>(null);
   const isPending = members.invite.isPending;
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<MemberInviteFormValues>({
+    resolver: zodResolver(memberInviteFormSchema),
+    defaultValues: {
+      email: "",
+      role: "MEMBER",
+    },
+  });
+
+  const emailValue = watch("email");
+
+  useEffect(() => {
+    if (!isOpen) return;
+    reset({ email: "", role: "MEMBER" });
+    setFormError(null);
+  }, [isOpen, reset]);
 
   function closeModal() {
     if (isPending) return;
@@ -49,19 +76,17 @@ export function ProjectMemberInviteModal({
     onOpenChange(false);
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function onSubmit(values: MemberInviteFormValues) {
     setFormError(null);
 
     try {
       await members.invite.mutateAsync({
         workspaceId,
         projectId,
-        email: email.trim(),
-        role,
+        email: values.email.trim(),
+        role: values.role,
       });
-      setEmail("");
-      setRole("MEMBER");
+      reset({ email: "", role: "MEMBER" });
       onOpenChange(false);
     } catch (error) {
       setFormError(getErrorMessage(error));
@@ -76,7 +101,7 @@ export function ProjectMemberInviteModal({
       }}
     >
       <DialogContent className="max-w-md overflow-hidden p-0">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <AppModalHeader
             title="Invite to project"
             description={`Send an invitation to join ${projectName} with project-specific access.`}
@@ -92,28 +117,51 @@ export function ProjectMemberInviteModal({
               <Input
                 id="project-member-email"
                 type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
                 placeholder="teammate@company.com"
                 autoFocus
-                required
+                disabled={isPending}
+                aria-invalid={Boolean(errors.email)}
+                {...register("email")}
               />
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="project-member-role">Project role</Label>
-              <Select value={role} onValueChange={(value) => setRole(value as MemberRole)}>
-                <SelectTrigger id="project-member-role" className="w-full cursor-pointer">
-                  <span>{role === "ADMIN" ? "Admin" : "Member"}</span>
-                </SelectTrigger>
-                <SelectContent side="bottom" align="start" alignItemWithTrigger={false}>
-                  {ASSIGNABLE_ROLES.map((assignableRole) => (
-                    <SelectItem key={assignableRole} value={assignableRole}>
-                      {assignableRole === "ADMIN" ? "Admin" : "Member"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                name="role"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    disabled={isPending}
+                  >
+                    <SelectTrigger
+                      id="project-member-role"
+                      className="w-full cursor-pointer"
+                    >
+                      <span>{field.value === "ADMIN" ? "Admin" : "Member"}</span>
+                    </SelectTrigger>
+                    <SelectContent
+                      side="bottom"
+                      align="start"
+                      alignItemWithTrigger={false}
+                    >
+                      {ASSIGNABLE_ROLES.map((assignableRole) => (
+                        <SelectItem key={assignableRole} value={assignableRole}>
+                          {assignableRole === "ADMIN" ? "Admin" : "Member"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.role && (
+                <p className="text-sm text-destructive">{errors.role.message}</p>
+              )}
               <p className="text-xs text-muted-foreground">
                 Admins can manage project members. Members can collaborate only in this project.
               </p>
@@ -130,7 +178,7 @@ export function ProjectMemberInviteModal({
             <Button type="button" variant="outline" onClick={closeModal} disabled={isPending}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending || !email.trim()}>
+            <Button type="submit" disabled={isPending || !emailValue?.trim()}>
               {isPending ? "Sending…" : "Send invitation"}
             </Button>
           </div>
