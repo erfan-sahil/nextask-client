@@ -304,7 +304,11 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
                 <SelectTrigger className="h-9 w-full">
                   <SelectValue className="truncate">{selectedPeriodLabel}</SelectValue>
                 </SelectTrigger>
-                <SelectContent align="start" side="bottom">
+                <SelectContent
+                  align="start"
+                  side="bottom"
+                  alignItemWithTrigger={false}
+                >
                   {PERIOD_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
@@ -320,7 +324,11 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
                 <SelectTrigger className="h-9 w-full">
                   <SelectValue className="truncate">{selectedProjectLabel}</SelectValue>
                 </SelectTrigger>
-                <SelectContent align="start" side="bottom">
+                <SelectContent
+                  align="start"
+                  side="bottom"
+                  alignItemWithTrigger={false}
+                >
                   <SelectItem value="all">All projects</SelectItem>
                   {filterProjects.map((project) => (
                     <SelectItem key={project._id} value={project._id}>
