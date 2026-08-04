@@ -1,15 +1,11 @@
 "use client";
 
-import {
-  LogOut,
-  Menu,
-  PanelLeft,
-  PanelLeftClose,
-} from "lucide-react";
+import { LogOut, PanelLeft, PanelLeftClose } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { AppNavIcon, NotificationIcon } from "@/components/app/app-nav-icon";
 import { UserAvatar } from "@/components/app/user-avatar";
+import { MobileMenuButton } from "@/components/layout/mobile-nav";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { appRoutes } from "@/config/navigation";
@@ -109,6 +105,7 @@ type AppHeaderProps = {
   onMenuClick?: () => void;
   onSidebarToggle?: () => void;
   sidebarOpen?: boolean;
+  mobileNavOpen?: boolean;
 };
 
 export function AppHeader({
@@ -117,62 +114,63 @@ export function AppHeader({
   onMenuClick,
   onSidebarToggle,
   sidebarOpen = true,
+  mobileNavOpen = false,
 }: AppHeaderProps) {
   const notifications = useNotifications();
   const unreadCount = notifications.data?.unreadCount ?? 0;
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-4 border-b border-border bg-background/90 px-4 backdrop-blur-md sm:px-6">
-      {/* Mobile: opens Sheet */}
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="lg:hidden"
-        onClick={onMenuClick}
-        aria-label="Open navigation menu"
-      >
-        <Menu className="size-5" />
-      </Button>
-
-      {/* Desktop: collapses/expands sidebar */}
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="hidden rounded-md hover:bg-emerald-500/5 hover:text-accent-foreground lg:flex"
-        onClick={onSidebarToggle}
-        aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-      >
-        {sidebarOpen ? (
-          <PanelLeftClose className="size-5" />
-        ) : (
-          <PanelLeft className="size-5" />
+    <header className="sticky top-0 z-30 shrink-0 px-4 pt-2 pb-2 lg:px-0 lg:py-0">
+      <div
+        className={cn(
+          "flex h-16 items-center gap-3 border px-3 transition-[border-color,background-color,box-shadow] duration-300 sm:gap-4 sm:px-4 lg:gap-4 lg:rounded-none lg:border-0 lg:border-b lg:border-border lg:bg-background/90 lg:px-6 lg:shadow-none lg:backdrop-blur-md",
+          "rounded-2xl border-border/60 bg-card/95 shadow-sm backdrop-blur-md dark:border-border/40 dark:bg-background/60",
         )}
-      </Button>
+      >
+        <MobileMenuButton
+          open={mobileNavOpen}
+          hiddenFrom="lg"
+          onClick={() => onMenuClick?.()}
+        />
 
-      <div className="min-w-0 flex-1">
-        <h1 className="truncate text-lg font-semibold tracking-tight">
-          {title}
-        </h1>
-        <p className="hidden text-sm text-muted-foreground sm:block">
-          Workspaces, projects, boards, and tasks — all in one place.
-        </p>
-      </div>
-
-      <div className="flex items-center gap-1.5 sm:gap-2">
-        <Link
-          href="/inbox"
-          aria-label="Notifications"
-          className="relative inline-flex size-9 items-center justify-center rounded-md transition-colors hover:bg-emerald-500/5 hover:text-accent-foreground"
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="hidden rounded-md hover:bg-emerald-500/5 hover:text-accent-foreground lg:flex"
+          onClick={onSidebarToggle}
+          aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
         >
-          <NotificationIcon className="size-4" />
-          {unreadCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />
+          {sidebarOpen ? (
+            <PanelLeftClose className="size-5" />
+          ) : (
+            <PanelLeft className="size-5" />
           )}
-        </Link>
-        <ThemeToggle />
-        <UserMenu user={user} />
+        </Button>
+
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-lg font-semibold tracking-tight">
+            {title}
+          </h1>
+          <p className="hidden text-sm text-muted-foreground sm:block">
+            Workspaces, projects, boards, and tasks — all in one place.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <Link
+            href="/inbox"
+            aria-label="Notifications"
+            className="relative inline-flex size-9 items-center justify-center rounded-md transition-colors hover:bg-emerald-500/5 hover:text-accent-foreground"
+          >
+            <NotificationIcon className="size-4" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />
+            )}
+          </Link>
+          <ThemeToggle />
+          <UserMenu user={user} />
+        </div>
       </div>
     </header>
   );

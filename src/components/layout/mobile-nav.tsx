@@ -1,20 +1,30 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { AuthActions } from "@/components/layout/auth-actions";
 import { cn } from "@/lib/utils";
+
+type MobileBreakpoint = "md" | "lg";
 
 type MobileNavProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Hide overlay/panel at this breakpoint and above. Defaults to `md`. */
+  hiddenFrom?: MobileBreakpoint;
 };
 
 const panelEase = "cubic-bezier(0.32, 0.72, 0, 1)";
 
+const hiddenFromClass: Record<MobileBreakpoint, string> = {
+  md: "md:hidden",
+  lg: "lg:hidden",
+};
+
 export function MobileNavOverlay({
   open,
   onOpenChange,
-}: Pick<MobileNavProps, "open" | "onOpenChange">) {
+  hiddenFrom = "md",
+}: Pick<MobileNavProps, "open" | "onOpenChange" | "hiddenFrom">) {
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => {
@@ -40,7 +50,8 @@ export function MobileNavOverlay({
     <div
       aria-hidden={!open}
       className={cn(
-        "fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 md:hidden",
+        "fixed inset-0 z-40 bg-black/40 transition-opacity duration-300",
+        hiddenFromClass[hiddenFrom],
         open
           ? "pointer-events-auto opacity-100"
           : "pointer-events-none opacity-0",
@@ -54,14 +65,21 @@ export function MobileNavOverlay({
 export function MobileNavPanel({
   open,
   onOpenChange,
-}: Pick<MobileNavProps, "open" | "onOpenChange">) {
+  hiddenFrom = "md",
+  children,
+  contentClassName,
+}: Pick<MobileNavProps, "open" | "onOpenChange" | "hiddenFrom"> & {
+  children?: ReactNode;
+  contentClassName?: string;
+}) {
   return (
     <div
       role="region"
       aria-hidden={!open}
       aria-label="Mobile menu"
       className={cn(
-        "grid transition-[grid-template-rows] duration-300 md:hidden",
+        "grid transition-[grid-template-rows] duration-300",
+        hiddenFromClass[hiddenFrom],
         open ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
       )}
       style={{ transitionTimingFunction: panelEase }}
@@ -73,6 +91,7 @@ export function MobileNavPanel({
             open
               ? "translate-y-0 opacity-100"
               : "-translate-y-1 opacity-0",
+            contentClassName,
           )}
           style={{
             transitionTimingFunction: panelEase,
@@ -83,12 +102,14 @@ export function MobileNavPanel({
             aria-hidden
             className="mb-4 h-px bg-linear-to-r from-transparent via-border/80 to-transparent"
           />
-          <AuthActions
-            layout="stacked"
-            animate
-            open={open}
-            onNavigate={() => onOpenChange(false)}
-          />
+          {children ?? (
+            <AuthActions
+              layout="stacked"
+              animate
+              open={open}
+              onNavigate={() => onOpenChange(false)}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -108,16 +129,28 @@ export function MobileNav(props: MobileNavProps) {
 type MobileMenuButtonProps = {
   open: boolean;
   onClick: () => void;
+  /** Hide button at this breakpoint and above. Defaults to `md`. */
+  hiddenFrom?: MobileBreakpoint;
+  className?: string;
 };
 
-export function MobileMenuButton({ open, onClick }: MobileMenuButtonProps) {
+export function MobileMenuButton({
+  open,
+  onClick,
+  hiddenFrom = "md",
+  className,
+}: MobileMenuButtonProps) {
   return (
     <button
       type="button"
       aria-label={open ? "Close menu" : "Open menu"}
       aria-expanded={open}
       onClick={onClick}
-      className="relative flex size-9 items-center justify-center rounded-full bg-transparent transition-colors hover:bg-emerald-500/5 md:hidden"
+      className={cn(
+        "relative flex size-9 items-center justify-center rounded-full bg-transparent transition-colors hover:bg-emerald-500/5",
+        hiddenFromClass[hiddenFrom],
+        className,
+      )}
     >
       <span className="relative block size-4">
         <span

@@ -94,7 +94,8 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
         <AppHeader
           user={user}
           sidebarOpen={sidebarOpen}
-          onMenuClick={() => setMobileNavOpen(true)}
+          mobileNavOpen={mobileNavOpen}
+          onMenuClick={() => setMobileNavOpen((open) => !open)}
           onSidebarToggle={toggleSidebar}
         />
         <main className="flex-1 overflow-y-auto overflow-x-hidden">{children}</main>
