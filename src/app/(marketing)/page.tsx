@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     absolute: siteTitle.default,
   },
   description:
-    "Create company workspaces, run multiple projects, organize work on kanban boards, and manage tasks in NexTask — a modern project management platform built for clarity and productivity.",
+    "Create workspaces, run projects, organize kanban boards, manage tasks, and collaborate in workspace chat with NexTask.",
   alternates: {
     canonical: "/",
   },

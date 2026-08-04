@@ -6,8 +6,7 @@ export type NavLink = {
 export const footerLinkGroups = {
   Product: [
     { label: "Features", href: "#features" },
-    { label: "How it works", href: "#workflow" },
-    { label: "Product tour", href: "#product" },
+    { label: "Inside the product", href: "#product" },
   ],
   Company: [
     { label: "About", href: "#" },

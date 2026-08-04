@@ -2,7 +2,7 @@ export const siteConfig = {
   name: "NexTask",
   tagline: "Project Management for Focused Teams",
   description:
-    "NexTask brings workspaces, projects, boards, and tasks into one calm system — so teams can focus on meaningful work, not tool chaos.",
+    "NexTask is a calm project management platform that helps teams plan clearly, track progress, and stay aligned.",
   footerTagline: "Built for teams who value clarity over complexity.",
 } as const;
 

@@ -1,98 +1,94 @@
 import {
-  Building2,
   CheckSquare,
   Columns3,
   FolderKanban,
-  LayoutDashboard,
-  Users,
+  Layers,
+  MessageCircle,
+  type LucideIcon,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
-const features = [
+const features: {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  wide?: boolean;
+}[] = [
   {
-    icon: Building2,
-    title: "Company workspaces",
+    icon: Layers,
+    title: "Workspaces",
     description:
-      "Give each department or client a dedicated workspace with its own members, settings, and context.",
+      "A dedicated home for each company, team, or client, with members and context kept together.",
+    wide: true,
   },
   {
     icon: FolderKanban,
-    title: "Projects inside workspaces",
+    title: "Projects",
     description:
-      "Run multiple initiatives in parallel — from product launches to internal ops — without mixing priorities.",
+      "Run multiple initiatives in parallel without mixing priorities or owners.",
   },
   {
     icon: Columns3,
-    title: "Kanban boards",
+    title: "Boards",
     description:
-      "Organize each project with visual boards and columns — backlog, in progress, and done — so work flows naturally.",
+      "Kanban columns that match how your team plans, builds, and ships.",
   },
   {
     icon: CheckSquare,
-    title: "Structured task management",
+    title: "Tasks",
     description:
-      "Break work into clear tasks with ownership, status, and progress so nothing slips through the cracks.",
+      "Clear ownership, status, and progress so nothing slips through.",
   },
   {
-    icon: LayoutDashboard,
-    title: "Focused dashboards",
+    icon: MessageCircle,
+    title: "Chat",
     description:
-      "See what matters now with calm, scannable views designed to reduce cognitive load.",
-  },
-  {
-    icon: Users,
-    title: "Team alignment",
-    description:
-      "Keep everyone on the same page with shared projects, visible progress, and accountable ownership.",
+      "Real-time conversation with mentions, so decisions stay next to the work.",
+    wide: true,
   },
 ];
 
 export function FeaturesSection() {
   return (
-    <section
-      id="features"
-      className="scroll-mt-20 border-t border-border bg-muted/40 py-14 sm:py-16 dark:bg-muted/30"
-    >
+    <section id="features" className="scroll-mt-20 py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <Badge variant="outline" className="rounded-full">
+        <div className="max-w-xl">
+          <p className="text-sm font-semibold tracking-[0.16em] text-primary uppercase">
             Features
-          </Badge>
-          <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-            Everything your company needs to plan and deliver
+          </p>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+            What you get with NexTask
           </h2>
           <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg">
-            NexTask mirrors how teams actually work — company first, then
-            workspace, project, board, and task — so structure feels natural.
+            The core pieces of the product. Nothing extra, nothing buried.
           </p>
         </div>
 
-        <div className="mt-10 grid gap-5 sm:mt-12 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature) => (
-            <Card
+        <div className="mt-10 grid gap-4 sm:mt-12 sm:grid-cols-2 lg:grid-cols-4">
+          {features.map((feature, index) => (
+            <article
               key={feature.title}
-              className="border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:bg-emerald-500/5 dark:border-border/80 dark:bg-card/80 dark:hover:bg-emerald-400/10 dark:hover:shadow-lg"
+              className={cn(
+                "group relative overflow-hidden rounded-2xl border border-border bg-card p-6 transition-all duration-200 hover:border-primary/30 hover:bg-primary-light sm:p-7 dark:hover:border-primary/25 dark:hover:bg-primary/10",
+                feature.wide && "sm:col-span-2",
+              )}
             >
-              <CardHeader>
-                <div className="mb-2 flex size-10 items-center justify-center rounded-xl bg-primary-light text-primary">
+              <div className="absolute top-0 left-0 h-full w-1 bg-primary opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+              <div className="mb-5 flex items-center justify-between gap-3">
+                <div className="flex size-11 items-center justify-center rounded-xl bg-primary-light text-primary transition-all duration-200 group-hover:bg-primary group-hover:text-primary-foreground dark:bg-primary/15 dark:group-hover:bg-primary-light dark:group-hover:text-primary dark:group-hover:ring-2 dark:group-hover:ring-primary/35">
                   <feature.icon className="size-5" aria-hidden />
                 </div>
-                <CardTitle className="text-base font-semibold">
-                  {feature.title}
-                </CardTitle>
-                <CardDescription className="leading-6">
-                  {feature.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent />
-            </Card>
+                <span className="font-mono text-xs font-semibold text-primary/50">
+                  0{index + 1}
+                </span>
+              </div>
+              <h3 className="text-xl font-bold tracking-tight text-foreground">
+                {feature.title}
+              </h3>
+              <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+                {feature.description}
+              </p>
+            </article>
           ))}
         </div>
       </div>

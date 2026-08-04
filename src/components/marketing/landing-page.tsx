@@ -3,8 +3,6 @@ import {
   FeaturesSection,
   HeroSection,
   ProductPreviewSection,
-  ProductivitySection,
-  WorkflowSection,
 } from "@/components/marketing/sections";
 
 export function LandingPage() {
@@ -12,9 +10,7 @@ export function LandingPage() {
     <main>
       <HeroSection />
       <FeaturesSection />
-      <WorkflowSection />
       <ProductPreviewSection />
-      <ProductivitySection />
       <CtaSection />
     </main>
   );

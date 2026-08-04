@@ -8,19 +8,18 @@ export function LandingJsonLd() {
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",
     description:
-      "NexTask is project management software that helps companies create workspaces, manage multiple projects, organize work on kanban boards, and track tasks effectively.",
+      "NexTask is project management software for workspaces, projects, kanban boards, tasks, and workspace chat.",
     offers: {
       "@type": "Offer",
       price: "0",
       priceCurrency: "USD",
     },
     featureList: [
-      "Company workspaces",
-      "Multi-project organization",
+      "Workspaces",
+      "Projects",
       "Kanban boards",
       "Task management",
-      "Team collaboration",
-      "Focused dashboards",
+      "Workspace chat",
     ],
   };
 
