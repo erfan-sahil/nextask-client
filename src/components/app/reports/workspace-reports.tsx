@@ -95,18 +95,18 @@ function StatCard({
   subtitle?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/20 hover:bg-muted/40">
-      <div className="flex items-center justify-between gap-3">
+    <div className="rounded-2xl border border-border bg-card p-3.5 transition-colors hover:border-primary/20 hover:bg-muted/40 sm:p-5">
+      <div className="flex items-center justify-between gap-2 sm:gap-3">
         <span
           className={cn(
-            "flex size-9 shrink-0 items-center justify-center rounded-xl",
+            "flex size-8 shrink-0 items-center justify-center rounded-xl sm:size-9",
             className,
           )}
         >
           <Icon className="size-4" aria-hidden />
         </span>
         <div className="min-w-0 text-right">
-          <p className="text-2xl font-bold tracking-tight">{value}</p>
+          <p className="text-xl font-bold tracking-tight sm:text-2xl">{value}</p>
           <p className="text-xs text-muted-foreground">{label}</p>
           {subtitle && (
             <p className="mt-0.5 truncate text-xs text-muted-foreground">
@@ -223,9 +223,9 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
     PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Last month";
   const selectedProjectLabel =
     selectedProjectId === "all"
-      ? "All"
+      ? "All Project"
       : filterProjects.find((project) => project._id === selectedProjectId)?.name ??
-        "All";
+        "All Project";
 
   if (workspacesQuery.isPending) {
     return <LoadingState />;
@@ -295,7 +295,7 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
           </div>
 
           <div className="mt-6 flex flex-wrap items-end gap-3">
-            <label className="grid w-48 gap-1.5 text-xs font-medium text-muted-foreground">
+            <label className="grid min-w-0 flex-1 gap-1.5 text-xs font-medium text-muted-foreground sm:max-w-48 sm:flex-none">
               Time period
               <Select
                 value={period}
@@ -318,7 +318,7 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
               </Select>
             </label>
 
-            <label className="grid w-52 min-w-0 gap-1.5 text-xs font-medium text-muted-foreground">
+            <label className="grid min-w-0 flex-1 gap-1.5 text-xs font-medium text-muted-foreground sm:max-w-52 sm:flex-none">
               Projects
               <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                 <SelectTrigger className="h-9 w-full">
@@ -329,7 +329,7 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
                   side="bottom"
                   alignItemWithTrigger={false}
                 >
-                  <SelectItem value="all">All projects</SelectItem>
+                  <SelectItem value="all">All Project</SelectItem>
                   {filterProjects.map((project) => (
                     <SelectItem key={project._id} value={project._id}>
                       {project.name}
@@ -340,7 +340,7 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
             </label>
 
             {period === "custom" && (
-              <div className="grid w-80 max-w-full basis-full gap-1.5 text-xs font-medium text-muted-foreground xl:basis-auto">
+              <div className="grid w-full max-w-full basis-full gap-1.5 text-xs font-medium text-muted-foreground sm:w-80 xl:basis-auto">
                 Date range
                 <ReportDateRangePicker
                   from={from}
@@ -375,7 +375,7 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
         </div>
       ) : (
         <>
-          <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
             <StatCard
               label="Total tasks"
               value={report.overview.totalTasks}
