@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Layers } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { authRoutes } from "@/config/navigation";
 import { cn } from "@/lib/utils";
@@ -14,7 +14,7 @@ export function CtaSection() {
           <div className="px-6 py-14 text-center sm:px-10 sm:py-16">
             <div className="mx-auto max-w-xl">
               <span className="mx-auto mb-5 flex size-12 items-center justify-center rounded-2xl bg-card text-primary dark:bg-primary-light">
-                <Sparkles className="size-5" aria-hidden />
+                <Layers className="size-5" aria-hidden />
               </span>
 
               <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">

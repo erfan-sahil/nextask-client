@@ -71,8 +71,9 @@ export function ProductPreviewSection() {
             <div className="h-1 w-full bg-primary" />
 
             <div className="grid lg:grid-cols-2 lg:items-stretch">
+              {/* Board panel */}
               <div className="flex min-h-0 flex-col border-b border-border lg:border-r lg:border-b-0">
-                <div className="flex h-[4.5rem] items-center justify-between gap-3 border-b border-border px-5">
+                <div className="flex h-[4.5rem] items-center justify-between gap-3 border-b border-border bg-card px-5">
                   <div className="min-w-0">
                     <p className="truncate text-xs font-medium text-muted-foreground">
                       Engineering
@@ -86,7 +87,7 @@ export function ProductPreviewSection() {
                   </span>
                 </div>
 
-                <div className="grid flex-1 grid-cols-1 content-start gap-3 bg-primary-light p-4 dark:bg-muted sm:grid-cols-3 sm:p-5">
+                <div className="grid flex-1 grid-cols-1 content-start gap-3 bg-muted p-4 sm:grid-cols-3 sm:p-5 dark:bg-background">
                   {columns.map((column) => (
                     <div
                       key={column.title}
@@ -116,7 +117,7 @@ export function ProductPreviewSection() {
                             "rounded-md px-2 py-0.5 text-xs font-bold",
                             column.highlight
                               ? "bg-primary-light text-primary dark:bg-primary/15"
-                              : "bg-muted text-muted-foreground",
+                              : "bg-muted text-muted-foreground dark:bg-muted",
                           )}
                         >
                           {column.items.length}
@@ -129,7 +130,7 @@ export function ProductPreviewSection() {
                             className={cn(
                               "rounded-lg border px-3 py-2.5",
                               item.active
-                                ? "border-primary/20 bg-primary/10"
+                                ? "border-primary/20 bg-primary-light dark:bg-primary/10"
                                 : "border-border bg-background",
                             )}
                           >
@@ -145,9 +146,10 @@ export function ProductPreviewSection() {
                 </div>
               </div>
 
-              <div className="flex min-h-0 flex-col">
-                <div className="flex h-[4.5rem] items-center gap-3 border-b border-border px-5">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-light text-primary dark:bg-primary/15">
+              {/* Chat panel */}
+              <div className="flex min-h-0 flex-col bg-card">
+                <div className="flex h-[4.5rem] items-center gap-3 border-b border-border bg-card px-5">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <MessageCircle className="size-4" aria-hidden />
                   </div>
                   <div className="min-w-0">
@@ -158,7 +160,7 @@ export function ProductPreviewSection() {
                   </div>
                 </div>
 
-                <div className="flex flex-1 flex-col gap-3 bg-primary-light p-4 dark:bg-muted">
+                <div className="flex flex-1 flex-col gap-3 bg-background p-4">
                   {chatMessages.map((message) => (
                     <div
                       key={message.text}
@@ -172,7 +174,7 @@ export function ProductPreviewSection() {
                           "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold",
                           message.own
                             ? "bg-primary text-primary-foreground"
-                            : "bg-card text-foreground ring-1 ring-border",
+                            : "bg-primary-light text-primary dark:bg-primary/15",
                         )}
                       >
                         {message.initials}
@@ -204,8 +206,8 @@ export function ProductPreviewSection() {
                   <div className="mt-auto" />
                 </div>
 
-                <div className="border-t border-border px-4 py-3">
-                  <div className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-muted-foreground">
+                <div className="border-t border-border bg-card px-4 py-3">
+                  <div className="rounded-xl border border-border bg-muted px-3 py-2.5 text-sm text-muted-foreground dark:bg-background">
                     Write a message…
                   </div>
                 </div>
