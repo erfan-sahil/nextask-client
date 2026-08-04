@@ -177,13 +177,6 @@ function goalProgress(goal: GoalDoc): number {
   return goal.status === "COMPLETED" ? 100 : 0;
 }
 
-function getPlainText(value: string | null | undefined) {
-  return String(value ?? "")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 function GoalCard({
   goal,
   canManage,
@@ -277,10 +270,6 @@ function GoalCard({
               </Badge>
             )}
           </div>
-
-          <p className="mt-1.5 text-xs leading-5 text-muted-foreground line-clamp-2">
-            {getPlainText(goal.details)}
-          </p>
 
           {/* Meta row */}
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5">
