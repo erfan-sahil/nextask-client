@@ -1,9 +1,13 @@
-/** Shared visual + motion paths — sweeping S-curves that frame the page */
+/** Desktop — sweeping S-curves that frame the page horizontally */
 const FLIGHT_PATH_PRIMARY =
   "M60 300 C220 140, 420 140, 560 280 C700 420, 860 440, 1000 300 C1140 160, 1280 160, 1400 280";
 
 const FLIGHT_PATH_SECONDARY =
   "M1400 620 C1240 780, 1040 780, 900 640 C760 500, 600 480, 460 620 C320 760, 180 760, 40 640";
+
+/** Mobile — single taller vertical S-curve kept near center */
+const FLIGHT_PATH_MOBILE =
+  "M620 50 C860 200, 480 340, 700 470 C920 600, 540 740, 780 880";
 
 function PaperPlane({ className }: { className?: string }) {
   return (
@@ -25,6 +29,77 @@ function PaperPlane({ className }: { className?: string }) {
         strokeWidth="0.6"
         strokeLinecap="round"
       />
+    </g>
+  );
+}
+
+function FlightRoutes({
+  pathIds,
+  className,
+}: {
+  pathIds: string[];
+  className?: string;
+}) {
+  return (
+    <g className={className}>
+      <g
+        fill="none"
+        className="stroke-primary/10 dark:stroke-primary/8"
+        strokeWidth="6"
+        strokeLinecap="round"
+      >
+        {pathIds.map((id) => (
+          <use key={`underlay-${id}`} href={`#${id}`} />
+        ))}
+      </g>
+      <g
+        fill="none"
+        className="stroke-primary/35 dark:stroke-primary/25"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      >
+        {pathIds.map((id) => (
+          <use key={`main-${id}`} href={`#${id}`} />
+        ))}
+      </g>
+      <g
+        fill="none"
+        className="stroke-primary/20 dark:stroke-primary/14"
+        strokeWidth="1"
+        strokeDasharray="2 10"
+        strokeLinecap="round"
+      >
+        {pathIds.map((id) => (
+          <use key={`dash-${id}`} href={`#${id}`} />
+        ))}
+      </g>
+    </g>
+  );
+}
+
+function PaperPlanes({
+  paths,
+  className,
+}: {
+  paths: { id: string; dur: string; begin?: string; opacity?: number }[];
+  className?: string;
+}) {
+  return (
+    <g className={className}>
+      {paths.map(({ id, dur, begin, opacity }) => (
+        <g key={id} opacity={opacity}>
+          <PaperPlane />
+          <animateMotion
+            dur={dur}
+            repeatCount="indefinite"
+            rotate="auto"
+            calcMode="linear"
+            begin={begin}
+          >
+            <mpath href={`#${id}`} />
+          </animateMotion>
+        </g>
+      ))}
     </g>
   );
 }
@@ -59,6 +134,7 @@ export function MarketingBackdrop() {
           </pattern>
           <path id="nextask-flight-primary" d={FLIGHT_PATH_PRIMARY} />
           <path id="nextask-flight-secondary" d={FLIGHT_PATH_SECONDARY} />
+          <path id="nextask-flight-mobile" d={FLIGHT_PATH_MOBILE} />
         </defs>
 
         {/* Quiet scaffold */}
@@ -120,69 +196,47 @@ export function MarketingBackdrop() {
           />
         </g>
 
-        {/* Soft underlay strokes */}
-        <g
-          fill="none"
-          className="stroke-primary/10 dark:stroke-primary/8"
-          strokeWidth="6"
-          strokeLinecap="round"
-        >
-          <use href="#nextask-flight-primary" />
-          <use href="#nextask-flight-secondary" />
-        </g>
+        <FlightRoutes
+          className="nextask-flight-desktop"
+          pathIds={["nextask-flight-primary", "nextask-flight-secondary"]}
+        />
+        <FlightRoutes
+          className="nextask-flight-mobile"
+          pathIds={["nextask-flight-mobile"]}
+        />
 
-        {/* Main flight routes */}
-        <g
-          fill="none"
-          className="stroke-primary/35 dark:stroke-primary/25"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        >
-          <use href="#nextask-flight-primary" />
-          <use href="#nextask-flight-secondary" />
-        </g>
-
-        {/* Dashed accent overlay */}
-        <g
-          fill="none"
-          className="stroke-primary/20 dark:stroke-primary/14"
-          strokeWidth="1"
-          strokeDasharray="2 10"
-          strokeLinecap="round"
-        >
-          <use href="#nextask-flight-primary" />
-          <use href="#nextask-flight-secondary" />
-        </g>
-
-        {/* Paper planes following the routes */}
-        <g className="nextask-paper-planes">
-          <g>
-            <PaperPlane />
-            <animateMotion
-              dur="16s"
-              repeatCount="indefinite"
-              rotate="auto"
-              calcMode="linear"
-            >
-              <mpath href="#nextask-flight-primary" />
-            </animateMotion>
-          </g>
-          <g opacity="0.8">
-            <PaperPlane />
-            <animateMotion
-              dur="20s"
-              repeatCount="indefinite"
-              rotate="auto"
-              calcMode="linear"
-              begin="4s"
-            >
-              <mpath href="#nextask-flight-secondary" />
-            </animateMotion>
-          </g>
-        </g>
+        <PaperPlanes
+          className="nextask-paper-planes nextask-flight-desktop"
+          paths={[
+            { id: "nextask-flight-primary", dur: "16s" },
+            {
+              id: "nextask-flight-secondary",
+              dur: "20s",
+              begin: "4s",
+              opacity: 0.8,
+            },
+          ]}
+        />
+        <PaperPlanes
+          className="nextask-paper-planes nextask-flight-mobile"
+          paths={[{ id: "nextask-flight-mobile", dur: "16s" }]}
+        />
       </svg>
 
       <style>{`
+        .nextask-flight-mobile {
+          display: none;
+        }
+
+        @media (max-width: 767px) {
+          .nextask-flight-desktop {
+            display: none;
+          }
+          .nextask-flight-mobile {
+            display: inline;
+          }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .nextask-paper-planes {
             display: none;
