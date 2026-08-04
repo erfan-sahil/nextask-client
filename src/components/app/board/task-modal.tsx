@@ -376,13 +376,13 @@ export function TaskModal({
       <DialogContent
         className={
           isDetails
-            ? "h-[min(32rem,calc(100svh-2rem))] max-w-3xl overflow-hidden p-0"
+            ? "h-[min(40rem,calc(100svh-2rem))] max-w-3xl overflow-hidden p-0"
             : isDeleting
               ? "max-w-md overflow-hidden p-0"
               : isAssigning
                 ? "max-w-md overflow-hidden p-0"
               : hasScrollableTaskContent
-                ? "h-[min(32rem,calc(100svh-2rem))] overflow-hidden p-0"
+                ? "h-[min(40rem,calc(100svh-2rem))] overflow-hidden p-0"
                 : "overflow-hidden p-0"
         }
       >

@@ -269,33 +269,37 @@ function ConnectedProjectPage({
       <section className="mb-8 overflow-hidden rounded-2xl border border-border bg-card">
         <div className="h-1 bg-primary" />
         <div className="p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
               <h1 className="text-2xl font-bold">{project.data.name}</h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 {project.data.description}
               </p>
             </div>
-            <div className="flex flex-wrap justify-end gap-2">
+            <div className="flex shrink-0 flex-nowrap items-center gap-2">
               {canInviteProjectMembers && (
                 <Button
                   type="button"
                   variant="outline"
                   size="page"
+                  className="px-2.5 sm:px-4"
                   onClick={() => setIsInviteModalOpen(true)}
                 >
                   <UserPlus className="size-4" />
-                  Invite member
+                  <span className="sm:hidden">Invite</span>
+                  <span className="hidden sm:inline">Invite member</span>
                 </Button>
               )}
               {canManageBoards && (
                 <Button
                   type="button"
                   size="page"
+                  className="px-2.5 sm:px-4"
                   onClick={() => setBoardModal({ mode: "create" })}
                 >
                   <Plus className="size-4" />
-                  New board
+                  <span className="sm:hidden">Board</span>
+                  <span className="hidden sm:inline">New board</span>
                 </Button>
               )}
             </div>
