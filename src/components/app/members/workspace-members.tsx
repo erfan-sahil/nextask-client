@@ -553,18 +553,20 @@ function StatCard({
   accent?: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
+    <div className="flex min-w-0 flex-col items-center gap-1.5 rounded-xl border border-border bg-background px-2 py-2.5 text-center sm:flex-row sm:gap-3 sm:px-4 sm:py-3 sm:text-left">
       <div
         className={cn(
-          "flex size-8 items-center justify-center rounded-lg",
+          "flex size-7 shrink-0 items-center justify-center rounded-lg sm:size-8",
           accent,
         )}
       >
-        <Icon className="size-4" />
+        <Icon className="size-3.5 sm:size-4" />
       </div>
-      <div>
-        <p className="text-[11px] text-muted-foreground">{label}</p>
-        <p className="text-sm font-semibold">{value}</p>
+      <div className="min-w-0">
+        <p className="truncate text-[10px] text-muted-foreground sm:text-[11px]">
+          {label}
+        </p>
+        <p className="truncate text-xs font-semibold sm:text-sm">{value}</p>
       </div>
     </div>
   );
@@ -638,12 +640,12 @@ export function WorkspaceMembers({ workspaceSlug }: { workspaceSlug: string }) {
       <section className="mb-8 overflow-hidden rounded-2xl border border-border bg-card">
         <div className="h-1 bg-primary" />
         <div className="p-5 sm:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <div className="flex items-start justify-between gap-2 sm:gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+              <div className="hidden size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary sm:flex">
                 <Users className="size-6" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h1 className="text-2xl font-bold tracking-tight">Members</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Manage access for{" "}
@@ -655,15 +657,17 @@ export function WorkspaceMembers({ workspaceSlug }: { workspaceSlug: string }) {
             </div>
             {canManageMembers && (
               <Button
-                size="page"
+                size="page-sm"
+                className="shrink-0 sm:h-10 sm:px-4 sm:text-sm"
                 onClick={() => setModalState({ mode: "invite" })}
               >
                 <UserPlus className="size-4" />
-                Invite member
+                <span className="sm:hidden">Invite</span>
+                <span className="hidden sm:inline">Invite member</span>
               </Button>
             )}
           </div>
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-6 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3">
             <StatCard
               icon={Users}
               label="Total members"
