@@ -41,7 +41,7 @@ const statItems = [
 export function StatsOverview({ stats }: StatsOverviewProps) {
   return (
     <section aria-label="Overview statistics">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         {statItems.map((item) => {
           const Icon = item.icon;
 

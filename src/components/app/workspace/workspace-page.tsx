@@ -107,36 +107,42 @@ export function WorkspacePage({ workspaceSlug }: { workspaceSlug: string }) {
             )}
           </div>
           {!isProjectScoped && (
-            <div className="mt-5 flex flex-wrap gap-3">
-              <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
-                <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <LayoutGrid className="size-4" />
+            <div className="mt-5 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3">
+              <div className="flex min-w-0 flex-col items-center gap-1.5 rounded-xl border border-border bg-background px-2 py-2.5 text-center sm:flex-row sm:gap-3 sm:px-4 sm:py-3 sm:text-left">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary sm:size-8">
+                  <LayoutGrid className="size-3.5 sm:size-4" />
                 </span>
-                <div>
-                  <p className="text-[11px] text-muted-foreground">Projects</p>
-                  <p className="text-sm font-semibold text-foreground">
+                <div className="min-w-0">
+                  <p className="truncate text-[10px] text-muted-foreground sm:text-[11px]">
+                    Projects
+                  </p>
+                  <p className="truncate text-xs font-semibold text-foreground sm:text-sm">
                     {workspace.projectCount}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
-                <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                  <Users className="size-4" />
+              <div className="flex min-w-0 flex-col items-center gap-1.5 rounded-xl border border-border bg-background px-2 py-2.5 text-center sm:flex-row sm:gap-3 sm:px-4 sm:py-3 sm:text-left">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground sm:size-8">
+                  <Users className="size-3.5 sm:size-4" />
                 </span>
-                <div>
-                  <p className="text-[11px] text-muted-foreground">Members</p>
-                  <p className="text-sm font-semibold text-foreground">
+                <div className="min-w-0">
+                  <p className="truncate text-[10px] text-muted-foreground sm:text-[11px]">
+                    Members
+                  </p>
+                  <p className="truncate text-xs font-semibold text-foreground sm:text-sm">
                     {workspace.memberCount}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3">
-                <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                  <CheckCircle2 className="size-4" />
+              <div className="flex min-w-0 flex-col items-center gap-1.5 rounded-xl border border-border bg-background px-2 py-2.5 text-center sm:flex-row sm:gap-3 sm:px-4 sm:py-3 sm:text-left">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground sm:size-8">
+                  <CheckCircle2 className="size-3.5 sm:size-4" />
                 </span>
-                <div>
-                  <p className="text-[11px] text-muted-foreground">Tasks</p>
-                  <p className="text-sm font-semibold text-foreground">
+                <div className="min-w-0">
+                  <p className="truncate text-[10px] text-muted-foreground sm:text-[11px]">
+                    Tasks
+                  </p>
+                  <p className="truncate text-xs font-semibold text-foreground sm:text-sm">
                     {workspace.taskCount}
                   </p>
                 </div>
