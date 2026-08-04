@@ -102,7 +102,7 @@ function EventPill({
       }}
       title={`${event.title} · ${isPast ? "Passed" : time}`}
       className={cn(
-        "block w-full truncate rounded-md px-1.5 py-0.5 text-left text-[10px] font-medium transition-opacity hover:opacity-75",
+        "block w-full cursor-pointer truncate rounded-md px-1.5 py-0.5 text-left text-[10px] font-medium transition-opacity hover:opacity-75",
         isPast ? PAST_EVENT_STYLE[event.type] : EVENT_STYLE[event.type],
       )}
     >
@@ -328,22 +328,27 @@ export function WorkspaceCalendarView({
                       openMeetingDialog(cell.date)
                     }
                     className={cn(
-                      "min-h-26 border-r border-b p-2 text-left transition-colors",
+                      "group min-h-26 border-r border-b p-2 text-left transition-colors",
                       index % 7 === 6 && "border-r-0",
-                      isToday && "bg-primary/10",
+                      isToday && "bg-primary/15 dark:bg-primary/20",
                       canCreateMeetings &&
                         cell.currentMonth &&
-                        "cursor-pointer hover:bg-emerald-500/5",
+                        (isToday
+                          ? "cursor-pointer hover:bg-primary/25 dark:hover:bg-primary/30"
+                          : "cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"),
                       !cell.currentMonth && "cursor-default opacity-50",
                     )}
                   >
                     <div className="mb-1.5 flex justify-end">
                       <span
                         className={cn(
-                          "flex size-6 items-center justify-center rounded-full text-xs font-semibold",
+                          "flex size-6 items-center justify-center rounded-full text-xs font-semibold transition-colors",
                           isToday
                             ? "bg-primary text-primary-foreground"
-                            : "text-foreground/80",
+                            : cn(
+                                "text-foreground/80",
+                                cell.currentMonth && "group-hover:text-primary",
+                              ),
                         )}
                       >
                         {cell.date.getDate()}

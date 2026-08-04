@@ -1,8 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { CalendarDays, Loader2, Users } from "lucide-react";
 import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { AppModalHeader } from "@/components/app/app-modal-header";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -19,6 +21,10 @@ import {
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { getErrorMessage } from "@/lib/api/get-error-message";
+import {
+  meetingFormSchema,
+  type MeetingFormValues,
+} from "@/lib/validations/meeting";
 import { cn } from "@/lib/utils";
 import type { CalendarEventDoc } from "@/types/domain";
 
@@ -55,25 +61,37 @@ export function CreateMeetingDialog({
 }) {
   const isEditing = Boolean(meeting);
   const initialStartsAt = meeting ? new Date(meeting.startsAt) : defaultDate;
-  const [title, setTitle] = useState(meeting?.title ?? "");
-  const [message, setMessage] = useState(meeting?.message ?? "");
-  const [location, setLocation] = useState(meeting?.location ?? "");
-  const [startDate, setStartDate] = useState(initialStartsAt);
-  const [startTime, setStartTime] = useState(format(initialStartsAt, "HH:mm"));
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    formState: { errors },
+  } = useForm<MeetingFormValues>({
+    resolver: zodResolver(meetingFormSchema),
+    defaultValues: {
+      title: meeting?.title ?? "",
+      message: meeting?.message ?? "",
+      location: meeting?.location ?? "",
+      startDate: initialStartsAt,
+      startTime: format(initialStartsAt, "HH:mm"),
+    },
+  });
 
-    const startsAt = toDateTime(startDate, startTime);
+  const titleValue = watch("title");
+
+  const onSubmit = async (values: MeetingFormValues) => {
+    const startsAt = toDateTime(values.startDate, values.startTime);
 
     try {
       setError(null);
       const input = {
-        title,
-        message: message || undefined,
+        title: values.title.trim(),
+        message: values.message?.trim() || undefined,
         startsAt: startsAt.toISOString(),
-        location: location || undefined,
+        location: values.location?.trim() || undefined,
       };
 
       if (isEditing && onUpdate) {
@@ -81,10 +99,6 @@ export function CreateMeetingDialog({
       } else if (onCreate) {
         await onCreate(input);
       }
-      setTitle("");
-      setMessage("");
-      setLocation("");
-      setStartTime("09:00");
       onOpenChange(false);
     } catch (createError) {
       setError(
@@ -104,7 +118,7 @@ export function CreateMeetingDialog({
       }
     >
       <DialogContent className="max-w-lg overflow-hidden p-0">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <AppModalHeader
             title={isEditing ? "Edit meeting" : "Schedule meeting"}
             description={
@@ -122,45 +136,104 @@ export function CreateMeetingDialog({
               <Label htmlFor="meeting-title">Title</Label>
               <Input
                 id="meeting-title"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
                 placeholder="Weekly team sync"
                 maxLength={500}
-                required
                 autoFocus
                 disabled={isPending}
+                aria-invalid={Boolean(errors.title)}
+                {...register("title")}
               />
+              {errors.title && (
+                <p className="text-sm text-destructive">{errors.title.message}</p>
+              )}
             </div>
-            <DateTimeField
-              label="Date and time"
-              date={startDate}
-              time={startTime}
-              onDateChange={setStartDate}
-              onTimeChange={setStartTime}
-              disabled={isPending}
-            />
             <div className="space-y-2">
-              <Label htmlFor="meeting-location">Location or meeting link</Label>
+              <Label>Date and time</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <Controller
+                  name="startDate"
+                  control={control}
+                  render={({ field }) => (
+                    <Popover>
+                      <PopoverTrigger
+                        className={cn(
+                          "flex h-8 w-full items-center justify-between rounded-lg border border-input bg-background px-2.5 text-left text-sm shadow-xs",
+                          errors.startDate && "border-destructive",
+                          isPending && "pointer-events-none opacity-50",
+                        )}
+                        aria-invalid={Boolean(errors.startDate)}
+                        disabled={isPending}
+                      >
+                        {format(field.value, "MMM d, yyyy")}
+                        <CalendarDays className="size-4 text-muted-foreground" />
+                      </PopoverTrigger>
+                      <PopoverContent align="start" className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={(nextDate) =>
+                            nextDate && field.onChange(nextDate)
+                          }
+                          captionLayout="dropdown"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                />
+                <div className="space-y-2">
+                  <Input
+                    aria-label="Meeting time"
+                    type="time"
+                    disabled={isPending}
+                    aria-invalid={Boolean(errors.startTime)}
+                    {...register("startTime")}
+                  />
+                </div>
+              </div>
+              {(errors.startDate || errors.startTime) && (
+                <p className="text-sm text-destructive">
+                  {errors.startDate?.message ?? errors.startTime?.message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="meeting-location">
+                Location or meeting link{" "}
+                <span className="font-normal text-muted-foreground">(optional)</span>
+              </Label>
               <Input
                 id="meeting-location"
-                value={location}
-                onChange={(event) => setLocation(event.target.value)}
                 placeholder="Google Meet, Zoom, or a room name"
                 maxLength={500}
                 disabled={isPending}
+                aria-invalid={Boolean(errors.location)}
+                {...register("location")}
               />
+              {errors.location && (
+                <p className="text-sm text-destructive">
+                  {errors.location.message}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="meeting-message">Message for attendees</Label>
+              <Label htmlFor="meeting-message">
+                Message for attendees{" "}
+                <span className="font-normal text-muted-foreground">(optional)</span>
+              </Label>
               <Textarea
                 id="meeting-message"
-                value={message}
-                onChange={(event) => setMessage(event.target.value)}
                 placeholder="Please join on time. We will discuss the sprint plan."
                 maxLength={10000}
                 rows={3}
                 disabled={isPending}
+                aria-invalid={Boolean(errors.message)}
+                {...register("message")}
               />
+              {errors.message && (
+                <p className="text-sm text-destructive">
+                  {errors.message.message}
+                </p>
+              )}
             </div>
             {error && (
               <p className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -177,7 +250,10 @@ export function CreateMeetingDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button
+              type="submit"
+              disabled={isPending || !titleValue?.trim()}
+            >
               {isPending && <Loader2 className="size-4 animate-spin" />}
               {isEditing ? "Save changes" : "Create meeting"}
             </Button>
@@ -185,55 +261,5 @@ export function CreateMeetingDialog({
         </form>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function DateTimeField({
-  label,
-  date,
-  time,
-  onDateChange,
-  onTimeChange,
-  disabled,
-}: {
-  label: string;
-  date: Date;
-  time: string;
-  onDateChange: (date: Date) => void;
-  onTimeChange: (time: string) => void;
-  disabled: boolean;
-}) {
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      <div className="grid grid-cols-2 gap-3">
-        <Popover>
-          <PopoverTrigger
-            className={cn(
-              "flex h-8 w-full items-center justify-between rounded-lg border border-input bg-background px-2.5 text-left text-sm shadow-xs",
-              disabled && "pointer-events-none opacity-50",
-            )}
-          >
-            {format(date, "MMM d, yyyy")}
-            <CalendarDays className="size-4 text-muted-foreground" />
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-auto p-0">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(nextDate) => nextDate && onDateChange(nextDate)}
-              captionLayout="dropdown"
-            />
-          </PopoverContent>
-        </Popover>
-        <Input
-          aria-label={`${label} time`}
-          type="time"
-          value={time}
-          onChange={(event) => onTimeChange(event.target.value)}
-          disabled={disabled}
-        />
-      </div>
-    </div>
   );
 }
