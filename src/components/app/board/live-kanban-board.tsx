@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useKanban } from "@/hooks/use-workflow";
 import { cn } from "@/lib/utils";
+import { DEFAULT_COLUMN_COLOR } from "@/lib/validations/column";
 import type { ColumnDoc, TaskDoc } from "@/types/domain";
 
 type LiveKanbanBoardProps = {
@@ -375,7 +376,7 @@ function KanbanColumn({
       <div className="flex items-center gap-2 px-1 py-0.5">
         <span
           className="size-2 shrink-0 rounded-full"
-          style={{ backgroundColor: column.color ?? "#64748b" }}
+          style={{ backgroundColor: column.color ?? DEFAULT_COLUMN_COLOR }}
         />
         <span className="truncate text-sm font-semibold text-foreground">
           {column.name}

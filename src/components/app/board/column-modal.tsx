@@ -1,7 +1,9 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, Columns3 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { AppModalHeader } from "@/components/app/app-modal-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +14,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useKanban } from "@/hooks/use-workflow";
 import { getErrorMessage } from "@/lib/api/get-error-message";
+import {
+  columnFormSchema,
+  DEFAULT_COLUMN_COLOR,
+  type ColumnFormValues,
+} from "@/lib/validations/column";
 import type { ColumnDoc } from "@/types/domain";
 
 type ColumnModalProps = {
@@ -25,6 +32,12 @@ type ColumnModalProps = {
   column?: ColumnDoc;
 };
 
+function resolveColumnColor(color?: string | null) {
+  return color && /^#[0-9a-fA-F]{6}$/.test(color)
+    ? color
+    : DEFAULT_COLUMN_COLOR;
+}
+
 export function ColumnModal({
   isOpen,
   onOpenChange,
@@ -36,40 +49,63 @@ export function ColumnModal({
   column,
 }: ColumnModalProps) {
   const kanban = useKanban(workspaceId, projectId, boardId);
-  const [name, setName] = useState(column?.name ?? "");
-  const [color, setColor] = useState(column?.color ?? "#64748b");
-  const [colorInput, setColorInput] = useState(column?.color ?? "#64748b");
   const [formError, setFormError] = useState<string | null>(null);
   const isDeleting = mode === "delete";
+  const isCreating = mode === "create";
   const isPending =
     kanban.createColumn.isPending ||
     kanban.updateColumn.isPending ||
     kanban.deleteColumn.isPending;
 
-  if (!isOpen) return null;
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<ColumnFormValues>({
+    resolver: zodResolver(columnFormSchema),
+    defaultValues: {
+      name: column?.name ?? "",
+      color: resolveColumnColor(column?.color),
+    },
+  });
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const nameValue = watch("name");
+  const colorValue = watch("color") || DEFAULT_COLUMN_COLOR;
+
+  useEffect(() => {
+    if (!isOpen) return;
+    reset({
+      name: column?.name ?? "",
+      color: resolveColumnColor(column?.color),
+    });
     setFormError(null);
-    if (!isDeleting && !/^#[0-9a-f]{6}$/i.test(colorInput)) {
-      setFormError("Enter a valid hex color, for example #64748B.");
-      return;
-    }
+  }, [isOpen, column, reset]);
+
+  function closeModal() {
+    if (isPending) return;
+    setFormError(null);
+    onOpenChange(false);
+  }
+
+  async function onSubmit(values: ColumnFormValues) {
+    setFormError(null);
+
+    const color =
+      values.color && /^#[0-9a-fA-F]{6}$/.test(values.color)
+        ? values.color
+        : DEFAULT_COLUMN_COLOR;
+
     try {
-      if (isDeleting && column) {
-        await kanban.deleteColumn.mutateAsync({
-          workspaceId,
-          projectId,
-          boardId,
-          columnId: column._id,
-        });
-      } else if (column) {
+      if (column) {
         await kanban.updateColumn.mutateAsync({
           workspaceId,
           projectId,
           boardId,
           columnId: column._id,
-          name: name.trim(),
+          name: values.name.trim(),
           color,
         });
       } else {
@@ -77,7 +113,7 @@ export function ColumnModal({
           workspaceId,
           projectId,
           boardId,
-          name: name.trim(),
+          name: values.name.trim(),
           color,
           position: nextPosition,
         });
@@ -88,20 +124,35 @@ export function ColumnModal({
     }
   }
 
+  async function handleDelete(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!column) return;
+
+    setFormError(null);
+
+    try {
+      await kanban.deleteColumn.mutateAsync({
+        workspaceId,
+        projectId,
+        boardId,
+        columnId: column._id,
+      });
+      onOpenChange(false);
+    } catch (error) {
+      setFormError(getErrorMessage(error));
+    }
+  }
+
   const title = isDeleting
     ? "Delete column"
-    : column
-      ? "Edit column"
-      : "Create column";
+    : isCreating
+      ? "Create column"
+      : "Edit column";
   const description = isDeleting
     ? `This will permanently delete ${column?.name}.`
-    : column
-      ? "Update this column's name and color."
-      : "Create a column to organize work on this board.";
-
-  function closeModal() {
-    if (!isPending) onOpenChange(false);
-  }
+    : isCreating
+      ? "Create a column to organize work on this board."
+      : "Update this column's name and color.";
 
   return (
     <Dialog
@@ -111,7 +162,10 @@ export function ColumnModal({
       }}
     >
       <DialogContent className="max-w-md overflow-hidden p-0">
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+        <form
+          onSubmit={isDeleting ? handleDelete : handleSubmit(onSubmit)}
+          className="flex min-h-0 flex-1 flex-col"
+        >
           <AppModalHeader
             title={title}
             description={description}
@@ -143,50 +197,56 @@ export function ColumnModal({
                   <Label htmlFor="column-name">Column name</Label>
                   <Input
                     id="column-name"
-                    required
                     autoFocus
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
                     placeholder="e.g. In progress"
                     className="h-10 rounded-xl bg-background"
+                    aria-invalid={Boolean(errors.name)}
+                    {...register("name")}
                   />
+                  {errors.name && (
+                    <p className="text-sm text-destructive">{errors.name.message}</p>
+                  )}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="column-color">Color</Label>
+                  <Label htmlFor="column-color">
+                    Color{" "}
+                    <span className="font-normal text-muted-foreground">
+                      (optional)
+                    </span>
+                  </Label>
                   <div className="flex h-10 items-center gap-3 rounded-xl border border-input bg-background px-2 transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
                     <input
                       id="column-color"
                       type="color"
-                      value={color}
+                      value={colorValue}
                       onChange={(event) => {
-                        setColor(event.target.value);
-                        setColorInput(event.target.value);
+                        setValue("color", event.target.value, {
+                          shouldValidate: true,
+                          shouldDirty: true,
+                        });
                       }}
                       className="size-6 cursor-pointer appearance-none rounded-md border-0 bg-transparent p-0 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-0 [&::-moz-color-swatch]:rounded-md [&::-moz-color-swatch]:border-0"
                     />
                     <span
                       className="size-2.5 rounded-full"
-                      style={{ backgroundColor: color }}
+                      style={{ backgroundColor: colorValue }}
                       aria-hidden="true"
                     />
                     <Input
-                      value={colorInput}
-                      onChange={(event) => {
-                        const nextColor = event.target.value;
-                        setColorInput(nextColor);
-                        if (/^#[0-9a-f]{6}$/i.test(nextColor)) {
-                          setColor(nextColor);
-                        }
-                      }}
-                      onBlur={() => {
-                        if (/^[0-9a-f]{6}$/i.test(colorInput)) {
-                          const normalizedColor = `#${colorInput}`;
-                          setColor(normalizedColor);
-                          setColorInput(normalizedColor);
-                        }
-                      }}
-                      placeholder="#64748B"
+                      {...register("color", {
+                        onBlur: (event) => {
+                          const nextColor = event.target.value.trim();
+                          if (/^[0-9a-fA-F]{6}$/.test(nextColor)) {
+                            setValue("color", `#${nextColor}`, {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            });
+                          }
+                        },
+                      })}
+                      placeholder={DEFAULT_COLUMN_COLOR.toUpperCase()}
                       aria-label="Column color hex code"
+                      aria-invalid={Boolean(errors.color)}
                       className="h-full min-w-0 flex-1 border-0 bg-transparent px-0 font-mono text-sm font-medium uppercase tracking-wide shadow-none focus-visible:border-0 focus-visible:ring-0"
                     />
                     <label
@@ -196,6 +256,9 @@ export function ColumnModal({
                       Pick color
                     </label>
                   </div>
+                  {errors.color && (
+                    <p className="text-sm text-destructive">{errors.color.message}</p>
+                  )}
                 </div>
               </div>
             )}
@@ -219,15 +282,19 @@ export function ColumnModal({
             <Button
               type="submit"
               variant={isDeleting ? "destructive" : "default"}
-              disabled={isPending || (!isDeleting && !name.trim())}
+              disabled={isPending || (!isDeleting && !nameValue?.trim())}
             >
               {isPending
-                ? "Saving…"
+                ? isDeleting
+                  ? "Deleting…"
+                  : isCreating
+                    ? "Creating…"
+                    : "Saving…"
                 : isDeleting
                   ? "Delete column"
-                  : column
-                    ? "Save changes"
-                    : "Create column"}
+                  : isCreating
+                    ? "Create column"
+                    : "Save changes"}
             </Button>
           </div>
         </form>
