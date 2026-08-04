@@ -42,16 +42,18 @@ export function MarketingBackdrop() {
         preserveAspectRatio="xMidYMid slice"
       >
         <defs>
+          {/* Soft diagonal hatch */}
           <pattern
-            id="nextask-fine-grid"
-            width="40"
-            height="40"
+            id="nextask-scaffold"
+            width="28"
+            height="28"
             patternUnits="userSpaceOnUse"
+            patternTransform="rotate(28)"
           >
             <path
-              d="M40 0 H0 V40"
+              d="M0 0 V28"
               fill="none"
-              className="stroke-border/50 dark:stroke-border/40"
+              className="stroke-border/40 dark:stroke-border/30"
               strokeWidth="1"
             />
           </pattern>
@@ -63,19 +65,8 @@ export function MarketingBackdrop() {
         <rect
           width="1440"
           height="900"
-          fill="url(#nextask-fine-grid)"
-          className="opacity-40 dark:opacity-30"
-        />
-
-        {/* Edge frame */}
-        <rect
-          x="36"
-          y="36"
-          width="1368"
-          height="828"
-          fill="none"
-          className="stroke-border/70 dark:stroke-border/50"
-          strokeWidth="1"
+          fill="url(#nextask-scaffold)"
+          className="opacity-50 dark:opacity-35"
         />
 
         {/* Corner brackets */}

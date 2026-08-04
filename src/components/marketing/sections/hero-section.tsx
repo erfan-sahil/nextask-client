@@ -34,9 +34,7 @@ const columns = [
     title: "Done",
     count: 1,
     accent: false,
-    tasks: [
-      { title: "Kickoff notes", tag: "Setup", tone: "done" as const },
-    ],
+    tasks: [{ title: "Kickoff notes", tag: "Setup", tone: "done" as const }],
   },
 ];
 
@@ -111,8 +109,7 @@ export function HeroSection() {
                   ))}
                 </div>
                 <div className="flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary">
-                  <MessageCircle className="size-3.5" aria-hidden />
-                  2
+                  <MessageCircle className="size-3.5" aria-hidden />2
                 </div>
               </div>
             </div>
@@ -152,7 +149,9 @@ export function HeroSection() {
                       <span
                         className={cn(
                           "size-1.5 rounded-full",
-                          column.accent ? "bg-primary" : "bg-muted-foreground/40",
+                          column.accent
+                            ? "bg-primary"
+                            : "bg-muted-foreground/40",
                         )}
                       />
                       <h2 className="text-xs font-semibold text-foreground">
@@ -207,7 +206,8 @@ export function HeroSection() {
                 <span className="relative inline-flex size-2 rounded-full bg-primary" />
               </span>
               <p className="min-w-0 truncate text-[11px] text-muted-foreground">
-                <span className="font-semibold text-foreground">Maya</span> moved{" "}
+                <span className="font-semibold text-foreground">Maya</span>{" "}
+                moved{" "}
                 <span className="font-medium text-foreground">
                   Build sprint board
                 </span>{" "}
