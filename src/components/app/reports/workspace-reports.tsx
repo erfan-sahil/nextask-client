@@ -320,7 +320,12 @@ export function WorkspaceReports({ workspaceSlug }: { workspaceSlug: string }) {
 
             <label className="grid min-w-0 flex-1 gap-1.5 text-xs font-medium text-muted-foreground sm:max-w-52 sm:flex-none">
               Projects
-              <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+              <Select
+                value={selectedProjectId}
+                onValueChange={(value) => {
+                  if (value) setSelectedProjectId(value);
+                }}
+              >
                 <SelectTrigger className="h-9 w-full">
                   <SelectValue className="truncate">{selectedProjectLabel}</SelectValue>
                 </SelectTrigger>
