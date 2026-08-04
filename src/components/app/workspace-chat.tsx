@@ -43,9 +43,11 @@ export function WorkspaceChat({ workspace }: { workspace?: WorkspaceDoc }) {
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const unreadCountRef = useRef(0);
-  const chat = useWorkspaceChat(workspace?._id);
-  const participants = useWorkspaceChatParticipants(workspace?._id);
-  const { user } = useAuth();
+  const chat = useWorkspaceChat(workspace?._id, { enabled: isOpen });
+  const participants = useWorkspaceChatParticipants(workspace?._id, {
+    enabled: isOpen,
+  });
+  const { user } = useAuth({ fetchUser: false });
   const messages = chat.data?.messages ?? [];
   const mentionSuggestions = (participants.data ?? [])
     .filter((user) => {

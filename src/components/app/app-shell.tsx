@@ -24,7 +24,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { user, isLoading, isError } = useAuth();
-  const workspaces = useWorkspaces();
+  const workspaces = useWorkspaces({ enabled: Boolean(user) });
   const needsEmailVerification = Boolean(user && !user.isEmailVerified);
   const firstSegment = pathname.split("/").filter(Boolean)[0] ?? "";
   const workspaceSlug = reservedAppSegments.has(firstSegment) ? undefined : firstSegment;

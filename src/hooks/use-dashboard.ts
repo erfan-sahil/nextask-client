@@ -17,6 +17,7 @@ export function useDashboard(userId?: string) {
     queryKey: workflowQueryKeys.dashboard(userId ?? ""),
     queryFn: () => workflowApi.getDashboard(),
     enabled: Boolean(userId),
+    staleTime: 2 * 60 * 1000,
   });
 
   return {

@@ -19,6 +19,7 @@ import {
   type RegisterInput,
   type UpdateProfileInput,
 } from "@/lib/api/auth";
+import { resetAuthRefreshState } from "@/lib/api/client";
 import { authQueryKeys, workflowQueryKeys } from "@/lib/api/query-keys";
 import type { User } from "@/types/auth";
 
@@ -36,6 +37,10 @@ export function useAuth(options: UseAuthOptions = {}) {
     queryFn: getMe,
     retry: false,
     enabled: fetchUser,
+    // Session user rarely changes outside explicit mutations / login.
+    staleTime: Number.POSITIVE_INFINITY,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   const setUser = (user: User | undefined) => {
@@ -50,12 +55,16 @@ export function useAuth(options: UseAuthOptions = {}) {
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: (data) => {
+      resetAuthRefreshState();
       setUser(data.user);
     },
   });
 
   const registerMutation = useMutation({
     mutationFn: register,
+    onSuccess: () => {
+      resetAuthRefreshState();
+    },
   });
 
   const logoutMutation = useMutation({
@@ -77,7 +86,10 @@ export function useAuth(options: UseAuthOptions = {}) {
 
   const verifyEmailMutation = useMutation({
     mutationFn: verifyEmail,
-    onSuccess: (data) => setUser(data.user),
+    onSuccess: (data) => {
+      resetAuthRefreshState();
+      setUser(data.user);
+    },
   });
 
   const resendVerificationMutation = useMutation({

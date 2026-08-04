@@ -1,11 +1,17 @@
 "use client";
 
+import { FolderKanban, Plus } from "lucide-react";
+import Link from "next/link";
 import { DashboardTaskList } from "@/components/app/dashboard/dashboard-task-list";
 import { RecentActivity } from "@/components/app/dashboard/recent-activity";
 import { StatsOverview } from "@/components/app/dashboard/stats-overview";
 import { UpcomingMeetings } from "@/components/app/dashboard/upcoming-meetings";
+import { buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { appRoutes } from "@/config/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useDashboard } from "@/hooks/use-dashboard";
+import { cn } from "@/lib/utils";
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -20,6 +26,18 @@ export function DashboardPage() {
 
   if (!user) return null;
 
+  const isEmpty =
+    !dashboard.isLoading &&
+    !dashboard.isError &&
+    dashboard.stats.activeProjects === 0 &&
+    dashboard.stats.openTasks === 0 &&
+    dashboard.stats.dueThisWeek === 0 &&
+    dashboard.stats.teamMembers === 0 &&
+    dashboard.myTasks.length === 0 &&
+    dashboard.upcomingTasks.length === 0 &&
+    dashboard.upcomingMeetings.length === 0 &&
+    dashboard.recentActivity.length === 0;
+
   return (
     <div className="space-y-8 px-4 py-6 sm:px-6">
       {/* Header */}
@@ -32,35 +50,45 @@ export function DashboardPage() {
         </p>
       </div>
 
-      {/* Stats */}
-      <StatsOverview stats={dashboard.stats} />
-
       {dashboard.isLoading ? (
         <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
           Loading dashboard data…
         </p>
-      ) : dashboard.isError ? (
-        <p className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive">
-          Unable to load dashboard data. Please try again.
-        </p>
+      ) : dashboard.isError || isEmpty ? (
+        <EmptyState
+          icon={FolderKanban}
+          title="Nothing to show yet"
+          description="Create a workspace and add a project to see your tasks, meetings, and activity here."
+          action={
+            <Link
+              href={appRoutes.workspaces}
+              className={cn(buttonVariants({ size: "page" }))}
+            >
+              <Plus className="size-4" />
+              Create workspace
+            </Link>
+          }
+        />
       ) : (
-        <div className="grid items-start gap-6 xl:grid-cols-3">
-          <DashboardTaskList
-            title="My current tasks"
-            tasks={dashboard.myTasks}
-            emptyMessage="You have no open tasks assigned to you."
-          />
-          <DashboardTaskList
-            title="Upcoming tasks"
-            tasks={dashboard.upcomingTasks}
-            emptyMessage="You have no upcoming tasks."
-          />
-          <UpcomingMeetings meetings={dashboard.upcomingMeetings} />
-        </div>
-      )}
+        <>
+          <StatsOverview stats={dashboard.stats} />
 
-      {!dashboard.isLoading && !dashboard.isError && (
-        <RecentActivity activity={dashboard.recentActivity} />
+          <div className="grid items-start gap-6 xl:grid-cols-3">
+            <DashboardTaskList
+              title="My current tasks"
+              tasks={dashboard.myTasks}
+              emptyMessage="You have no open tasks assigned to you."
+            />
+            <DashboardTaskList
+              title="Upcoming tasks"
+              tasks={dashboard.upcomingTasks}
+              emptyMessage="You have no upcoming tasks."
+            />
+            <UpcomingMeetings meetings={dashboard.upcomingMeetings} />
+          </div>
+
+          <RecentActivity activity={dashboard.recentActivity} />
+        </>
       )}
     </div>
   );
