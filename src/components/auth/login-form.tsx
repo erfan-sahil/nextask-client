@@ -14,12 +14,22 @@ import { setPendingVerificationEmail } from "@/lib/auth/pending-verification";
 import { getErrorMessage } from "@/lib/api/get-error-message";
 import { getFieldErrors, loginFormSchema } from "@/lib/validation/auth-schemas";
 
+const GOOGLE_AUTH_ERROR_MESSAGES: Record<string, string> = {
+  google_auth: "Google sign-in failed. Please try again.",
+  google_denied: "Google sign-in was cancelled.",
+};
+
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const oauthErrorCode = searchParams.get("error");
+  const oauthErrorMessage =
+    searchParams.get("message") ||
+    (oauthErrorCode ? GOOGLE_AUTH_ERROR_MESSAGES[oauthErrorCode] : null);
 
   const { login, isLoggingIn, loginError, resetLogin } = useAuth({
     fetchUser: false,
@@ -114,6 +124,10 @@ export function LoginForm() {
           <AuthAlert>
             {getErrorMessage(loginError, "Unable to sign in")}
           </AuthAlert>
+        ) : null}
+
+        {!loginError && oauthErrorMessage ? (
+          <AuthAlert>{oauthErrorMessage}</AuthAlert>
         ) : null}
 
         <AuthSubmitButton

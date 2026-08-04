@@ -5,6 +5,7 @@ export type User = {
   username: string;
   email: string;
   avatar: string | null;
+  authProvider?: "local" | "google";
   isEmailVerified: boolean;
   status: string;
   lastLoginAt: string | null;
