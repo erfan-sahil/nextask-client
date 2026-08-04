@@ -16,8 +16,10 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { AppModalHeader } from "@/components/app/app-modal-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -53,6 +55,12 @@ import { RichTextEditor } from "@/components/app/rich-text-editor";
 import { useGoals, useWorkspaceBySlug } from "@/hooks/use-workflow";
 import { getErrorMessage } from "@/lib/api/get-error-message";
 import { cn } from "@/lib/utils";
+import {
+  GOAL_PRIORITY_VALUES,
+  GOAL_STATUS_VALUES,
+  goalFormSchema,
+  type GoalFormValues,
+} from "@/lib/validations/goal";
 import type { GoalDoc, GoalPriority, GoalStatus } from "@/types/domain";
 
 // ─── Status config ─────────────────────────────────────────────────────────
@@ -169,8 +177,8 @@ function goalProgress(goal: GoalDoc): number {
   return goal.status === "COMPLETED" ? 100 : 0;
 }
 
-function getPlainText(value: string) {
-  return value
+function getPlainText(value: string | null | undefined) {
+  return String(value ?? "")
     .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -350,14 +358,6 @@ function GoalCard({
   );
 }
 
-const GOAL_STATUSES: GoalStatus[] = [
-  "PLANNING",
-  "IN_PROGRESS",
-  "ON_HOLD",
-  "COMPLETED",
-  "CANCELLED",
-];
-const GOAL_PRIORITIES: GoalPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
 const EMPTY_GOALS: GoalDoc[] = [];
 
 const toDateInputValue = (value: string | null) =>
@@ -368,11 +368,13 @@ function GoalDatePicker({
   label,
   value,
   onChange,
+  error,
 }: {
   id: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
+  error?: string;
 }) {
   const selectedDate = value ? new Date(`${value}T00:00:00`) : undefined;
 
@@ -382,9 +384,11 @@ function GoalDatePicker({
       <Popover>
         <PopoverTrigger
           id={id}
+          aria-invalid={Boolean(error)}
           className={cn(
             "flex h-10 w-full cursor-pointer items-center justify-between rounded-lg border border-input bg-background px-3 text-left text-sm shadow-xs outline-none transition-colors hover:bg-emerald-500/5 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
             !selectedDate && "text-muted-foreground",
+            error && "border-destructive",
           )}
         >
           <span>
@@ -396,26 +400,14 @@ function GoalDatePicker({
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={(date) =>
-              onChange(date ? format(date, "yyyy-MM-dd") : "")
-            }
+            onSelect={(date) => {
+              if (date) onChange(format(date, "yyyy-MM-dd"));
+            }}
             captionLayout="dropdown"
           />
-          {selectedDate && (
-            <div className="border-t border-border p-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="w-full"
-                onClick={() => onChange("")}
-              >
-                Clear date
-              </Button>
-            </div>
-          )}
         </PopoverContent>
       </Popover>
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }
@@ -424,10 +416,12 @@ function GoalDetailsEditor({
   value,
   onChange,
   disabled,
+  error,
 }: {
   value: string;
   onChange: (value: string) => void;
   disabled: boolean;
+  error?: string;
 }) {
   return (
     <div className="space-y-2">
@@ -439,6 +433,7 @@ function GoalDetailsEditor({
         ariaLabel="Goal details"
         placeholder="Add context, milestones, or a checklist…"
       />
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }
@@ -453,36 +448,56 @@ function GoalDialog({
   onClose: () => void;
 }) {
   const goals = useGoals(workspaceId);
-  const [title, setTitle] = useState(goal?.title ?? "");
-  const [details, setDetails] = useState(goal?.details ?? "");
-  const [status, setStatus] = useState<GoalStatus>(goal?.status ?? "PLANNING");
-  const [priority, setPriority] = useState<GoalPriority>(
-    goal?.priority ?? "MEDIUM",
-  );
-  const [startDate, setStartDate] = useState(
-    toDateInputValue(goal?.startDate ?? null),
-  );
-  const [dueDate, setDueDate] = useState(
-    toDateInputValue(goal?.dueDate ?? null),
-  );
   const [error, setError] = useState<string | null>(null);
   const isEditing = Boolean(goal);
   const isPending = goals.create.isPending || goals.update.isPending;
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<GoalFormValues>({
+    resolver: zodResolver(goalFormSchema),
+    defaultValues: {
+      title: goal?.title ?? "",
+      details: goal?.details ?? "",
+      status: goal?.status ?? "PLANNING",
+      priority: goal?.priority ?? "MEDIUM",
+      startDate: toDateInputValue(goal?.startDate ?? null),
+      dueDate: toDateInputValue(goal?.dueDate ?? null),
+    },
+  });
+
+  const watchedValues = watch();
+
+  useEffect(() => {
+    reset({
+      title: goal?.title ?? "",
+      details: goal?.details ?? "",
+      status: goal?.status ?? "PLANNING",
+      priority: goal?.priority ?? "MEDIUM",
+      startDate: toDateInputValue(goal?.startDate ?? null),
+      dueDate: toDateInputValue(goal?.dueDate ?? null),
+    });
+    setError(null);
+  }, [goal, reset]);
+
+  async function onSubmit(values: GoalFormValues) {
     setError(null);
 
-    try {
-      const data = {
-        title: title.trim(),
-        details,
-        status,
-        priority,
-        startDate: startDate || null,
-        dueDate: dueDate || null,
-      };
+    const data = {
+      title: values.title.trim(),
+      details: values.details,
+      status: values.status,
+      priority: values.priority,
+      startDate: values.startDate,
+      dueDate: values.dueDate,
+    };
 
+    try {
       if (goal) {
         await goals.update.mutateAsync({
           workspaceId,
@@ -499,10 +514,18 @@ function GoalDialog({
     }
   }
 
+  const canSubmit =
+    Boolean(watchedValues.title?.trim()) &&
+    Boolean(watchedValues.details?.replace(/<[^>]*>/g, " ").trim()) &&
+    Boolean(watchedValues.status) &&
+    Boolean(watchedValues.priority) &&
+    Boolean(watchedValues.startDate) &&
+    Boolean(watchedValues.dueDate);
+
   return (
     <Dialog open onOpenChange={(open) => !open && !isPending && onClose()}>
       <DialogContent className="max-w-lg p-0">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <AppModalHeader
             title={isEditing ? "Edit goal" : "Create goal"}
             description={
@@ -520,69 +543,126 @@ function GoalDialog({
               <Label htmlFor="goal-title">Title</Label>
               <Input
                 id="goal-title"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
                 maxLength={500}
                 placeholder="Goal title"
-                required
                 autoFocus
+                aria-invalid={Boolean(errors.title)}
+                {...register("title")}
               />
+              {errors.title && (
+                <p className="text-sm text-destructive">{errors.title.message}</p>
+              )}
             </div>
-            <GoalDetailsEditor
-              value={details}
-              onChange={setDetails}
-              disabled={isPending}
+            <Controller
+              name="details"
+              control={control}
+              render={({ field }) => (
+                <GoalDetailsEditor
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={isPending}
+                  error={errors.details?.message}
+                />
+              )}
             />
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select
-                  value={status}
-                  onValueChange={(value) => setStatus(value as GoalStatus)}
-                >
-                  <SelectTrigger className="w-full">
-                    <span>{STATUS_CONFIG[status].label}</span>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {GOAL_STATUSES.map((item) => (
-                      <SelectItem key={item} value={item}>
-                        {STATUS_CONFIG[item].label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="status"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) => {
+                        if (value) field.onChange(value as GoalStatus);
+                      }}
+                    >
+                      <SelectTrigger
+                        className="w-full"
+                        aria-invalid={Boolean(errors.status)}
+                      >
+                        <span>{STATUS_CONFIG[field.value].label}</span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {GOAL_STATUS_VALUES.map((item) => (
+                          <SelectItem key={item} value={item}>
+                            {STATUS_CONFIG[item].label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.status && (
+                  <p className="text-sm text-destructive">
+                    {errors.status.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Priority</Label>
-                <Select
-                  value={priority}
-                  onValueChange={(value) => setPriority(value as GoalPriority)}
-                >
-                  <SelectTrigger className="w-full">
-                    <span>{priority[0] + priority.slice(1).toLowerCase()}</span>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {GOAL_PRIORITIES.map((item) => (
-                      <SelectItem key={item} value={item}>
-                        {item[0] + item.slice(1).toLowerCase()}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="priority"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) => {
+                        if (value) field.onChange(value as GoalPriority);
+                      }}
+                    >
+                      <SelectTrigger
+                        className="w-full"
+                        aria-invalid={Boolean(errors.priority)}
+                      >
+                        <span>
+                          {field.value[0] + field.value.slice(1).toLowerCase()}
+                        </span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {GOAL_PRIORITY_VALUES.map((item) => (
+                          <SelectItem key={item} value={item}>
+                            {item[0] + item.slice(1).toLowerCase()}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.priority && (
+                  <p className="text-sm text-destructive">
+                    {errors.priority.message}
+                  </p>
+                )}
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <GoalDatePicker
-                id="goal-start-date"
-                label="Start date"
-                value={startDate}
-                onChange={setStartDate}
+              <Controller
+                name="startDate"
+                control={control}
+                render={({ field }) => (
+                  <GoalDatePicker
+                    id="goal-start-date"
+                    label="Start date"
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={errors.startDate?.message}
+                  />
+                )}
               />
-              <GoalDatePicker
-                id="goal-due-date"
-                label="Due date"
-                value={dueDate}
-                onChange={setDueDate}
+              <Controller
+                name="dueDate"
+                control={control}
+                render={({ field }) => (
+                  <GoalDatePicker
+                    id="goal-due-date"
+                    label="Due date"
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={errors.dueDate?.message}
+                  />
+                )}
               />
             </div>
             {error && (
@@ -600,7 +680,7 @@ function GoalDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending || !canSubmit}>
               {isPending
                 ? "Saving…"
                 : isEditing

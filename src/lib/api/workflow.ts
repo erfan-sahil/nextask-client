@@ -248,11 +248,11 @@ export const workflowApi = {
     ...input
   }: WorkspaceRef & {
     title: string;
-    details?: string;
-    status?: GoalStatus;
-    startDate?: string | null;
-    dueDate?: string | null;
-    priority?: GoalPriority;
+    details: string;
+    status: GoalStatus;
+    startDate: string;
+    dueDate: string;
+    priority: GoalPriority;
     completedAt?: string | null;
   }) {
     return unwrap(
