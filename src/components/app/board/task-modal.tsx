@@ -1,5 +1,6 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertTriangle,
   CalendarDays,
@@ -11,7 +12,8 @@ import {
   Users,
 } from "lucide-react";
 import { format } from "date-fns";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { AppModalHeader } from "@/components/app/app-modal-header";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/app/user-avatar";
@@ -51,6 +53,11 @@ import {
   useWorkspaces,
 } from "@/hooks/use-workflow";
 import { getErrorMessage } from "@/lib/api/get-error-message";
+import {
+  TASK_PRIORITY_VALUES,
+  taskFormSchema,
+  type TaskFormValues,
+} from "@/lib/validations/task";
 import type { ColumnDoc, TaskDoc, TaskPriority } from "@/types/domain";
 
 function getColumnId(columnId: TaskDoc["columnId"]) {
@@ -110,20 +117,8 @@ export function TaskModal({
     shouldLoadMembers && Boolean(workspace?.membershipRole),
   );
   const projectMembers = useProjectMembers(workspaceId, projectId, shouldLoadMembers);
-  const [title, setTitle] = useState(task?.title ?? "");
-  const [details, setDetails] = useState(task?.details ?? "");
-  const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? "MEDIUM");
-  const [dueDate, setDueDate] = useState(
-    task?.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : "",
-  );
   const [calendarMonth, setCalendarMonth] = useState(
     task?.dueDate ? new Date(task.dueDate) : new Date(),
-  );
-  const [columnId, setColumnId] = useState(
-    task ? getColumnId(task.columnId) : initialColumnId ?? columns[0]?._id ?? "",
-  );
-  const [assigneeIds, setAssigneeIds] = useState(
-    task?.assignees.map((assignee) => assignee._id) ?? [],
   );
   const [memberSearch, setMemberSearch] = useState("");
   const [comment, setComment] = useState("");
@@ -140,6 +135,52 @@ export function TaskModal({
     kanban.createTask.isPending ||
     kanban.updateTask.isPending ||
     kanban.deleteTask.isPending;
+
+  const defaultFormValues = useMemo<TaskFormValues>(
+    () => ({
+      title: task?.title ?? "",
+      details: task?.details ?? "",
+      columnId: task
+        ? getColumnId(task.columnId)
+        : (initialColumnId ?? columns[0]?._id ?? ""),
+      priority: task?.priority ?? "LOW",
+      dueDate: task?.dueDate
+        ? new Date(task.dueDate).toISOString().slice(0, 10)
+        : "",
+      assigneeIds: task?.assignees.map((assignee) => assignee._id) ?? [],
+    }),
+    [columns, initialColumnId, task],
+  );
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    watch,
+    setValue,
+    getValues,
+    formState: { errors },
+  } = useForm<TaskFormValues>({
+    resolver: zodResolver(taskFormSchema),
+    defaultValues: defaultFormValues,
+  });
+
+  const title = watch("title");
+  const columnId = watch("columnId");
+  const assigneeIds = watch("assigneeIds") ?? [];
+
+  useEffect(() => {
+    if (!isOpen) return;
+    reset(defaultFormValues);
+    setCalendarMonth(
+      defaultFormValues.dueDate
+        ? new Date(`${defaultFormValues.dueDate}T00:00:00`)
+        : new Date(),
+    );
+    setFormError(null);
+    setMemberSearch("");
+  }, [defaultFormValues, isOpen, reset]);
   const members = useMemo(
     () =>
       Array.from(
@@ -179,10 +220,13 @@ export function TaskModal({
   }, [assigneeIds, members, task?.assignees]);
 
   function toggleAssignee(memberId: string) {
-    setAssigneeIds((currentAssigneeIds) =>
+    const currentAssigneeIds = getValues("assigneeIds") ?? [];
+    setValue(
+      "assigneeIds",
       currentAssigneeIds.includes(memberId)
         ? currentAssigneeIds.filter((id) => id !== memberId)
         : [...currentAssigneeIds, memberId],
+      { shouldDirty: true },
     );
   }
 
@@ -216,46 +260,75 @@ export function TaskModal({
     if (!isPending) onOpenChange(false);
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleDelete(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!task) return;
+
     setFormError(null);
 
     try {
-      if (isDeleting && task) {
-        await kanban.deleteTask.mutateAsync({
-          workspaceId,
-          projectId,
-          boardId,
-          taskId: task._id,
-        });
-      } else if (task) {
+      await kanban.deleteTask.mutateAsync({
+        workspaceId,
+        projectId,
+        boardId,
+        taskId: task._id,
+      });
+      onOpenChange(false);
+    } catch (error) {
+      setFormError(getErrorMessage(error));
+    }
+  }
+
+  async function handleAssign(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!task) return;
+
+    setFormError(null);
+
+    try {
+      await kanban.updateTask.mutateAsync({
+        workspaceId,
+        projectId,
+        boardId,
+        taskId: task._id,
+        assignees: getValues("assigneeIds") ?? [],
+      });
+      onOpenChange(false);
+    } catch (error) {
+      setFormError(getErrorMessage(error));
+    }
+  }
+
+  async function onSubmit(values: TaskFormValues) {
+    setFormError(null);
+
+    const priority = values.priority ?? "LOW";
+
+    try {
+      if (task) {
         await kanban.updateTask.mutateAsync({
           workspaceId,
           projectId,
           boardId,
           taskId: task._id,
-          assignees: assigneeIds,
-          ...(isAssigning
-            ? {}
-            : {
-                title: title.trim(),
-                details,
-                priority,
-                columnId,
-                dueDate: dueDate || null,
-              }),
+          title: values.title.trim(),
+          details: values.details ?? "",
+          priority,
+          columnId: values.columnId,
+          assignees: values.assigneeIds ?? [],
+          dueDate: values.dueDate || null,
         });
       } else {
         await kanban.createTask.mutateAsync({
           workspaceId,
           projectId,
           boardId,
-          title: title.trim(),
-          details: details || undefined,
+          title: values.title.trim(),
+          details: values.details || undefined,
           priority,
-          columnId,
-          assignees: assigneeIds,
-          dueDate: dueDate || undefined,
+          columnId: values.columnId,
+          assignees: values.assigneeIds,
+          dueDate: values.dueDate || undefined,
         });
       }
       onOpenChange(false);
@@ -291,7 +364,6 @@ export function TaskModal({
       : task
         ? "Edit task"
         : "Create task";
-  const selectedDueDate = dueDate ? new Date(`${dueDate}T00:00:00`) : undefined;
   const hasScrollableTaskContent = !isDeleting && !isAssigning;
 
   return (
@@ -314,7 +386,16 @@ export function TaskModal({
                 : "overflow-hidden p-0"
         }
       >
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+        <form
+          onSubmit={
+            isDeleting
+              ? handleDelete
+              : isAssigning
+                ? handleAssign
+                : handleSubmit(onSubmit)
+          }
+          className="flex min-h-0 flex-1 flex-col"
+        >
           <AppModalHeader
             title={heading}
             description={
@@ -522,106 +603,169 @@ export function TaskModal({
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="task-title">Task title</Label>
-              <Input id="task-title" autoFocus required value={title} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Prepare launch brief" />
+              <Input
+                id="task-title"
+                autoFocus
+                placeholder="e.g. Prepare launch brief"
+                aria-invalid={Boolean(errors.title)}
+                {...register("title")}
+              />
+              {errors.title && (
+                <p className="text-sm text-destructive">{errors.title.message}</p>
+              )}
             </div>
             <div className="space-y-1.5 sm:col-span-2">
               <Label>Task details</Label>
-              <RichTextEditor
-                value={details}
-                onChange={setDetails}
-                disabled={isPending}
-                ariaLabel="Task details"
-                placeholder="Add context, requirements, links, or a checklist…"
+              <Controller
+                name="details"
+                control={control}
+                render={({ field }) => (
+                  <RichTextEditor
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    disabled={isPending}
+                    ariaLabel="Task details"
+                    placeholder="Add context, requirements, links, or a checklist…"
+                  />
+                )}
               />
+              {errors.details && (
+                <p className="text-sm text-destructive">{errors.details.message}</p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="task-column">Column</Label>
-              <Select
-                value={columnId}
-                onValueChange={(value) => {
-                  if (value) setColumnId(value);
-                }}
-              >
-                <SelectTrigger id="task-column" className="h-10 w-full cursor-pointer rounded-xl bg-background px-3">
-                  <SelectValue placeholder="Select a column">
-                    {(value: string | null) =>
-                      columns.find((column) => column._id === value)?.name ??
-                      "Select a column"
-                    }
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent align="start">
-                  {columns.map((column) => (
-                    <SelectItem key={column._id} value={column._id}>
-                      {column.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                name="columnId"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={(value) => {
+                      if (value) field.onChange(value);
+                    }}
+                  >
+                    <SelectTrigger
+                      id="task-column"
+                      className="h-10 w-full cursor-pointer rounded-xl bg-background px-3"
+                      aria-invalid={Boolean(errors.columnId)}
+                    >
+                      <SelectValue placeholder="Select a column">
+                        {(value: string | null) =>
+                          columns.find((column) => column._id === value)?.name ??
+                          "Select a column"
+                        }
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent align="start">
+                      {columns.map((column) => (
+                        <SelectItem key={column._id} value={column._id}>
+                          {column.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.columnId && (
+                <p className="text-sm text-destructive">{errors.columnId.message}</p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="task-priority">Priority</Label>
-              <Select
-                value={priority}
-                onValueChange={(value) => {
-                  if (value) setPriority(value as TaskPriority);
-                }}
-              >
-                <SelectTrigger id="task-priority" className="h-10 w-full cursor-pointer rounded-xl bg-background px-3">
-                  <SelectValue>
-                    {(value: string | null) =>
-                      value ? `${value[0]}${value.slice(1).toLowerCase()}` : "Select priority"
-                    }
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent align="start">
-                  {(["LOW", "MEDIUM", "HIGH", "URGENT"] as const).map((value) => (
-                    <SelectItem key={value} value={value}>
-                      {value[0]}{value.slice(1).toLowerCase()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                name="priority"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={(value) => {
+                      if (value) field.onChange(value as TaskPriority);
+                    }}
+                  >
+                    <SelectTrigger
+                      id="task-priority"
+                      className="h-10 w-full cursor-pointer rounded-xl bg-background px-3"
+                      aria-invalid={Boolean(errors.priority)}
+                    >
+                      <SelectValue>
+                        {(value: string | null) =>
+                          value
+                            ? `${value[0]}${value.slice(1).toLowerCase()}`
+                            : "Select priority"
+                        }
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent align="start">
+                      {TASK_PRIORITY_VALUES.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {value[0]}
+                          {value.slice(1).toLowerCase()}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.priority && (
+                <p className="text-sm text-destructive">{errors.priority.message}</p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label>Deadline</Label>
-              <Popover>
-                <PopoverTrigger
-                  type="button"
-                  className="flex h-10 w-full cursor-pointer items-center gap-2 rounded-xl border border-input bg-background px-3 text-left text-sm font-normal transition-colors hover:bg-emerald-500/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                  aria-label="Select task deadline"
-                >
-                  <CalendarDays className="size-4 text-muted-foreground" />
-                  <span className={dueDate ? "text-foreground" : "text-muted-foreground"}>
-                    {selectedDueDate ? format(selectedDueDate, "PPP") : "Pick a date"}
-                  </span>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    month={calendarMonth}
-                    onMonthChange={setCalendarMonth}
-                    selected={selectedDueDate}
-                    onSelect={(date) => {
-                      setDueDate(date ? format(date, "yyyy-MM-dd") : "");
-                      if (date) setCalendarMonth(date);
-                    }}
-                  />
-                  {dueDate && (
-                    <div className="border-t border-border p-2">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => setDueDate("")}
+              <Controller
+                name="dueDate"
+                control={control}
+                render={({ field }) => (
+                  <Popover>
+                    <PopoverTrigger
+                      type="button"
+                      className="flex h-10 w-full cursor-pointer items-center gap-2 rounded-xl border border-input bg-background px-3 text-left text-sm font-normal transition-colors hover:bg-emerald-500/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                      aria-label="Select task deadline"
+                    >
+                      <CalendarDays className="size-4 text-muted-foreground" />
+                      <span
+                        className={
+                          field.value ? "text-foreground" : "text-muted-foreground"
+                        }
                       >
-                        Clear deadline
-                      </Button>
-                    </div>
-                  )}
-                </PopoverContent>
-              </Popover>
+                        {field.value
+                          ? format(new Date(`${field.value}T00:00:00`), "PPP")
+                          : "Pick a date"}
+                      </span>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        month={calendarMonth}
+                        onMonthChange={setCalendarMonth}
+                        selected={
+                          field.value
+                            ? new Date(`${field.value}T00:00:00`)
+                            : undefined
+                        }
+                        onSelect={(date) => {
+                          field.onChange(date ? format(date, "yyyy-MM-dd") : "");
+                          if (date) setCalendarMonth(date);
+                        }}
+                      />
+                      {field.value && (
+                        <div className="border-t border-border p-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => field.onChange("")}
+                          >
+                            Clear deadline
+                          </Button>
+                        </div>
+                      )}
+                    </PopoverContent>
+                  </Popover>
+                )}
+              />
             </div>
             <div className="space-y-1.5 sm:col-span-2">
               <Label>Assignees</Label>
@@ -788,7 +932,16 @@ export function TaskModal({
             <Button type="button" variant="outline" onClick={closeModal} disabled={isPending}>
               Cancel
             </Button>
-            <Button type="submit" variant={isDeleting ? "destructive" : "default"} disabled={isPending || (!isDeleting && (!title.trim() || !columnId))}>
+            <Button
+              type="submit"
+              variant={isDeleting ? "destructive" : "default"}
+              disabled={
+                isPending ||
+                (!isDeleting &&
+                  !isAssigning &&
+                  (!title?.trim() || !columnId))
+              }
+            >
               {isPending
                 ? "Saving…"
                 : isDeleting
