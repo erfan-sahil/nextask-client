@@ -18,24 +18,25 @@ type ThemeContextValue = {
 };
 
 const ThemeContext = createContext<ThemeContextValue>({
-  theme: "light",
+  theme: "dark",
   setTheme: () => {},
   toggleTheme: () => {},
 });
 
 const STORAGE_KEY = "nextask-theme";
+const DEFAULT_THEME: Theme = "dark";
 
 function applyTheme(theme: Theme) {
   document.documentElement.classList.toggle("dark", theme === "dark");
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("light");
+  const [theme, setThemeState] = useState<Theme>(DEFAULT_THEME);
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
     const initial =
-      stored === "light" || stored === "dark" ? stored : "light";
+      stored === "light" || stored === "dark" ? stored : DEFAULT_THEME;
 
     setThemeState(initial);
     applyTheme(initial);

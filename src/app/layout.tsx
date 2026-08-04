@@ -78,7 +78,7 @@ export default function RootLayout({
           id="nextask-theme-init"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("nextask-theme");if(t==="dark")document.documentElement.classList.add("dark");}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem("nextask-theme");if(t!=="light")document.documentElement.classList.add("dark");}catch(e){document.documentElement.classList.add("dark");}})();`,
           }}
         />
         <AppProviders>{children}</AppProviders>

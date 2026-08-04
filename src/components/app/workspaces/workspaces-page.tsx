@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { WorkspaceModal } from "@/components/app/workspaces/workspace-modal";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { appRoutes } from "@/config/navigation";
 import { useWorkspaces } from "@/hooks/use-workflow";
 import { cn } from "@/lib/utils";
@@ -56,6 +57,10 @@ export function WorkspacesPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  const showEmptyState =
+    !workspaces.isLoading &&
+    (workspaces.isError || workspaceList.length === 0);
+
   return (
     <div className="px-4 py-6 sm:px-6">
       {/* Header */}
@@ -65,8 +70,9 @@ export function WorkspacesPage() {
             Workspaces
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {workspaceList.length} workspace
-            {workspaceList.length !== 1 ? "s" : ""} you&apos;re part of
+            {showEmptyState
+              ? "Get started by creating your first workspace"
+              : `${workspaceList.length} workspace${workspaceList.length !== 1 ? "s" : ""} you're part of`}
           </p>
         </div>
         <Button
@@ -82,10 +88,22 @@ export function WorkspacesPage() {
       {/* Grid */}
       {workspaces.isLoading ? (
         <p className="text-sm text-muted-foreground">Loading workspaces…</p>
-      ) : workspaces.isError ? (
-        <p className="text-sm text-destructive">
-          Unable to load workspaces. Please try again.
-        </p>
+      ) : showEmptyState ? (
+        <EmptyState
+          icon={Layers}
+          title="No workspaces yet"
+          description="Create a workspace to organize projects, boards, and your team in one place."
+          action={
+            <Button
+              type="button"
+              size="page"
+              onClick={() => setIsCreateDialogOpen(true)}
+            >
+              <Plus className="size-4" />
+              Create workspace
+            </Button>
+          }
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {workspaceList.map((workspace) => (

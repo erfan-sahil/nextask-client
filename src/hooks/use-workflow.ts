@@ -13,11 +13,17 @@ import type {
 } from "@/types/domain";
 import { socket } from "@/lib/socket";
 
-export function useWorkspaces() {
+type EnabledOption = {
+  enabled?: boolean;
+};
+
+export function useWorkspaces(options: EnabledOption = {}) {
   const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: workflowQueryKeys.workspaces,
     queryFn: () => workflowApi.listWorkspaces({ limit: 100 }),
+    enabled: options.enabled ?? true,
+    staleTime: 5 * 60 * 1000,
   });
 
   return {
@@ -148,6 +154,7 @@ export function useProjects(workspaceId?: string) {
     queryFn: () =>
       workflowApi.listProjects({ workspaceId: workspaceId!, limit: 100 }),
     enabled: Boolean(workspaceId),
+    staleTime: 5 * 60 * 1000,
   });
 
   const invalidate = () =>
@@ -489,12 +496,20 @@ export function useTaskComments(
   };
 }
 
-export function useNotifications() {
+export function useNotifications(options: EnabledOption = {}) {
   const queryClient = useQueryClient();
   const key = workflowQueryKeys.notifications;
-  const query = useQuery({ queryKey: key, queryFn: workflowApi.listNotifications });
+  const enabled = options.enabled ?? true;
+  const query = useQuery({
+    queryKey: key,
+    queryFn: workflowApi.listNotifications,
+    enabled,
+    staleTime: 2 * 60 * 1000,
+  });
 
   useEffect(() => {
+    if (!enabled) return;
+
     if (!socket.connected) socket.connect();
     const onNotification = (notification: NotificationDoc) => {
       const current = queryClient.getQueryData<{
@@ -519,7 +534,7 @@ export function useNotifications() {
     return () => {
       socket.off("notification:created", onNotification);
     };
-  }, [key, queryClient]);
+  }, [enabled, key, queryClient]);
 
   return {
     ...query,
@@ -534,13 +549,18 @@ export function useNotifications() {
   };
 }
 
-export function useWorkspaceChat(workspaceId?: string) {
+export function useWorkspaceChat(
+  workspaceId?: string,
+  options: EnabledOption = {},
+) {
   const queryClient = useQueryClient();
   const key = workflowQueryKeys.chat(workspaceId ?? "");
+  const fetchEnabled = Boolean(workspaceId) && (options.enabled ?? true);
   const query = useQuery({
     queryKey: key,
     queryFn: () => workflowApi.listChatMessages(workspaceId!),
-    enabled: Boolean(workspaceId),
+    enabled: fetchEnabled,
+    staleTime: 60 * 1000,
   });
 
   useEffect(() => {
@@ -574,11 +594,14 @@ export function useWorkspaceChat(workspaceId?: string) {
   };
 }
 
-export function useWorkspaceChatParticipants(workspaceId?: string) {
+export function useWorkspaceChatParticipants(
+  workspaceId?: string,
+  options: EnabledOption = {},
+) {
   return useQuery({
     queryKey: workflowQueryKeys.chatMembers(workspaceId ?? ""),
     queryFn: () => workflowApi.listChatParticipants(workspaceId!),
-    enabled: Boolean(workspaceId),
+    enabled: Boolean(workspaceId) && (options.enabled ?? true),
     staleTime: 5 * 60 * 1000,
   });
 }

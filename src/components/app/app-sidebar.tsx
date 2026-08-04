@@ -130,7 +130,8 @@ export function AppSidebar({ className, onNavigate }: AppSidebarProps) {
   const pathname = usePathname();
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
   const workspaces = useWorkspaces();
-  const notifications = useNotifications();
+  // Header already owns the notifications query + socket; reuse cache only.
+  const notifications = useNotifications({ enabled: false });
   const unreadNotificationCount = notifications.data?.unreadCount ?? 0;
 
   // Derive active workspace from the URL, falling back to the first available workspace.
