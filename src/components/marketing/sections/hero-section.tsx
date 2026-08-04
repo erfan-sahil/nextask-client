@@ -42,7 +42,7 @@ export function HeroSection() {
   return (
     <section className="relative overflow-hidden">
       <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-12 pb-16 sm:px-6 sm:pt-16 sm:pb-20 lg:grid-cols-[1fr_1.05fr] lg:gap-10 lg:pt-20 lg:pb-24">
-        <div>
+        <div className="relative z-10 rounded-2xl bg-background px-5 py-6 sm:px-7 sm:py-8">
           <p className="animate-in fade-in slide-in-from-bottom-2 text-5xl font-extrabold tracking-tight text-primary duration-500 sm:text-6xl lg:text-7xl">
             {siteConfig.name}
           </p>
@@ -61,7 +61,7 @@ export function HeroSection() {
               href={authRoutes.register}
               className={cn(
                 buttonVariants({ size: "lg" }),
-                "h-12 px-8 text-base transition-colors hover:bg-primary-hover",
+                "h-12 gap-2 px-8 text-base has-data-[icon=inline-end]:pr-8 transition-colors hover:bg-primary-hover",
               )}
             >
               Start free
@@ -71,7 +71,7 @@ export function HeroSection() {
               href="#features"
               className={cn(
                 buttonVariants({ variant: "outline", size: "lg" }),
-                "h-12 border-border bg-card px-8 text-base transition-colors hover:border-primary/30 hover:bg-primary-light hover:text-primary dark:hover:border-primary/25 dark:hover:bg-primary/10 dark:hover:text-primary",
+                "h-12 gap-2 px-8 text-base transition-colors hover:border-primary/30 hover:bg-primary-light hover:text-primary dark:hover:border-primary/25 dark:hover:bg-primary/10 dark:hover:text-primary",
               )}
             >
               Explore features

@@ -29,7 +29,7 @@ export function CtaSection() {
                   href={authRoutes.register}
                   className={cn(
                     buttonVariants({ size: "lg" }),
-                    "h-12 px-8 text-base transition-colors hover:bg-primary-hover",
+                    "h-12 gap-2 px-8 text-base has-data-[icon=inline-end]:pr-8 transition-colors hover:bg-primary-hover",
                   )}
                 >
                   Get started free
@@ -39,7 +39,7 @@ export function CtaSection() {
                   href={authRoutes.login}
                   className={cn(
                     buttonVariants({ variant: "outline", size: "lg" }),
-                    "h-12 border-border bg-card px-8 text-base transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground dark:hover:border-primary/40 dark:hover:bg-primary/15 dark:hover:text-primary",
+                    "h-12 gap-2 border-border bg-card px-8 text-base text-foreground transition-colors hover:border-primary/40 hover:bg-background hover:text-primary",
                   )}
                 >
                   Log in

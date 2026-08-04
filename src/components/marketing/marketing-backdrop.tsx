@@ -53,7 +53,7 @@ export function MarketingBackdrop() {
             <path
               d="M0 0 V28"
               fill="none"
-              className="stroke-border/40 dark:stroke-border/30"
+              className="stroke-border/55 dark:stroke-border/40"
               strokeWidth="1"
             />
           </pattern>
@@ -66,7 +66,7 @@ export function MarketingBackdrop() {
           width="1440"
           height="900"
           fill="url(#nextask-scaffold)"
-          className="opacity-50 dark:opacity-35"
+          className="opacity-58 dark:opacity-42"
         />
 
         {/* Corner brackets */}
