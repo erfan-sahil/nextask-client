@@ -237,7 +237,67 @@ export function WorkspaceCalendarView({
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      {/* Mobile / small laptop header */}
+      <div className="flex flex-col gap-4 lg:hidden">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl font-bold tracking-tight">Calendar</h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Deadlines and meetings for{" "}
+              <span className="font-medium text-foreground">
+                {workspace.name}
+              </span>
+            </p>
+          </div>
+
+          {canCreateMeetings && (
+            <Button
+              size="page"
+              className="shrink-0"
+              onClick={() => openMeetingDialog(today)}
+            >
+              <Plus className="size-4" />
+              Schedule meeting
+            </Button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 md:justify-end">
+          <Button
+            variant="outline"
+            size="page"
+            onClick={() =>
+              setViewDate(new Date(today.getFullYear(), today.getMonth(), 1))
+            }
+          >
+            Today
+          </Button>
+          <div className="flex items-center overflow-hidden rounded-xl border border-border bg-card">
+            <button
+              type="button"
+              onClick={() => setViewDate(new Date(year, month - 1, 1))}
+              className="flex size-9 items-center justify-center text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground"
+              aria-label="Previous month"
+            >
+              <ChevronLeft className="size-4" />
+            </button>
+            <span className="min-w-36 border-x border-border px-2 text-center text-sm font-semibold">
+              {MONTHS[month]} {year}
+            </span>
+            <button
+              type="button"
+              onClick={() => setViewDate(new Date(year, month + 1, 1))}
+              className="flex size-9 items-center justify-center text-muted-foreground transition-colors hover:bg-emerald-500/5 hover:text-foreground"
+              aria-label="Next month"
+            >
+              <ChevronRight className="size-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Large laptop / desktop header — unchanged */}
+      <div className="hidden flex-wrap items-center justify-between gap-4 lg:flex">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Calendar</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
