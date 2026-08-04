@@ -1043,10 +1043,10 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-4 sm:p-6">
       {/* ── Header ── */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold tracking-tight">Goals</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Track objectives and key results for{" "}
@@ -1058,6 +1058,7 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
         {canManageGoals && (
           <Button
             size="page"
+            className="shrink-0"
             onClick={() => setDialogGoal(null)}
           >
             <Plus className="size-4" />
@@ -1067,8 +1068,8 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
       </div>
 
       {/* ── Overview banner ── */}
-      <div className="rounded-2xl border border-border bg-card p-5">
-        <div className="flex flex-wrap items-center gap-6">
+      <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6">
           {/* Progress ring + summary */}
           <div className="flex items-center gap-4">
             <div className="relative shrink-0">
@@ -1082,7 +1083,7 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
                 {avgProgress}%
               </span>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-base font-bold leading-tight">
                 {goals.length} goal{goals.length !== 1 ? "s" : ""}
               </p>
@@ -1108,10 +1109,10 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
           </div>
 
           {/* Divider */}
-          <div className="hidden h-14 w-px bg-border sm:block" />
+          <div className="hidden h-14 w-px shrink-0 bg-border lg:block" />
 
           {/* Status breakdown */}
-          <div className="flex flex-1 flex-wrap gap-4">
+          <div className="grid min-w-0 grid-cols-5 gap-1 sm:gap-2 lg:flex lg:flex-1 lg:gap-4">
             {STAT_CONFIG.map(({ status, colorClass, bgClass }) => {
               const count = counts[status] ?? 0;
               const cfg = STATUS_CONFIG[status];
@@ -1122,7 +1123,7 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
                   type="button"
                   onClick={() => setStatusFilter(status)}
                   className={cn(
-                    "flex cursor-pointer flex-col items-center gap-1 rounded-xl border border-transparent px-3.75 py-2.25 transition-colors",
+                    "flex min-w-0 cursor-pointer flex-col items-center gap-1 rounded-xl border border-transparent px-1 py-2 transition-colors sm:px-2 sm:py-2.25 lg:px-3.75",
                     statusFilter === status &&
                       "border-primary/20 bg-emerald-500/10 dark:bg-emerald-400/10",
                     statusFilter !== status &&
@@ -1131,15 +1132,17 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
                 >
                   <div
                     className={cn(
-                      "flex size-8 items-center justify-center rounded-lg",
+                      "flex size-7 items-center justify-center rounded-lg sm:size-8",
                       bgClass,
                       colorClass,
                     )}
                   >
-                    <Icon className="size-4" />
+                    <Icon className="size-3.5 sm:size-4" />
                   </div>
-                  <p className="text-base font-bold tabular-nums">{count}</p>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-sm font-bold tabular-nums sm:text-base">
+                    {count}
+                  </p>
+                  <p className="w-full truncate text-center text-[9px] text-muted-foreground sm:text-[10px]">
                     {cfg.label}
                   </p>
                 </button>
@@ -1150,34 +1153,36 @@ export function WorkspaceGoals({ workspaceSlug }: { workspaceSlug: string }) {
       </div>
 
       {/* ── Filter bar ── */}
-      <div className="flex items-center gap-1 self-start rounded-xl border border-border bg-card p-1">
-        {FILTER_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => setStatusFilter(opt.value)}
-            className={cn(
-              "cursor-pointer rounded-lg px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap",
-              statusFilter === opt.value
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:bg-emerald-500/5 hover:text-foreground",
-            )}
-          >
-            {opt.label}
-            {counts[opt.value] !== undefined && counts[opt.value] > 0 && (
-              <span
-                className={cn(
-                  "ml-1.5 rounded-full px-1.5 py-px text-[10px] font-semibold tabular-nums",
-                  statusFilter === opt.value
-                    ? "bg-primary-foreground/20 text-primary-foreground"
-                    : "bg-muted text-muted-foreground",
-                )}
-              >
-                {counts[opt.value]}
-              </span>
-            )}
-          </button>
-        ))}
+      <div className="scrollbar-hidden -mx-4 overflow-x-auto px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:overflow-visible lg:px-0">
+        <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-card p-1">
+          {FILTER_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setStatusFilter(opt.value)}
+              className={cn(
+                "cursor-pointer rounded-lg px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap",
+                statusFilter === opt.value
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-emerald-500/5 hover:text-foreground",
+              )}
+            >
+              {opt.label}
+              {counts[opt.value] !== undefined && counts[opt.value] > 0 && (
+                <span
+                  className={cn(
+                    "ml-1.5 rounded-full px-1.5 py-px text-[10px] font-semibold tabular-nums",
+                    statusFilter === opt.value
+                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {counts[opt.value]}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ── Goal list ── */}
