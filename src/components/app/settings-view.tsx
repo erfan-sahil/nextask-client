@@ -9,8 +9,10 @@ import {
   EyeOff,
   KeyRound,
   Lock,
+  Mail,
   Moon,
   Palette,
+  Settings2,
   ShieldAlert,
   Sun,
   Trash2,
@@ -28,7 +30,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { User as UserType } from "@/types/auth";
 
@@ -37,11 +38,27 @@ type SettingsTab = "profile" | "security" | "appearance";
 const navItems: {
   id: SettingsTab;
   label: string;
+  description: string;
   icon: React.ComponentType<{ className?: string }>;
 }[] = [
-  { id: "profile", label: "Profile", icon: User },
-  { id: "security", label: "Security", icon: Lock },
-  { id: "appearance", label: "Appearance", icon: Palette },
+  {
+    id: "profile",
+    label: "Profile",
+    description: "Name and username",
+    icon: User,
+  },
+  {
+    id: "security",
+    label: "Security",
+    description: "Password and account",
+    icon: Lock,
+  },
+  {
+    id: "appearance",
+    label: "Appearance",
+    description: "Theme preferences",
+    icon: Palette,
+  },
 ];
 
 const getErrorMessage = (error: unknown, fallback: string) => {
@@ -52,45 +69,129 @@ const getErrorMessage = (error: unknown, fallback: string) => {
   return fallback;
 };
 
+function StatusBanner({
+  message,
+  tone,
+}: {
+  message: string;
+  tone: "success" | "error";
+}) {
+  return (
+    <div
+      role="status"
+      className={cn(
+        "rounded-xl px-3.5 py-2.5 text-sm",
+        tone === "success"
+          ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+          : "bg-destructive/10 text-destructive",
+      )}
+    >
+      {message}
+    </div>
+  );
+}
+
+function SettingsPanel({
+  title,
+  description,
+  children,
+  footer,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+  footer?: React.ReactNode;
+}) {
+  return (
+    <section className="overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="border-b border-border px-5 py-4 sm:px-6">
+        <h2 className="text-base font-semibold tracking-tight text-foreground">
+          {title}
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+      </div>
+      <div className="px-5 py-5 sm:px-6">{children}</div>
+      {footer ? (
+        <div className="border-t border-border bg-muted/20 px-5 py-4 sm:px-6">
+          {footer}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 export function SettingsView() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
+  const activeNav = navItems.find((item) => item.id === activeTab) ?? navItems[0];
 
   return (
-    <div className="px-4 py-6 sm:px-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Settings
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage your account and preferences.
-        </p>
-      </div>
+    <div className="max-w-6xl px-4 py-6 sm:px-8">
+      <section className="mb-8 overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="h-1 bg-primary" />
+        <div className="flex flex-wrap items-start gap-4 p-5 sm:p-6">
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <Settings2 className="size-6" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Manage your profile, security, and how NexTask looks for you.
+            </p>
+          </div>
+        </div>
+      </section>
 
-      <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-        <aside className="shrink-0 lg:w-48">
-          <nav className="flex gap-1 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">
-            {navItems.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setActiveTab(id)}
-                className={cn(
-                  "flex cursor-pointer items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                  activeTab === id
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-emerald-500/5 hover:text-foreground",
-                )}
-              >
-                <Icon className="size-4 shrink-0" />
-                {label}
-              </button>
-            ))}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
+        <aside className="shrink-0 lg:sticky lg:top-6 lg:w-56">
+          <nav
+            aria-label="Settings sections"
+            className="flex gap-1 overflow-x-auto rounded-2xl border border-border bg-card p-1.5 lg:flex-col lg:overflow-visible"
+          >
+            {navItems.map(({ id, label, description, icon: Icon }) => {
+              const isActive = activeTab === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setActiveTab(id)}
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "flex min-w-38 cursor-pointer items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors lg:min-w-0",
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-emerald-500/5 hover:text-foreground",
+                  )}
+                >
+                  <Icon className="mt-0.5 size-4 shrink-0" />
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium">{label}</span>
+                    <span
+                      className={cn(
+                        "mt-0.5 hidden text-xs lg:block",
+                        isActive ? "text-primary/80" : "text-muted-foreground",
+                      )}
+                    >
+                      {description}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
           </nav>
         </aside>
 
-        <main className="min-w-0 flex-1">
+        <main className="min-w-0 flex-1 space-y-4">
+          <div className="mb-1">
+            <h2 className="text-lg font-semibold tracking-tight">
+              {activeNav.label}
+            </h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {activeNav.description}
+            </p>
+          </div>
+
           {activeTab === "profile" && (
             <ProfileSection key={user?._id ?? "loading"} user={user} />
           )}
@@ -165,160 +266,190 @@ function ProfileSection({ user }: { user: UserType | undefined }) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-border bg-card">
-        <div className="flex items-center gap-4 px-6 py-5">
+      <SettingsPanel
+        title="Account overview"
+        description="Your public identity across workspaces and mentions."
+      >
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
           <UserAvatar
             name={fullName || "User"}
             avatar={user?.avatar}
             size="lg"
-            className="size-14 text-base ring-2 ring-background"
+            className="size-16 text-lg ring-2 ring-background"
           />
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-foreground">
-              {fullName || "—"}
-            </p>
-            {user?.username && (
-              <p className="truncate text-xs text-muted-foreground">
-                @{user.username}
+          <div className="min-w-0 flex-1 space-y-2">
+            <div>
+              <p className="truncate text-base font-semibold text-foreground">
+                {fullName || "—"}
               </p>
-            )}
-            {memberSince && (
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Member since {memberSince}
-              </p>
-            )}
+              {user?.username ? (
+                <p className="truncate text-sm text-muted-foreground">
+                  @{user.username}
+                </p>
+              ) : null}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {user?.email ? (
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-muted/70 px-2.5 py-1 text-xs text-muted-foreground">
+                  <Mail className="size-3" />
+                  <span className="truncate">{user.email}</span>
+                </span>
+              ) : null}
+              {memberSince ? (
+                <span className="inline-flex items-center rounded-lg bg-muted/70 px-2.5 py-1 text-xs text-muted-foreground">
+                  Joined {memberSince}
+                </span>
+              ) : null}
+              {user?.isEmailVerified ? (
+                <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                  <CheckCircle2 className="size-3" />
+                  Verified
+                </span>
+              ) : null}
+            </div>
           </div>
         </div>
-      </div>
+      </SettingsPanel>
 
-      <form
-        onSubmit={handleSubmit}
-        className="rounded-2xl border border-border bg-card"
-      >
-        <div className="flex items-start justify-between gap-4 px-6 py-5">
-          <div>
-            <h2 className="text-sm font-semibold text-foreground">
-              Personal information
-            </h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Update the name and username shown across NexTask.
-            </p>
-          </div>
-          {!isEditing && (
-            <Button
-              type="button"
-              size="sm"
-              onClick={startEditing}
-              disabled={!user}
-            >
-              Edit
-            </Button>
-          )}
-        </div>
-
-        <Separator />
-
-        <div className="grid gap-4 px-6 py-5 sm:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="firstName">First name</Label>
-            <Input
-              id="firstName"
-              value={form.firstName}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  firstName: event.target.value,
-                }))
-              }
-              placeholder="First name"
-              required
-              maxLength={50}
-              disabled={!isEditing}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="lastName">Last name</Label>
-            <Input
-              id="lastName"
-              value={form.lastName}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  lastName: event.target.value,
-                }))
-              }
-              placeholder="Last name"
-              required
-              maxLength={50}
-              disabled={!isEditing}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5 sm:col-span-2">
-            <Label htmlFor="username">Username</Label>
-            <div className="relative max-w-md">
-              <AtSign className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+      <form onSubmit={handleSubmit}>
+        <SettingsPanel
+          title="Personal information"
+          description="Update the name and username shown across NexTask."
+          footer={
+            isEditing ? (
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs text-muted-foreground">
+                  Changes apply immediately after saving.
+                </p>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={cancelEditing}
+                    disabled={updateProfileMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={updateProfileMutation.isPending}
+                  >
+                    {updateProfileMutation.isPending ? "Saving…" : "Save changes"}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs text-muted-foreground">
+                  Keep your profile details up to date for teammates.
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={startEditing}
+                  disabled={!user}
+                  className="shrink-0"
+                >
+                  Edit profile
+                </Button>
+              </div>
+            )
+          }
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="firstName">First name</Label>
               <Input
-                id="username"
-                value={form.username}
+                id="firstName"
+                value={form.firstName}
                 onChange={(event) =>
                   setForm((current) => ({
                     ...current,
-                    username: event.target.value.toLowerCase(),
+                    firstName: event.target.value,
                   }))
                 }
-                placeholder="username"
-                className="pl-7"
+                placeholder="First name"
                 required
-                minLength={3}
-                maxLength={30}
-                pattern="[a-z0-9_]+"
+                maxLength={50}
                 disabled={!isEditing}
               />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Use 3–30 lowercase letters, numbers, or underscores.
-            </p>
-          </div>
-        </div>
 
-        {(successMessage || errorMessage) && (
-          <div
-            role="status"
-            className={cn(
-              "mx-6 mb-5 rounded-lg px-3 py-2 text-sm",
-              successMessage
-                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                : "bg-destructive/10 text-destructive",
-            )}
-          >
-            {successMessage || errorMessage}
-          </div>
-        )}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="lastName">Last name</Label>
+              <Input
+                id="lastName"
+                value={form.lastName}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    lastName: event.target.value,
+                  }))
+                }
+                placeholder="Last name"
+                required
+                maxLength={50}
+                disabled={!isEditing}
+              />
+            </div>
 
-        <Separator />
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
+              <Label htmlFor="username">Username</Label>
+              <div className="relative max-w-md">
+                <AtSign className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="username"
+                  value={form.username}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      username: event.target.value.toLowerCase(),
+                    }))
+                  }
+                  placeholder="username"
+                  className="pl-7"
+                  required
+                  minLength={3}
+                  maxLength={30}
+                  pattern="[a-z0-9_]+"
+                  disabled={!isEditing}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                3–30 lowercase letters, numbers, or underscores. Used for
+                mentions.
+              </p>
+            </div>
 
-        {isEditing && (
-          <div className="flex justify-end gap-2 px-6 py-4">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={cancelEditing}
-              disabled={updateProfileMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              size="sm"
-              disabled={updateProfileMutation.isPending}
-            >
-              {updateProfileMutation.isPending ? "Saving…" : "Save changes"}
-            </Button>
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative max-w-md">
+                <Mail className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="email"
+                  value={user?.email ?? ""}
+                  className="pl-7"
+                  disabled
+                  readOnly
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Email is used for sign-in and cannot be changed here.
+              </p>
+            </div>
           </div>
-        )}
+
+          {(successMessage || errorMessage) && (
+            <div className="mt-4">
+              <StatusBanner
+                message={successMessage || errorMessage}
+                tone={successMessage ? "success" : "error"}
+              />
+            </div>
+          )}
+        </SettingsPanel>
       </form>
     </div>
   );
@@ -358,7 +489,7 @@ function PasswordField({
           type="button"
           onClick={onToggle}
           aria-label={show ? "Hide password" : "Show password"}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
+          className="absolute top-1/2 right-2.5 -translate-y-1/2 cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
         >
           {show ? (
             <EyeOff className="size-3.5" aria-hidden />
@@ -443,26 +574,42 @@ function SecuritySection() {
 
   return (
     <div className="space-y-4">
-      <form
-        onSubmit={handlePasswordSubmit}
-        className="overflow-hidden rounded-2xl border border-border bg-card"
-      >
-        <div className="flex gap-4 px-6 py-5">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <KeyRound className="size-5" />
+      <form onSubmit={handlePasswordSubmit}>
+        <SettingsPanel
+          title="Change password"
+          description="Use at least 8 characters with one uppercase letter and one number."
+          footer={
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-muted-foreground">
+                You will need to sign in again after changing your password.
+              </p>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={changePasswordMutation.isPending}
+                className="shrink-0"
+              >
+                {changePasswordMutation.isPending
+                  ? "Updating…"
+                  : "Update password"}
+              </Button>
+            </div>
+          }
+        >
+          <div className="mb-5 flex items-start gap-3 rounded-xl border border-border bg-muted/30 p-3.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <KeyRound className="size-4" />
+            </span>
+            <div>
+              <p className="text-sm font-medium text-foreground">
+                Keep your account secure
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Prefer a unique password you do not reuse on other sites.
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-sm font-semibold text-foreground">
-              Change password
-            </h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Choose a password with at least 8 characters, one uppercase
-              letter, and one number.
-            </p>
-          </div>
-        </div>
 
-        <div className="border-y border-border bg-muted/20 px-6 py-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <PasswordField
               id="currentPassword"
@@ -493,45 +640,40 @@ function SecuritySection() {
               placeholder="Repeat new password"
             />
           </div>
-        </div>
 
-        {(passwordMessage || passwordError) && (
-          <div
-            role="status"
-            className={cn(
-              "mx-6 mt-5 rounded-lg px-3 py-2 text-sm",
-              passwordMessage
-                ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                : "bg-destructive/10 text-destructive",
-            )}
-          >
-            {passwordMessage || passwordError}
-          </div>
-        )}
-
-        <div className="flex items-center justify-between gap-4 px-6 py-4">
-          <p className="text-xs text-muted-foreground">
-            You will need to sign in again after changing your password.
-          </p>
-          <Button
-            type="submit"
-            size="sm"
-            disabled={changePasswordMutation.isPending}
-            className="shrink-0"
-          >
-            {changePasswordMutation.isPending ? "Updating…" : "Update password"}
-          </Button>
-        </div>
+          {(passwordMessage || passwordError) && (
+            <div className="mt-4">
+              <StatusBanner
+                message={passwordMessage || passwordError}
+                tone={passwordMessage ? "success" : "error"}
+              />
+            </div>
+          )}
+        </SettingsPanel>
       </form>
 
-      <div className="rounded-2xl border border-destructive/30 bg-destructive/5">
-        <div className="flex items-center justify-between gap-4 px-6 py-5">
-          <div>
-            <p className="text-sm font-semibold text-destructive">
-              Delete account
-            </p>
+      <section className="overflow-hidden rounded-2xl border border-destructive/25 bg-destructive/3">
+        <div className="border-b border-destructive/15 px-5 py-4 sm:px-6">
+          <div className="flex items-start gap-3">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+              <ShieldAlert className="size-4" />
+            </span>
+            <div>
+              <h2 className="text-base font-semibold tracking-tight text-destructive">
+                Danger zone
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Irreversible actions that permanently affect your account.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-foreground">Delete account</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Permanently remove your account. This action cannot be undone.
+              Permanently remove your account and associated data. This cannot
+              be undone.
             </p>
           </div>
           <Button
@@ -545,10 +687,10 @@ function SecuritySection() {
             }}
           >
             <Trash2 className="size-3.5" />
-            Delete
+            Delete account
           </Button>
         </div>
-      </div>
+      </section>
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="max-w-md overflow-hidden p-0">
@@ -614,45 +756,74 @@ const themeOptions: {
   value: Theme;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  preview: React.ReactNode;
 }[] = [
-  {
-    value: "light",
-    label: "Light",
-    icon: Sun,
-    preview: (
-      <div className="h-20 rounded-t-lg bg-white p-3">
-        <div className="mb-2 h-2 w-12 rounded-full bg-gray-200" />
-        <div className="mb-3 h-1.5 w-16 rounded-full bg-gray-100" />
-        <div className="flex gap-1.5">
-          <div className="size-8 rounded-lg bg-gray-100" />
-          <div className="flex-1 space-y-1.5 pt-0.5">
-            <div className="h-1.5 w-full rounded-full bg-gray-100" />
-            <div className="h-1.5 w-3/4 rounded-full bg-gray-100" />
-          </div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    value: "dark",
-    label: "Dark",
-    icon: Moon,
-    preview: (
-      <div className="h-20 rounded-t-lg bg-zinc-900 p-3">
-        <div className="mb-2 h-2 w-12 rounded-full bg-zinc-600" />
-        <div className="mb-3 h-1.5 w-16 rounded-full bg-zinc-800" />
-        <div className="flex gap-1.5">
-          <div className="size-8 rounded-lg bg-zinc-800" />
-          <div className="flex-1 space-y-1.5 pt-0.5">
-            <div className="h-1.5 w-full rounded-full bg-zinc-800" />
-            <div className="h-1.5 w-3/4 rounded-full bg-zinc-700" />
-          </div>
-        </div>
-      </div>
-    ),
-  },
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
 ];
+
+function ThemePreview({ value }: { value: Theme }) {
+  const isDark = value === "dark";
+
+  return (
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-lg border p-2",
+        isDark
+          ? "border-zinc-700 bg-zinc-950"
+          : "border-slate-200 bg-slate-50",
+      )}
+    >
+      <div className="mb-1.5 flex items-center gap-1">
+        <span
+          className={cn(
+            "size-1.5 rounded-full",
+            isDark ? "bg-zinc-600" : "bg-slate-300",
+          )}
+        />
+        <span
+          className={cn(
+            "size-1.5 rounded-full",
+            isDark ? "bg-zinc-600" : "bg-slate-300",
+          )}
+        />
+        <span
+          className={cn(
+            "size-1.5 rounded-full",
+            isDark ? "bg-zinc-600" : "bg-slate-300",
+          )}
+        />
+      </div>
+      <div className="flex gap-1.5">
+        <div
+          className={cn(
+            "h-10 w-4 rounded-sm",
+            isDark ? "bg-zinc-800" : "bg-white shadow-sm",
+          )}
+        />
+        <div className="flex-1 space-y-1">
+          <div
+            className={cn(
+              "h-2 rounded-sm",
+              isDark ? "bg-zinc-700" : "bg-slate-200",
+            )}
+          />
+          <div
+            className={cn(
+              "h-2 w-4/5 rounded-sm",
+              isDark ? "bg-zinc-800" : "bg-slate-100",
+            )}
+          />
+          <div
+            className={cn(
+              "h-4 rounded-sm",
+              isDark ? "bg-emerald-500/30" : "bg-emerald-500/20",
+            )}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function AppearanceSection({
   theme,
@@ -662,51 +833,57 @@ function AppearanceSection({
   setTheme: (theme: Theme) => void;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card">
-      <div className="px-6 py-5">
-        <h2 className="text-sm font-semibold text-foreground">Color scheme</h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          Choose how NexTask looks for you.
-        </p>
-      </div>
-
-      <Separator />
-
-      <div className="px-6 py-5">
-        <div className="grid grid-cols-2 gap-3 sm:max-w-xs">
-          {themeOptions.map(({ value, label, icon: Icon, preview }) => (
+    <SettingsPanel
+      title="Color scheme"
+      description="Choose how NexTask looks across the app. Your preference is saved on this device."
+    >
+      <div
+        role="radiogroup"
+        aria-label="Color scheme"
+        className="flex flex-wrap gap-3"
+      >
+        {themeOptions.map(({ value, label, icon: Icon }) => {
+          const isActive = theme === value;
+          return (
             <button
               key={value}
               type="button"
+              role="radio"
+              aria-checked={isActive}
               onClick={() => setTheme(value)}
               className={cn(
-                "cursor-pointer overflow-hidden rounded-xl border-2 text-left transition-all",
-                theme === value
-                  ? "border-primary shadow-sm shadow-primary/10"
-                  : "border-border hover:bg-emerald-500/5 dark:hover:bg-emerald-400/10",
+                "w-36 cursor-pointer rounded-xl border p-2.5 text-left transition-colors",
+                isActive
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/30 hover:bg-emerald-500/5",
               )}
             >
-              {preview}
-              <div
-                className={cn(
-                  "flex items-center justify-between px-3 py-2.5",
-                  theme === value ? "bg-primary/5" : "bg-muted/40",
-                )}
-              >
-                <div className="flex items-center gap-1.5">
-                  <Icon className="size-3.5 text-muted-foreground" />
-                  <span className="text-xs font-medium text-foreground">
+              <ThemePreview value={value} />
+              <span className="mt-2 flex items-center justify-between gap-2 px-0.5">
+                <span className="flex items-center gap-1.5">
+                  <Icon
+                    className={cn(
+                      "size-3.5",
+                      isActive ? "text-primary" : "text-muted-foreground",
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "text-sm font-medium",
+                      isActive ? "text-foreground" : "text-muted-foreground",
+                    )}
+                  >
                     {label}
                   </span>
-                </div>
-                {theme === value && (
+                </span>
+                {isActive ? (
                   <CheckCircle2 className="size-3.5 text-primary" />
-                )}
-              </div>
+                ) : null}
+              </span>
             </button>
-          ))}
-        </div>
+          );
+        })}
       </div>
-    </div>
+    </SettingsPanel>
   );
 }

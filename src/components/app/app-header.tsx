@@ -45,7 +45,7 @@ export function UserMenu({ user, className }: UserMenuProps) {
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className="flex items-center gap-2.5 rounded-full border border-border bg-card py-1 pr-3 pl-1 transition-colors hover:bg-emerald-500/5 hover:text-accent-foreground"
+        className="flex cursor-pointer items-center gap-2.5 rounded-full border border-border bg-card py-1 pr-3 pl-1 transition-colors hover:bg-emerald-500/5 hover:text-accent-foreground"
         aria-expanded={isOpen}
         aria-haspopup="menu"
       >

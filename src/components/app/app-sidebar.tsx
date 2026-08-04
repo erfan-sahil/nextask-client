@@ -113,7 +113,7 @@ function ChatNavButton({
         window.dispatchEvent(new Event("workspace-chat:open"));
         onNavigate?.();
       }}
-      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-emerald-500/5 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+      className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-emerald-500/5 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
     >
       <MessageCircle className="size-4 shrink-0" aria-hidden />
       <span className="truncate">Chat</span>
