@@ -1,255 +1,235 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { AuthAlert, AuthField } from "@/components/auth/auth-field";
+import { AuthDivider } from "@/components/auth/auth-divider";
+import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 import { AuthShell } from "@/components/auth/auth-shell";
-import { register } from "@/lib/api/auth";
-import { getErrorMessage } from "@/lib/api/get-error-message";
-
-const inputClassName =
-  "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary";
-
-const validatePassword = (password: string) => {
-  if (password.length < 8) {
-    return "Password must be at least 8 characters";
-  }
-
-  if (!/[A-Z]/.test(password)) {
-    return "Password must contain at least one uppercase letter";
-  }
-
-  if (!/[0-9]/.test(password)) {
-    return "Password must contain at least one number";
-  }
-
-  return null;
-};
-
-const validateUsername = (username: string) => {
-  if (username.length < 3) {
-    return "Username must be at least 3 characters";
-  }
-
-  if (username.length > 30) {
-    return "Username must be at most 30 characters";
-  }
-
-  if (!/^[a-z0-9_]+$/.test(username)) {
-    return "Username may only contain lowercase letters, numbers, and underscores";
-  }
-
-  return null;
-};
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
+import { appRoutes, authRoutes } from "@/config/navigation";
+import { useAuth } from "@/hooks/use-auth";
+import { setPendingVerificationEmail } from "@/lib/auth/pending-verification";
+import {
+  getAuthFormErrors,
+  getErrorMessage,
+} from "@/lib/api/get-error-message";
+import {
+  getFieldErrors,
+  registerFormSchema,
+} from "@/lib/validation/auth-schemas";
 
 export function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [clientError, setClientError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const registerMutation = useMutation({
-    mutationFn: register,
-    onSuccess: () => {
-      router.push("/verify-email");
-    },
+  const { register, isRegistering, registerError, resetRegister } = useAuth({
+    fetchUser: false,
   });
+
+  const clearFieldError = (field: string) => {
+    setFieldErrors((current) => {
+      if (!current[field]) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+  };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setClientError(null);
+    setFieldErrors({});
+    resetRegister();
 
-    const usernameError = validateUsername(username.trim().toLowerCase());
-    if (usernameError) {
-      setClientError(usernameError);
-      return;
-    }
-
-    const passwordError = validatePassword(password);
-    if (passwordError) {
-      setClientError(passwordError);
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setClientError("Passwords do not match");
-      return;
-    }
-
-    registerMutation.mutate({
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      username: username.trim().toLowerCase(),
-      email: email.trim().toLowerCase(),
+    const result = registerFormSchema.safeParse({
+      firstName,
+      lastName,
+      username,
+      email,
       password,
+      confirmPassword,
     });
+
+    if (!result.success) {
+      setFieldErrors(getFieldErrors(result.error));
+      return;
+    }
+
+    register(
+      {
+        firstName: result.data.firstName,
+        lastName: result.data.lastName,
+        username: result.data.username.toLowerCase(),
+        email: result.data.email.toLowerCase(),
+        password: result.data.password,
+      },
+      {
+        onSuccess: (data) => {
+          setPendingVerificationEmail(data.email);
+          const callbackUrl = searchParams.get("callbackUrl");
+          const verifyUrl =
+            callbackUrl && callbackUrl.startsWith("/")
+              ? `${authRoutes.verifyEmail}?callbackUrl=${encodeURIComponent(callbackUrl)}`
+              : authRoutes.verifyEmail;
+          router.push(verifyUrl);
+        },
+        onError: (error) => {
+          const apiFieldErrors = getAuthFormErrors(error);
+          if (Object.keys(apiFieldErrors).length > 0) {
+            setFieldErrors(apiFieldErrors);
+          }
+        },
+      },
+    );
   };
+
+  const formError =
+    registerError && Object.keys(fieldErrors).length === 0
+      ? getErrorMessage(registerError, "Unable to create account")
+      : null;
 
   return (
     <AuthShell
       wide
       badge="Get started"
-      title="Create your NexTask account"
+      title="Create your account"
       description="Fill in your details below. We'll send a verification code to your email."
     >
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-5" noValidate>
         <div className="grid gap-5 sm:grid-cols-2">
-          <div className="space-y-2">
-            <label
-              htmlFor="firstName"
-              className="text-sm font-medium text-foreground"
-            >
-              First name
-            </label>
-            <input
-              id="firstName"
-              type="text"
-              autoComplete="given-name"
-              required
-              maxLength={50}
-              value={firstName}
-              onChange={(event) => setFirstName(event.target.value)}
-              className={inputClassName}
-              placeholder="John"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="lastName"
-              className="text-sm font-medium text-foreground"
-            >
-              Last name
-            </label>
-            <input
-              id="lastName"
-              type="text"
-              autoComplete="family-name"
-              required
-              maxLength={50}
-              value={lastName}
-              onChange={(event) => setLastName(event.target.value)}
-              className={inputClassName}
-              placeholder="Doe"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label
-            htmlFor="username"
-            className="text-sm font-medium text-foreground"
-          >
-            Username
-          </label>
-          <input
-            id="username"
+          <AuthField
+            id="firstName"
+            label="First name"
             type="text"
-            autoComplete="username"
-            required
-            maxLength={30}
-            value={username}
-            onChange={(event) =>
-              setUsername(event.target.value.toLowerCase().replace(/\s/g, ""))
-            }
-            className={inputClassName}
-            placeholder="johndoe"
+            autoComplete="given-name"
+            maxLength={50}
+            value={firstName}
+            onChange={(event) => {
+              setFirstName(event.target.value);
+              clearFieldError("firstName");
+            }}
+            placeholder="John"
+            error={fieldErrors.firstName}
           />
-          <p className="text-xs text-muted-foreground">
-            Lowercase letters, numbers, and underscores only.
-          </p>
-        </div>
 
-        <div className="space-y-2">
-          <label htmlFor="email" className="text-sm font-medium text-foreground">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className={inputClassName}
-            placeholder="you@example.com"
+          <AuthField
+            id="lastName"
+            label="Last name"
+            type="text"
+            autoComplete="family-name"
+            maxLength={50}
+            value={lastName}
+            onChange={(event) => {
+              setLastName(event.target.value);
+              clearFieldError("lastName");
+            }}
+            placeholder="Doe"
+            error={fieldErrors.lastName}
           />
         </div>
 
-        <div className="space-y-2">
-          <label
-            htmlFor="password"
-            className="text-sm font-medium text-foreground"
-          >
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="new-password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className={inputClassName}
-            placeholder="Create a strong password"
-          />
-          <p className="text-xs text-muted-foreground">
-            At least 8 characters, one uppercase letter, and one number.
-          </p>
-        </div>
+        <AuthField
+          id="username"
+          label="Username"
+          type="text"
+          autoComplete="username"
+          maxLength={30}
+          value={username}
+          onChange={(event) => {
+            setUsername(event.target.value.toLowerCase().replace(/\s/g, ""));
+            clearFieldError("username");
+          }}
+          placeholder="johndoe"
+          hint={
+            fieldErrors.username
+              ? undefined
+              : "Lowercase letters, numbers, and underscores only."
+          }
+          error={fieldErrors.username}
+        />
 
-        <div className="space-y-2">
-          <label
-            htmlFor="confirmPassword"
-            className="text-sm font-medium text-foreground"
-          >
-            Confirm password
-          </label>
-          <input
-            id="confirmPassword"
-            type="password"
-            autoComplete="new-password"
-            required
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            className={inputClassName}
-            placeholder="Re-enter your password"
-          />
-        </div>
+        <AuthField
+          id="email"
+          label="Email"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            clearFieldError("email");
+          }}
+          placeholder="you@example.com"
+          error={fieldErrors.email}
+        />
 
-        {clientError ? (
-          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {clientError}
-          </p>
-        ) : null}
+        <AuthField
+          id="password"
+          label="Password"
+          type="password"
+          autoComplete="new-password"
+          value={password}
+          onChange={(event) => {
+            setPassword(event.target.value);
+            clearFieldError("password");
+          }}
+          placeholder="Create a strong password"
+          hint={
+            fieldErrors.password
+              ? undefined
+              : "At least 8 characters, one uppercase letter, and one number."
+          }
+          error={fieldErrors.password}
+        />
 
-        {registerMutation.isError ? (
-          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {getErrorMessage(registerMutation.error, "Unable to create account")}
-          </p>
-        ) : null}
+        <AuthField
+          id="confirmPassword"
+          label="Confirm password"
+          type="password"
+          autoComplete="new-password"
+          value={confirmPassword}
+          onChange={(event) => {
+            setConfirmPassword(event.target.value);
+            clearFieldError("confirmPassword");
+          }}
+          placeholder="Re-enter your password"
+          error={fieldErrors.confirmPassword}
+        />
 
-        <button
-          type="submit"
-          disabled={registerMutation.isPending}
-          className="w-full rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          {registerMutation.isPending ? "Creating account..." : "Create account"}
-        </button>
+        {formError ? <AuthAlert>{formError}</AuthAlert> : null}
+
+        <AuthSubmitButton
+          isPending={isRegistering}
+          label="Create account"
+          pendingLabel="Creating account..."
+        />
       </form>
 
-      <p className="mt-6 text-center text-sm text-muted">
+      <AuthDivider className="my-5" />
+
+      <GoogleSignInButton
+        callbackUrl={searchParams.get("callbackUrl") ?? appRoutes.dashboard}
+      />
+
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link
-          href="/verify-email"
-          className="font-medium text-primary transition-colors hover:text-primary-hover"
+          href={`${authRoutes.login}?callbackUrl=${encodeURIComponent(
+            searchParams.get("callbackUrl") ?? appRoutes.dashboard,
+          )}`}
+          className="font-semibold text-primary transition-colors hover:text-primary-hover"
         >
-          Verify your email
+          Sign in
         </Link>
       </p>
     </AuthShell>

@@ -5,6 +5,7 @@ export type User = {
   username: string;
   email: string;
   avatar: string | null;
+  authProvider?: "local" | "google";
   isEmailVerified: boolean;
   status: string;
   lastLoginAt: string | null;
@@ -17,6 +18,7 @@ export type AuthPayload = {
   accessToken: string;
 };
 
-export type RegisterPayload = AuthPayload & {
+export type RegisterPayload = {
+  email: string;
   verificationEmailSent: boolean;
 };

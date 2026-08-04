@@ -1,0 +1,177 @@
+"use client";
+
+import { LogOut, PanelLeft, PanelLeftClose } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import { AppNavIcon, NotificationIcon } from "@/components/app/app-nav-icon";
+import { UserAvatar } from "@/components/app/user-avatar";
+import { MobileMenuButton } from "@/components/layout/mobile-nav";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { Button } from "@/components/ui/button";
+import { appRoutes } from "@/config/navigation";
+import { useAuth } from "@/hooks/use-auth";
+import { useNotifications } from "@/hooks/use-workflow";
+import type { User as AuthUser } from "@/types/auth";
+import { cn } from "@/lib/utils";
+
+type UserMenuProps = {
+  user: AuthUser;
+  className?: string;
+};
+
+export function UserMenu({ user, className }: UserMenuProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const { logout, isLoggingOut } = useAuth({ fetchUser: false });
+  const displayName = `${user.firstName} ${user.lastName}`.trim();
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
+  return (
+    <div className={cn("relative", className)} ref={menuRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen((current) => !current)}
+        className="flex cursor-pointer items-center gap-2.5 rounded-full border border-border bg-card py-1 pr-3 pl-1 transition-colors hover:bg-emerald-500/5 hover:text-accent-foreground"
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
+      >
+        <UserAvatar name={displayName} avatar={user.avatar} size="sm" />
+        <span className="hidden max-w-28 truncate text-sm font-medium sm:block">
+          {user.firstName}
+        </span>
+      </button>
+
+      {isOpen ? (
+        <div
+          className="absolute top-[calc(100%+0.5rem)] right-0 z-50 w-56 overflow-hidden rounded-xl border border-border bg-popover shadow-lg"
+          role="menu"
+        >
+          <div className="border-b border-border px-4 py-3">
+            <p className="truncate text-sm font-semibold">{displayName}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {user.email}
+            </p>
+          </div>
+          <div className="p-1.5">
+            <Link
+              href={appRoutes.settings}
+              role="menuitem"
+              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-emerald-500/5 hover:text-primary"
+              onClick={() => setIsOpen(false)}
+            >
+              <AppNavIcon
+                icon="settings"
+                className="size-4 text-muted-foreground"
+              />
+              Settings
+            </Link>
+            <button
+              type="button"
+              role="menuitem"
+              disabled={isLoggingOut}
+              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => {
+                setIsOpen(false);
+                logout();
+              }}
+            >
+              <LogOut className="size-4" />
+              {isLoggingOut ? "Signing out..." : "Sign out"}
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+type AppHeaderProps = {
+  user: AuthUser;
+  title?: string;
+  onMenuClick?: () => void;
+  onSidebarToggle?: () => void;
+  sidebarOpen?: boolean;
+  mobileNavOpen?: boolean;
+};
+
+export function AppHeader({
+  user,
+  title = "Dashboard",
+  onMenuClick,
+  onSidebarToggle,
+  sidebarOpen = true,
+  mobileNavOpen = false,
+}: AppHeaderProps) {
+  const notifications = useNotifications();
+  const unreadCount = notifications.data?.unreadCount ?? 0;
+
+  return (
+    <header className="sticky top-0 z-30 shrink-0 px-4 pt-2 pb-2 lg:px-0 lg:py-0">
+      <div
+        className={cn(
+          "flex h-16 items-center gap-3 border px-3 transition-[border-color,background-color,box-shadow] duration-300 sm:gap-4 sm:px-4 lg:gap-4 lg:rounded-none lg:border-0 lg:border-b lg:border-border lg:bg-background/90 lg:px-6 lg:shadow-none lg:backdrop-blur-md",
+          "rounded-2xl border-border/60 bg-card/95 shadow-sm backdrop-blur-md dark:border-border/40 dark:bg-background/60",
+        )}
+      >
+        <MobileMenuButton
+          open={mobileNavOpen}
+          hiddenFrom="lg"
+          onClick={() => onMenuClick?.()}
+        />
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="hidden rounded-md hover:bg-emerald-500/5 hover:text-accent-foreground lg:flex"
+          onClick={onSidebarToggle}
+          aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+        >
+          {sidebarOpen ? (
+            <PanelLeftClose className="size-5" />
+          ) : (
+            <PanelLeft className="size-5" />
+          )}
+        </Button>
+
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-lg font-semibold tracking-tight">
+            {title}
+          </h1>
+          <p className="hidden text-sm text-muted-foreground sm:block">
+            Workspaces, projects, boards, and tasks — all in one place.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <Link
+            href="/inbox"
+            aria-label="Notifications"
+            className="relative inline-flex size-9 items-center justify-center rounded-md transition-colors hover:bg-emerald-500/5 hover:text-accent-foreground"
+          >
+            <NotificationIcon className="size-4" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />
+            )}
+          </Link>
+          <ThemeToggle />
+          <UserMenu user={user} />
+        </div>
+      </div>
+    </header>
+  );
+}
