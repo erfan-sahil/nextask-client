@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +16,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useWorkspaces } from "@/hooks/use-workflow";
 import { getErrorMessage } from "@/lib/api/get-error-message";
+import {
+  workspaceFormSchema,
+  type WorkspaceFormValues,
+} from "@/lib/validations/workspace";
 import type { WorkspaceDoc } from "@/types/domain";
 
 type CreateWorkspaceModalProps = {
@@ -28,13 +34,36 @@ export function CreateWorkspaceModal({
   onCreated,
 }: CreateWorkspaceModalProps) {
   const workspaces = useWorkspaces();
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [visibility, setVisibility] =
-    useState<WorkspaceDoc["visibility"]>("PRIVATE");
   const [formError, setFormError] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<WorkspaceFormValues>({
+    resolver: zodResolver(workspaceFormSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      visibility: "PRIVATE",
+    },
+  });
+
+  const nameValue = watch("name");
+  const visibilityValue = watch("visibility");
+
+  useEffect(() => {
+    if (!isOpen) return;
+    reset({
+      name: "",
+      description: "",
+      visibility: "PRIVATE",
+    });
+    setFormError(null);
+  }, [isOpen, reset]);
 
   function closeModal() {
     if (workspaces.create.isPending) return;
@@ -42,35 +71,28 @@ export function CreateWorkspaceModal({
     onOpenChange(false);
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function onSubmit(values: WorkspaceFormValues) {
     setFormError(null);
-
-    const trimmedName = name.trim();
-    if (!trimmedName) {
-      setFormError("Workspace name is required");
-      return;
-    }
-    if (!visibility) {
-      setFormError("Visibility is required");
-      return;
-    }
 
     try {
       const workspace = await workspaces.create.mutateAsync({
-        name: trimmedName,
-        visibility,
-        description: description.trim() || undefined,
+        name: values.name.trim(),
+        visibility: values.visibility,
+        description: values.description?.trim() || undefined,
       });
-      setName("");
-      setDescription("");
-      setVisibility("PRIVATE");
+      reset({
+        name: "",
+        description: "",
+        visibility: "PRIVATE",
+      });
       onOpenChange(false);
       onCreated?.(workspace);
     } catch (error) {
       setFormError(getErrorMessage(error));
     }
   }
+
+  if (!isOpen) return null;
 
   return (
     <div
@@ -86,7 +108,7 @@ export function CreateWorkspaceModal({
         onClick={closeModal}
       />
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(onSubmit)}
         className="relative z-10 w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-xl"
       >
         <div>
@@ -103,13 +125,15 @@ export function CreateWorkspaceModal({
             <Label htmlFor="workspace-name">Workspace name</Label>
             <Input
               id="workspace-name"
-              required
               autoFocus
-              value={name}
-              onChange={(event) => setName(event.target.value)}
               placeholder="e.g. Product team"
               className="h-10 rounded-xl bg-background px-3"
+              aria-invalid={Boolean(errors.name)}
+              {...register("name")}
             />
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name.message}</p>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -119,41 +143,57 @@ export function CreateWorkspaceModal({
             </Label>
             <Textarea
               id="workspace-description"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
               placeholder="What will your team work on?"
               rows={3}
               className="rounded-xl bg-background px-3"
+              aria-invalid={Boolean(errors.description)}
+              {...register("description")}
             />
+            {errors.description && (
+              <p className="text-sm text-destructive">
+                {errors.description.message}
+              </p>
+            )}
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="workspace-visibility">Visibility</Label>
-            <Select
-              value={visibility}
-              onValueChange={(value) => {
-                if (value) setVisibility(value as WorkspaceDoc["visibility"]);
-              }}
-              required
-            >
-              <SelectTrigger
-                id="workspace-visibility"
-                className="h-10 w-full rounded-xl bg-background px-3"
-              >
-                <SelectValue>
-                  {(value: string | null) =>
-                    value
-                      ? `${value[0]}${value.slice(1).toLowerCase()}`
-                      : "Select visibility"
-                  }
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent align="start">
-                <SelectItem value="PRIVATE">Private — invite only</SelectItem>
-                <SelectItem value="TEAM">Team — visible to your team</SelectItem>
-                <SelectItem value="PUBLIC">Public — visible to everyone</SelectItem>
-              </SelectContent>
-            </Select>
+            <Controller
+              name="visibility"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={(value) => {
+                    if (value) field.onChange(value);
+                  }}
+                >
+                  <SelectTrigger
+                    id="workspace-visibility"
+                    className="h-10 w-full rounded-xl bg-background px-3"
+                    aria-invalid={Boolean(errors.visibility)}
+                  >
+                    <SelectValue>
+                      {(value: string | null) =>
+                        value
+                          ? `${value[0]}${value.slice(1).toLowerCase()}`
+                          : "Select visibility"
+                      }
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent align="start">
+                    <SelectItem value="PRIVATE">Private — invite only</SelectItem>
+                    <SelectItem value="TEAM">Team — visible to your team</SelectItem>
+                    <SelectItem value="PUBLIC">Public — visible to everyone</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.visibility && (
+              <p className="text-sm text-destructive">
+                {errors.visibility.message}
+              </p>
+            )}
           </div>
 
           {formError && (
@@ -176,7 +216,9 @@ export function CreateWorkspaceModal({
           <Button
             type="submit"
             disabled={
-              workspaces.create.isPending || !name.trim() || !visibility
+              workspaces.create.isPending ||
+              !nameValue?.trim() ||
+              !visibilityValue
             }
             className="h-10 rounded-xl px-4"
           >

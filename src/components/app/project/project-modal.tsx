@@ -1,7 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, FolderKanban } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { AppModalHeader } from "@/components/app/app-modal-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +17,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { useProjects } from "@/hooks/use-workflow";
 import { getErrorMessage } from "@/lib/api/get-error-message";
 import type { ProjectDoc } from "@/types/domain";
+
+const projectFormSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Project name is required")
+    .max(200, "Project name cannot exceed 200 characters"),
+  description: z
+    .string()
+    .max(2000, "Description cannot exceed 2000 characters")
+    .optional(),
+});
+
+type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
 type ProjectModalProps = {
   isOpen: boolean;
@@ -33,8 +50,6 @@ export function ProjectModal({
   mode,
 }: ProjectModalProps) {
   const projects = useProjects(workspaceId);
-  const [name, setName] = useState(project?.name ?? "");
-  const [description, setDescription] = useState(project?.description ?? "");
   const [formError, setFormError] = useState<string | null>(null);
   const isPending =
     projects.create.isPending || projects.update.isPending || projects.remove.isPending;
@@ -46,37 +61,76 @@ export function ProjectModal({
       ? "Delete project"
       : "Edit project";
 
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<ProjectFormValues>({
+    resolver: zodResolver(projectFormSchema),
+    defaultValues: {
+      name: project?.name ?? "",
+      description: project?.description ?? "",
+    },
+  });
+
+  const nameValue = watch("name");
+
+  useEffect(() => {
+    if (!isOpen) return;
+    reset({
+      name: project?.name ?? "",
+      description: project?.description ?? "",
+    });
+    setFormError(null);
+  }, [isOpen, project, reset]);
+
   function closeModal() {
     if (isPending) return;
     setFormError(null);
     onOpenChange(false);
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function onSubmit(values: ProjectFormValues) {
     setFormError(null);
 
+    const payload = {
+      name: values.name.trim(),
+      description: values.description?.trim() || undefined,
+    };
+
     try {
-      if (isDeleting && project) {
-        await projects.remove.mutateAsync({
-          workspaceId,
-          projectId: project._id,
-        });
-      } else if (project) {
+      if (project) {
         await projects.update.mutateAsync({
           workspaceId,
           projectId: project._id,
-          name: name.trim(),
-          description: description.trim() || undefined,
+          ...payload,
         });
       } else {
         await projects.create.mutateAsync({
           workspaceId,
-          name: name.trim(),
-          description: description.trim() || undefined,
+          ...payload,
         });
       }
 
+      onOpenChange(false);
+    } catch (error) {
+      setFormError(getErrorMessage(error));
+    }
+  }
+
+  async function handleDelete(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!project) return;
+
+    setFormError(null);
+
+    try {
+      await projects.remove.mutateAsync({
+        workspaceId,
+        projectId: project._id,
+      });
       onOpenChange(false);
     } catch (error) {
       setFormError(getErrorMessage(error));
@@ -91,7 +145,7 @@ export function ProjectModal({
       }}
     >
       <DialogContent className="max-w-lg overflow-hidden p-0">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={isDeleting ? handleDelete : handleSubmit(onSubmit)}>
           <AppModalHeader
             title={title}
             description={
@@ -129,24 +183,34 @@ export function ProjectModal({
                   <Label htmlFor="project-name">Project name</Label>
                   <Input
                     id="project-name"
-                    required
                     autoFocus
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
                     placeholder="e.g. Website redesign"
                     className="h-10 rounded-xl bg-background px-3"
+                    aria-invalid={Boolean(errors.name)}
+                    {...register("name")}
                   />
+                  {errors.name && (
+                    <p className="text-sm text-destructive">{errors.name.message}</p>
+                  )}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="project-description">Description</Label>
+                  <Label htmlFor="project-description">
+                    Description{" "}
+                    <span className="font-normal text-muted-foreground">(optional)</span>
+                  </Label>
                   <Textarea
                     id="project-description"
-                    value={description}
-                    onChange={(event) => setDescription(event.target.value)}
                     placeholder="What is this project about?"
                     rows={3}
                     className="rounded-xl bg-background px-3"
+                    aria-invalid={Boolean(errors.description)}
+                    {...register("description")}
                   />
+                  {errors.description && (
+                    <p className="text-sm text-destructive">
+                      {errors.description.message}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -164,7 +228,7 @@ export function ProjectModal({
             </Button>
             <Button
               type="submit"
-              disabled={isPending || (!isDeleting && !name.trim())}
+              disabled={isPending || (!isDeleting && !nameValue?.trim())}
               variant={isDeleting ? "destructive" : "default"}
             >
               {isPending
