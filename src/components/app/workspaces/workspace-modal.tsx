@@ -64,17 +64,35 @@ export function WorkspaceModal({
         await workspaces.remove.mutateAsync(workspace._id);
         onDeleted?.(workspace);
       } else if (isEditing && workspace) {
+        const trimmedName = name.trim();
+        if (!trimmedName) {
+          setFormError("Workspace name is required");
+          return;
+        }
+        if (!visibility) {
+          setFormError("Visibility is required");
+          return;
+        }
         await workspaces.update.mutateAsync({
           workspaceId: workspace._id,
-          name: name.trim(),
-          description: description.trim(),
+          name: trimmedName,
+          description: description.trim() || undefined,
           visibility,
         });
       } else {
+        const trimmedName = name.trim();
+        if (!trimmedName) {
+          setFormError("Workspace name is required");
+          return;
+        }
+        if (!visibility) {
+          setFormError("Visibility is required");
+          return;
+        }
         const createdWorkspace = await workspaces.create.mutateAsync({
-          name: name.trim(),
-          description: description.trim() || undefined,
+          name: trimmedName,
           visibility,
+          description: description.trim() || undefined,
         });
         onCreated?.(createdWorkspace);
       }
@@ -142,7 +160,10 @@ export function WorkspaceModal({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="workspace-description">Description</Label>
+                  <Label htmlFor="workspace-description">
+                    Description{" "}
+                    <span className="font-normal text-muted-foreground">(optional)</span>
+                  </Label>
                   <Textarea
                     id="workspace-description"
                     value={description}
@@ -155,10 +176,19 @@ export function WorkspaceModal({
                   <Label htmlFor="workspace-visibility">Visibility</Label>
                   <Select
                     value={visibility}
-                    onValueChange={(value) => setVisibility(value as WorkspaceDoc["visibility"])}
+                    onValueChange={(value) => {
+                      if (value) setVisibility(value as WorkspaceDoc["visibility"]);
+                    }}
+                    required
                   >
                     <SelectTrigger id="workspace-visibility" className="h-10 w-full cursor-pointer rounded-xl bg-background px-3">
-                      <SelectValue />
+                      <SelectValue>
+                        {(value: string | null) =>
+                          value
+                            ? `${value[0]}${value.slice(1).toLowerCase()}`
+                            : "Select visibility"
+                        }
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent align="start">
                       <SelectItem value="PRIVATE">Private</SelectItem>
@@ -184,7 +214,9 @@ export function WorkspaceModal({
             <Button
               type="submit"
               variant={isDeleting ? "destructive" : "default"}
-              disabled={isPending || (!isDeleting && !name.trim())}
+              disabled={
+                isPending || (!isDeleting && (!name.trim() || !visibility))
+              }
             >
               {isPending
                 ? "Saving…"

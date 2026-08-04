@@ -164,9 +164,9 @@ export const workflowApi = {
   },
   async createWorkspace(input: {
     name: string;
+    visibility: WorkspaceDoc["visibility"];
     slug?: string;
     description?: string;
-    visibility?: WorkspaceDoc["visibility"];
   }) {
     return unwrap(
       await apiClient.post<ApiSuccessResponse<{ workspace: WorkspaceDoc }>>(

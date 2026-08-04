@@ -46,11 +46,21 @@ export function CreateWorkspaceModal({
     event.preventDefault();
     setFormError(null);
 
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setFormError("Workspace name is required");
+      return;
+    }
+    if (!visibility) {
+      setFormError("Visibility is required");
+      return;
+    }
+
     try {
       const workspace = await workspaces.create.mutateAsync({
-        name: name.trim(),
-        description: description.trim() || undefined,
+        name: trimmedName,
         visibility,
+        description: description.trim() || undefined,
       });
       setName("");
       setDescription("");
@@ -103,7 +113,10 @@ export function CreateWorkspaceModal({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="workspace-description">Description</Label>
+            <Label htmlFor="workspace-description">
+              Description{" "}
+              <span className="font-normal text-muted-foreground">(optional)</span>
+            </Label>
             <Textarea
               id="workspace-description"
               value={description}
@@ -115,15 +128,25 @@ export function CreateWorkspaceModal({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Visibility</Label>
+            <Label htmlFor="workspace-visibility">Visibility</Label>
             <Select
               value={visibility}
-              onValueChange={(value) =>
-                setVisibility(value as WorkspaceDoc["visibility"])
-              }
+              onValueChange={(value) => {
+                if (value) setVisibility(value as WorkspaceDoc["visibility"]);
+              }}
+              required
             >
-              <SelectTrigger className="h-10 w-full rounded-xl bg-background px-3">
-                <SelectValue />
+              <SelectTrigger
+                id="workspace-visibility"
+                className="h-10 w-full rounded-xl bg-background px-3"
+              >
+                <SelectValue>
+                  {(value: string | null) =>
+                    value
+                      ? `${value[0]}${value.slice(1).toLowerCase()}`
+                      : "Select visibility"
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent align="start">
                 <SelectItem value="PRIVATE">Private — invite only</SelectItem>
@@ -152,7 +175,9 @@ export function CreateWorkspaceModal({
           </Button>
           <Button
             type="submit"
-            disabled={workspaces.create.isPending || !name.trim()}
+            disabled={
+              workspaces.create.isPending || !name.trim() || !visibility
+            }
             className="h-10 rounded-xl px-4"
           >
             {workspaces.create.isPending ? "Creating…" : "Create workspace"}
