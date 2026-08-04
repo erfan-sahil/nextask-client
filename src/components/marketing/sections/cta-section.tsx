@@ -8,12 +8,12 @@ export function CtaSection() {
   return (
     <section className="py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="overflow-hidden rounded-2xl border border-border bg-primary-light dark:bg-card">
+        <div className="overflow-hidden rounded-2xl border border-border bg-[color-mix(in_oklab,var(--primary-light)_78%,var(--primary)_22%)] dark:bg-[color-mix(in_oklab,var(--primary-light)_55%,var(--background)_45%)]">
           <div className="h-1 w-full bg-primary" />
 
           <div className="px-6 py-14 text-center sm:px-10 sm:py-16">
             <div className="mx-auto max-w-xl">
-              <span className="mx-auto mb-5 flex size-12 items-center justify-center rounded-2xl bg-card text-primary dark:bg-primary-light">
+              <span className="mx-auto mb-5 flex size-12 items-center justify-center rounded-2xl bg-card text-primary">
                 <Layers className="size-5" aria-hidden />
               </span>
 

@@ -69,7 +69,7 @@ export function FeaturesSection() {
             <article
               key={feature.title}
               className={cn(
-                "group relative overflow-hidden rounded-2xl border border-border bg-card p-6 transition-all duration-200 hover:border-primary/30 hover:bg-primary-light sm:p-7 dark:hover:border-primary/25 dark:hover:bg-primary/10",
+                "group relative overflow-hidden rounded-2xl border border-border bg-card p-6 transition-all duration-200 hover:border-primary/30 hover:bg-primary-light sm:p-7 dark:hover:border-primary/25 dark:hover:bg-primary-light",
                 feature.wide && "sm:col-span-2",
               )}
             >
