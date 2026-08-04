@@ -1,9 +1,11 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   CalendarDays,
   Crown,
   ListFilter,
+  Loader2,
   LogOut,
   Mail,
   MoreHorizontal,
@@ -15,7 +17,8 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { AppModalHeader } from "@/components/app/app-modal-header";
 import { UserAvatar } from "@/components/app/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -43,6 +46,10 @@ import {
 } from "@/components/ui/select";
 import { useWorkspaceBySlug, useWorkspaceMembers } from "@/hooks/use-workflow";
 import { getErrorMessage } from "@/lib/api/get-error-message";
+import {
+  memberInviteFormSchema,
+  type MemberInviteFormValues,
+} from "@/lib/validations/member";
 import { cn } from "@/lib/utils";
 import type { MemberDoc, MemberRole } from "@/types/domain";
 
@@ -158,11 +165,26 @@ function MemberModal({
   onClose: () => void;
 }) {
   const members = useWorkspaceMembers(workspaceId);
-  const [email, setEmail] = useState("");
   const [role, setRole] = useState<MemberRole>(
     state?.mode === "role" ? state.member.role : "MEMBER",
   );
   const [formError, setFormError] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit: handleInviteSubmit,
+    control,
+    watch,
+    formState: { errors },
+  } = useForm<MemberInviteFormValues>({
+    resolver: zodResolver(memberInviteFormSchema),
+    defaultValues: {
+      email: "",
+      role: "MEMBER",
+    },
+  });
+
+  const emailValue = watch("email");
 
   if (!state) return null;
 
@@ -191,18 +213,32 @@ function MemberModal({
         ? `Remove ${getMemberName(member!)} from this workspace. They will lose access to its projects and boards.`
         : `Update the access level for ${getMemberName(member!)}.`;
 
+  async function onInviteSubmit(values: MemberInviteFormValues) {
+    setFormError(null);
+
+    try {
+      await members.invite.mutateAsync({
+        workspaceId,
+        email: values.email.trim(),
+        role: values.role,
+      });
+      onClose();
+    } catch (error) {
+      setFormError(getErrorMessage(error));
+    }
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    if (isInvite) {
+      await handleInviteSubmit(onInviteSubmit)(event);
+      return;
+    }
+
     event.preventDefault();
     setFormError(null);
 
     try {
-      if (isInvite) {
-        await members.invite.mutateAsync({
-          workspaceId,
-          email: email.trim(),
-          role,
-        });
-      } else if (isRemove && member) {
+      if (isRemove && member) {
         await members.remove.mutateAsync({ workspaceId, memberId: member._id });
       } else if (member) {
         await members.updateRole.mutateAsync({
@@ -300,14 +336,33 @@ function MemberModal({
                   <Input
                     id="member-email"
                     type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
                     placeholder="teammate@company.com"
                     autoFocus
-                    required
+                    disabled={isPending}
+                    aria-invalid={Boolean(errors.email)}
+                    {...register("email")}
                   />
+                  {errors.email && (
+                    <p className="text-sm text-destructive">
+                      {errors.email.message}
+                    </p>
+                  )}
                 </div>
-                <RoleSelect value={role} onValueChange={setRole} />
+                <Controller
+                  name="role"
+                  control={control}
+                  render={({ field }) => (
+                    <RoleSelect
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    />
+                  )}
+                />
+                {errors.role && (
+                  <p className="text-sm text-destructive">
+                    {errors.role.message}
+                  </p>
+                )}
               </>
             )}
             {!isInvite && !isDetails && !isRemove && (
@@ -332,7 +387,9 @@ function MemberModal({
               <Button
                 type="submit"
                 variant={isRemove ? "destructive" : "default"}
-                disabled={isPending}
+                disabled={
+                  isPending || (isInvite && !emailValue?.trim())
+                }
               >
                 {isPending
                   ? "Saving…"
@@ -518,11 +575,22 @@ export function WorkspaceMembers({ workspaceSlug }: { workspaceSlug: string }) {
     useWorkspaceBySlug(workspaceSlug);
   const members = useWorkspaceMembers(workspace?._id);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<MemberRole | "ALL">("ALL");
   const [modalState, setModalState] = useState<MemberModalState>(null);
   const workspaceMembers = members.data?.members ?? EMPTY_MEMBERS;
+  const isSearching = search.trim() !== debouncedSearch.trim();
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+
+    return () => window.clearTimeout(timeout);
+  }, [search]);
+
   const filteredMembers = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
+    const normalizedSearch = debouncedSearch.trim().toLowerCase();
     return workspaceMembers
       .filter((member) => {
         const matchesSearch =
@@ -535,7 +603,7 @@ export function WorkspaceMembers({ workspaceSlug }: { workspaceSlug: string }) {
         );
       })
       .sort((a, b) => ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role));
-  }, [roleFilter, search, workspaceMembers]);
+  }, [roleFilter, debouncedSearch, workspaceMembers]);
 
   if (isWorkspaceLoading) {
     return (
@@ -629,12 +697,17 @@ export function WorkspaceMembers({ workspaceSlug }: { workspaceSlug: string }) {
           </div>
           <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-1.5 shadow-sm sm:flex-row sm:items-center">
             <div className="relative min-w-0 sm:w-72">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              {isSearching ? (
+                <Loader2 className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-primary" />
+              ) : (
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              )}
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search name or email…"
                 className="h-10 rounded-lg border-0 bg-transparent pl-9 shadow-none focus-visible:ring-1"
+                aria-busy={isSearching}
               />
             </div>
             <Select
@@ -671,7 +744,7 @@ export function WorkspaceMembers({ workspaceSlug }: { workspaceSlug: string }) {
           </div>
         </div>
 
-        {!members.isLoading && filteredMembers.length > 0 && (
+        {!members.isLoading && !isSearching && filteredMembers.length > 0 && (
           <p className="mb-3 text-xs text-muted-foreground">
             Showing{" "}
             <span className="font-medium text-foreground">
@@ -685,9 +758,10 @@ export function WorkspaceMembers({ workspaceSlug }: { workspaceSlug: string }) {
           </p>
         )}
 
-        {members.isLoading ? (
-          <div className="rounded-2xl border border-border bg-card py-16 text-center text-sm text-muted-foreground">
-            Loading members…
+        {members.isLoading || isSearching ? (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card py-16 text-sm text-muted-foreground">
+            <Loader2 className="mb-3 size-5 animate-spin text-primary" />
+            {isSearching ? "Searching members…" : "Loading members…"}
           </div>
         ) : filteredMembers.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border py-20 text-center">
@@ -696,11 +770,11 @@ export function WorkspaceMembers({ workspaceSlug }: { workspaceSlug: string }) {
             </div>
             <p className="text-sm font-semibold">No members found</p>
             <p className="mt-1 max-w-xs text-xs text-muted-foreground">
-              {search || roleFilter !== "ALL"
+              {debouncedSearch || roleFilter !== "ALL"
                 ? "Try a different search or role filter."
                 : "Invite your first team member to get started."}
             </p>
-            {canManageMembers && !search && roleFilter === "ALL" && (
+            {canManageMembers && !debouncedSearch && roleFilter === "ALL" && (
               <Button
                 className="mt-5 gap-2"
                 onClick={() => setModalState({ mode: "invite" })}
