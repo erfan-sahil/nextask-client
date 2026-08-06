@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { authRoutes, appRoutes } from "@/config/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -10,23 +10,41 @@ export function AuthLayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const switchAccountStarted = useRef(false);
 
   const isGuestOnlyRoute =
     pathname === authRoutes.login || pathname === authRoutes.register;
   const callbackUrl = searchParams.get("callbackUrl");
+  const wantsSwitchAccount = searchParams.get("switchAccount") === "1";
   const safeCallbackUrl =
     callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
       ? callbackUrl
       : null;
 
-  const meQuery = useAuth({ fetchUser: isGuestOnlyRoute });
+  const { user, isAuthenticated, isLoggingOut, logout } = useAuth({
+    fetchUser: isGuestOnlyRoute,
+  });
 
   useEffect(() => {
-    if (!isGuestOnlyRoute || !meQuery.user) {
+    if (!isGuestOnlyRoute || !user) {
       return;
     }
 
-    if (meQuery.user.isEmailVerified) {
+    // Invite / account-switch flow: clear the existing session so login can render.
+    if (wantsSwitchAccount) {
+      if (switchAccountStarted.current || isLoggingOut) {
+        return;
+      }
+
+      switchAccountStarted.current = true;
+      const nextUrl = safeCallbackUrl
+        ? `${pathname}?callbackUrl=${encodeURIComponent(safeCallbackUrl)}`
+        : pathname;
+      logout(nextUrl);
+      return;
+    }
+
+    if (user.isEmailVerified) {
       router.replace(safeCallbackUrl ?? appRoutes.dashboard);
       return;
     }
@@ -36,9 +54,19 @@ export function AuthLayoutShell({ children }: { children: React.ReactNode }) {
         ? `${authRoutes.verifyEmail}?callbackUrl=${encodeURIComponent(safeCallbackUrl)}`
         : authRoutes.verifyEmail,
     );
-  }, [isGuestOnlyRoute, meQuery.user, router, safeCallbackUrl]);
+  }, [
+    isGuestOnlyRoute,
+    isLoggingOut,
+    logout,
+    pathname,
+    router,
+    safeCallbackUrl,
+    user,
+    wantsSwitchAccount,
+  ]);
 
-  const isRedirecting = isGuestOnlyRoute && meQuery.isAuthenticated;
+  const isRedirecting =
+    isGuestOnlyRoute && (isAuthenticated || isLoggingOut);
 
   return (
     <div className="relative flex min-h-svh flex-col overflow-hidden">
