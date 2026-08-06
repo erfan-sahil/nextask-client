@@ -21,6 +21,7 @@ import {
 } from "@/lib/api/auth";
 import { resetAuthRefreshState } from "@/lib/api/client";
 import { authQueryKeys, workflowQueryKeys } from "@/lib/api/query-keys";
+import { clearAuthTokens } from "@/lib/auth/token-storage";
 import type { User } from "@/types/auth";
 
 type UseAuthOptions = {
@@ -48,6 +49,7 @@ export function useAuth(options: UseAuthOptions = {}) {
   };
 
   const clearUser = () => {
+    clearAuthTokens();
     queryClient.removeQueries({ queryKey: authQueryKeys.me });
     queryClient.removeQueries({ queryKey: workflowQueryKeys.dashboardRoot });
   };
@@ -57,6 +59,8 @@ export function useAuth(options: UseAuthOptions = {}) {
     onSuccess: (data) => {
       resetAuthRefreshState();
       setUser(data.user);
+      void queryClient.invalidateQueries({ queryKey: workflowQueryKeys.workspaces });
+      void queryClient.invalidateQueries({ queryKey: workflowQueryKeys.dashboardRoot });
     },
   });
 
@@ -89,6 +93,8 @@ export function useAuth(options: UseAuthOptions = {}) {
     onSuccess: (data) => {
       resetAuthRefreshState();
       setUser(data.user);
+      void queryClient.invalidateQueries({ queryKey: workflowQueryKeys.workspaces });
+      void queryClient.invalidateQueries({ queryKey: workflowQueryKeys.dashboardRoot });
     },
   });
 

@@ -11,7 +11,7 @@ import type {
   TaskDoc,
   WorkspaceChatMessageDoc,
 } from "@/types/domain";
-import { socket } from "@/lib/socket";
+import { connectSocket, socket } from "@/lib/socket";
 
 type EnabledOption = {
   enabled?: boolean;
@@ -510,7 +510,7 @@ export function useNotifications(options: EnabledOption = {}) {
   useEffect(() => {
     if (!enabled) return;
 
-    if (!socket.connected) socket.connect();
+    connectSocket();
     const onNotification = (notification: NotificationDoc) => {
       const current = queryClient.getQueryData<{
         notifications: NotificationDoc[];
@@ -565,7 +565,7 @@ export function useWorkspaceChat(
 
   useEffect(() => {
     if (!workspaceId) return;
-    if (!socket.connected) socket.connect();
+    connectSocket();
     socket.emit("workspace:join", workspaceId);
     const onMessage = (message: WorkspaceChatMessageDoc) => {
       queryClient.setQueryData<ListResult<WorkspaceChatMessageDoc, "messages">>(

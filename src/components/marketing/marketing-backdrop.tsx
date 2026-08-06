@@ -80,15 +80,19 @@ function FlightRoutes({
 function PaperPlanes({
   paths,
   className,
+  scale = 1,
 }: {
   paths: { id: string; dur: string; begin?: string; opacity?: number }[];
   className?: string;
+  scale?: number;
 }) {
   return (
     <g className={className}>
       {paths.map(({ id, dur, begin, opacity }) => (
         <g key={id} opacity={opacity}>
-          <PaperPlane />
+          <g transform={scale !== 1 ? `scale(${scale})` : undefined}>
+            <PaperPlane />
+          </g>
           <animateMotion
             dur={dur}
             repeatCount="indefinite"
@@ -219,6 +223,7 @@ export function MarketingBackdrop() {
         />
         <PaperPlanes
           className="nextask-paper-planes nextask-flight-mobile"
+          scale={0.62}
           paths={[{ id: "nextask-flight-mobile", dur: "16s" }]}
         />
       </svg>
