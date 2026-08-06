@@ -1,7 +1,14 @@
 "use client";
 
 import { MessageCircle, Send, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,6 +22,32 @@ import { socket } from "@/lib/socket";
 import type { WorkspaceDoc } from "@/types/domain";
 
 const unreadStorageKey = (workspaceId: string) => `nextask-chat-unread:${workspaceId}`;
+
+type ViewportFrame = {
+  height: number;
+  offsetLeft: number;
+  offsetTop: number;
+  width: number;
+};
+
+function getChatPanelStyle(frame: ViewportFrame | null): CSSProperties | undefined {
+  if (!frame) return undefined;
+
+  const isNarrow = frame.width < 640;
+  const margin = isNarrow ? 8 : 24;
+  const maxWidth = isNarrow ? frame.width - margin * 2 : Math.min(448, frame.width - margin * 2);
+  const maxHeight = Math.min(isNarrow ? frame.height - margin * 2 : 640, frame.height - margin * 2);
+
+  return {
+    top: frame.offsetTop + frame.height - maxHeight - margin,
+    left: frame.offsetLeft + frame.width - maxWidth - margin,
+    width: maxWidth,
+    height: maxHeight,
+    right: "auto",
+    bottom: "auto",
+    maxWidth: "none",
+  };
+}
 
 function renderMessageContent(content: string, isOwnMessage: boolean) {
   const mentionClassName = isOwnMessage
@@ -39,6 +72,7 @@ export function WorkspaceChat({ workspace }: { workspace?: WorkspaceDoc }) {
   const [mention, setMention] = useState<{ query: string; start: number } | null>(null);
   const [debouncedMentionQuery, setDebouncedMentionQuery] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [viewportFrame, setViewportFrame] = useState<ViewportFrame | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -69,6 +103,35 @@ export function WorkspaceChat({ workspace }: { workspace?: WorkspaceDoc }) {
   useEffect(() => {
     if (isOpen) endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [isOpen, messages.length]);
+
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      setViewportFrame(null);
+      return;
+    }
+
+    const syncViewport = () => {
+      const vv = window.visualViewport;
+      setViewportFrame({
+        height: vv?.height ?? window.innerHeight,
+        offsetLeft: vv?.offsetLeft ?? 0,
+        offsetTop: vv?.offsetTop ?? 0,
+        width: vv?.width ?? window.innerWidth,
+      });
+    };
+
+    syncViewport();
+    const vv = window.visualViewport;
+    vv?.addEventListener("resize", syncViewport);
+    vv?.addEventListener("scroll", syncViewport);
+    window.addEventListener("resize", syncViewport);
+
+    return () => {
+      vv?.removeEventListener("resize", syncViewport);
+      vv?.removeEventListener("scroll", syncViewport);
+      window.removeEventListener("resize", syncViewport);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     window.addEventListener("workspace-chat:open", handleOpenChat);
@@ -181,8 +244,11 @@ export function WorkspaceChat({ workspace }: { workspace?: WorkspaceDoc }) {
         )}
       </Button>
       {isOpen && (
-        <section className="fixed right-4 bottom-4 z-50 flex h-[min(40rem,calc(100svh-2rem))] w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-foreground/10 sm:right-6 sm:bottom-6">
-          <header className="flex items-center justify-between border-b border-border bg-muted/20 px-4 py-3.5">
+        <section
+          className="fixed right-2 bottom-2 z-50 flex h-[min(40rem,calc(100dvh-1rem))] w-[calc(100vw-1rem)] max-w-md flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl shadow-foreground/10 sm:right-6 sm:bottom-6 sm:h-[min(40rem,calc(100dvh-3rem))] sm:w-[calc(100vw-3rem)] sm:rounded-2xl"
+          style={getChatPanelStyle(viewportFrame)}
+        >
+          <header className="flex shrink-0 items-center justify-between border-b border-border bg-muted/20 px-4 py-3.5">
             <div className="flex min-w-0 items-center gap-3">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <MessageCircle className="size-4" aria-hidden />
@@ -220,8 +286,11 @@ export function WorkspaceChat({ workspace }: { workspace?: WorkspaceDoc }) {
               </div>
             ) : null}
             {messages.map((message) => {
-              const name = `${message.createdBy.firstName} ${message.createdBy.lastName}`.trim();
-              const isOwnMessage = message.createdBy._id === user?._id;
+              const author = message.createdBy;
+              const name = author
+                ? `${author.firstName} ${author.lastName}`.trim() || author.username
+                : "Unknown user";
+              const isOwnMessage = author?._id === user?._id;
               return (
                 <article
                   key={message._id}
@@ -229,7 +298,7 @@ export function WorkspaceChat({ workspace }: { workspace?: WorkspaceDoc }) {
                     isOwnMessage ? "flex-row-reverse slide-in-from-right-2" : "slide-in-from-left-2"
                   }`}
                 >
-                  <UserAvatar name={name} avatar={message.createdBy.avatar} size="sm" className="mt-0.5" />
+                  <UserAvatar name={name} avatar={author?.avatar} size="sm" className="mt-0.5" />
                   <div className="min-w-0 max-w-[calc(100%-2.5rem)]">
                     <div
                       className={
@@ -260,7 +329,7 @@ export function WorkspaceChat({ workspace }: { workspace?: WorkspaceDoc }) {
             <div ref={endRef} />
             </div>
           </ScrollArea>
-          <div className="flex gap-2 border-t border-border bg-card p-3">
+          <div className="flex shrink-0 gap-2 border-t border-border bg-card p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <div className="relative min-w-0 flex-1">
               <Textarea
                 ref={composerRef}
@@ -281,7 +350,9 @@ export function WorkspaceChat({ workspace }: { workspace?: WorkspaceDoc }) {
                 }}
                 placeholder="Message #workspace…"
                 rows={2}
-                className="min-h-20 resize-none rounded-xl border-border bg-muted/20 px-3 py-2.5 text-sm shadow-none placeholder:text-muted-foreground/80 focus-visible:bg-background"
+                enterKeyHint="send"
+                autoComplete="off"
+                className="min-h-20 resize-none rounded-xl border-border bg-muted/20 px-3 py-2.5 text-base shadow-none placeholder:text-muted-foreground/80 focus-visible:bg-background sm:text-sm"
               />
               {mention && (
                 <div className="absolute right-0 bottom-[calc(100%+0.5rem)] left-0 z-10 overflow-hidden rounded-lg border border-border bg-popover p-1 shadow-lg">

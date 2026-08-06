@@ -192,7 +192,7 @@ export type WorkspaceChatMessageDoc = {
   _id: Id;
   workspaceId: Id;
   content: string;
-  createdBy: ApiUser;
+  createdBy: ApiUser | null;
   createdAt: string;
   updatedAt: string;
 };
