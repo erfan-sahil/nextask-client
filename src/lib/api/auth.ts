@@ -1,3 +1,8 @@
+import {
+  clearAuthTokens,
+  getRefreshToken,
+  setAuthTokens,
+} from "@/lib/auth/token-storage";
 import type { ApiSuccessResponse } from "@/types/api";
 import type { AuthPayload, RegisterPayload, User } from "@/types/auth";
 import { API_BASE_URL, apiClient } from "./client";
@@ -39,13 +44,22 @@ type ResendVerificationInput = {
   email: string;
 };
 
+const persistAuthPayload = (payload: AuthPayload) => {
+  setAuthTokens({
+    accessToken: payload.accessToken,
+    refreshToken: payload.refreshToken,
+  });
+
+  return payload;
+};
+
 export const login = async (input: LoginInput) => {
   const { data } = await apiClient.post<ApiSuccessResponse<AuthPayload>>(
     "/auth/login",
     input,
   );
 
-  return data.data;
+  return persistAuthPayload(data.data);
 };
 
 export const register = async (input: RegisterInput) => {
@@ -62,11 +76,17 @@ export const refreshSession = async () => {
     "/auth/refresh",
   );
 
-  return data.data;
+  return persistAuthPayload(data.data);
 };
 
 export const logout = async () => {
-  await apiClient.post<ApiSuccessResponse<null>>("/auth/logout");
+  try {
+    await apiClient.post<ApiSuccessResponse<null>>("/auth/logout", {
+      refreshToken: getRefreshToken() ?? undefined,
+    });
+  } finally {
+    clearAuthTokens();
+  }
 };
 
 export const updateProfile = async (input: UpdateProfileInput) => {
@@ -80,12 +100,14 @@ export const updateProfile = async (input: UpdateProfileInput) => {
 
 export const changePassword = async (input: ChangePasswordInput) => {
   await apiClient.patch<ApiSuccessResponse<null>>("/auth/password", input);
+  clearAuthTokens();
 };
 
 export const deleteAccount = async (input: DeleteAccountInput) => {
   await apiClient.delete<ApiSuccessResponse<null>>("/auth/account", {
     data: input,
   });
+  clearAuthTokens();
 };
 
 export const verifyEmail = async (input: VerifyEmailInput) => {
@@ -93,6 +115,10 @@ export const verifyEmail = async (input: VerifyEmailInput) => {
     "/auth/verify-email",
     input,
   );
+
+  if (data.data.accessToken) {
+    persistAuthPayload(data.data);
+  }
 
   return data.data;
 };

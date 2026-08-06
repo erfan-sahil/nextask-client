@@ -16,6 +16,7 @@ export type User = {
 export type AuthPayload = {
   user: User;
   accessToken: string;
+  refreshToken?: string;
 };
 
 export type RegisterPayload = {

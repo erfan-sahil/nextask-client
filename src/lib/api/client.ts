@@ -1,4 +1,12 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
+import {
+  clearAuthTokens,
+  getAccessToken,
+  getRefreshToken,
+  setAuthTokens,
+} from "@/lib/auth/token-storage";
+import type { ApiSuccessResponse } from "@/types/api";
+import type { AuthPayload } from "@/types/auth";
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001/api/v1";
@@ -27,8 +35,12 @@ const shouldSkipRefresh = (url?: string) => {
 const refreshSession = async () => {
   if (!refreshPromise) {
     refreshPromise = apiClient
-      .post("/auth/refresh")
-      .then(() => {
+      .post<ApiSuccessResponse<AuthPayload>>("/auth/refresh", {
+        refreshToken: getRefreshToken() ?? undefined,
+      })
+      .then((response) => {
+        const { accessToken, refreshToken } = response.data.data;
+        setAuthTokens({ accessToken, refreshToken });
         refreshFailed = false;
       })
       .finally(() => {
@@ -52,6 +64,16 @@ export const apiClient = axios.create({
   },
 });
 
+apiClient.interceptors.request.use((config) => {
+  const accessToken = getAccessToken();
+
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  return config;
+});
+
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -71,9 +93,17 @@ apiClient.interceptors.response.use(
 
     try {
       await refreshSession();
+
+      const accessToken = getAccessToken();
+
+      if (accessToken) {
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+      }
+
       return apiClient(originalRequest);
     } catch {
       refreshFailed = true;
+      clearAuthTokens();
       return Promise.reject(error);
     }
   },
